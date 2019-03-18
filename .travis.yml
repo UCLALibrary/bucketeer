@@ -4,9 +4,10 @@ script:
 - mvn package
 
 # We want all PRs built but only merges on master branch
-#branches:
-#  only:
-#  - master
+#  However, when we first create a new project, we need to comment this out
+branches:
+  only:
+  - master
 
 notifications:
   email:
