@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>jp2-bucketeer</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>JP2 Bucketeer</name>
+  <description>A TIFF -&gt; JP2 -&gt; S3 bucket microservice</description>
+  <url>https://github.com/uclalibrary/jp2-bucketeer</url>
+
+  <licenses>
+    <license>
+      <name>The 3-Clause BSD License</name>
+      <url>https://opensource.org/licenses/BSD-3-clause</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:uclalibrary/jp2-bucketeer.git</connection>
+    <developerConnection>scm:git:git@github.com:uclalibrary/bucketeer.git</developerConnection>
+    <url>git@github.com:uclalibrary/jp2-bucketeer.git</url>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/uclalibrary/jp2-bucketeer/issues</url>
+  </issueManagement>
+
+  <developers>
+    <developer>
+      <id>ksclarke</id>
+      <name>Kevin S. Clarke</name>
+      <email>ksclarke@ksclarke.io</email>
+      <organization>UCLA Library</organization>
+      <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+      <timezone>America/New_York</timezone>
+    </developer>
+    <developer>
+      <id>hardyoyo</id>
+      <name>Hardy Pottinger</name>
+      <email>hpottinger@library.ucla.edu</email>
+      <organization>UCLA Library</organization>
+      <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+    </developer>
+  </developers>
+
+  <properties>
+    <vertx.version>3.6.3</vertx.version>
+    <freelib.utils.version>0.8.9</freelib.utils.version>
+
+    <!-- Build plugin versions -->
+    <shade.plugin.version>2.4.3</shade.plugin.version>
+    <vertx.plugin.version>1.0.18</vertx.plugin.version>
+    <codacy.plugin.version>1.0.2</codacy.plugin.version>
+
+    <!-- Name of the main Vert.x verticle -->
+    <main.verticle>edu.ucla.library.bucketeer.MainVerticle</main.verticle>
+  </properties>
+
+  <dependencies>
+    <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <!-- OpenAPI for Vert.x - https://vertx.io/docs/vertx-web-api-contract/java/ -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-api-contract</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <!-- Below dependencies only used for testing -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-unit</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- The build-helper plugin gets us a dynamic port for testing -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+      </plugin>
+      <!--<![CDATA[
+        To run the generate-codes plugin outside of a full build, run:
+          mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
+      ]]>-->
+      <plugin>
+        <groupId>info.freelibrary</groupId>
+        <artifactId>freelib-utils</artifactId>
+        <version>${freelib.utils.version}</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>generate-codes</goal>
+            </goals>
+            <configuration>
+              <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
+              <messageFiles>
+                <messageFile>src/main/resources/bucketeer_messages.xml</messageFile>
+              </messageFiles>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- PMD is an extensible cross-language static code analyzer -->
+      <plugin>
+        <artifactId>maven-pmd-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>info.freelibrary</groupId>
+            <artifactId>freelib-resources</artifactId>
+            <version>${freelib.resources.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <stylesheetfile>javadocs.css</stylesheetfile>
+          <nonavbar>true</nonavbar>
+          <show>public</show>
+          <nosince>true</nosince>
+          <notimestamp>true</notimestamp>
+          <bottom> </bottom>
+          <detectLinks>false</detectLinks>
+          <additionalJOptions>
+            <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin-${project.name}</additionalJOption>
+          </additionalJOptions>
+          <links>
+            <link>https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/</link>
+            <!-- <link>https://vertx.io/docs/apidocs/</link> -->
+          </links>
+          <sourcepath>src/main/java:src/main/generated</sourcepath>
+        </configuration>
+        <executions>
+          <execution>
+            <id>site-javadocs</id>
+            <phase>site</phase>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Checkstyle ensures adherence to coding standards -->
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <!-- Enforcer enforces some basic characteristics of the project -->
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <!-- Codacy runs automated code reviews and code analytics -->
+      <plugin>
+        <groupId>com.gavinmogan</groupId>
+        <artifactId>codacy-maven-plugin</artifactId>
+        <version>${codacy.plugin.version}</version>
+      </plugin>
+      <!-- Maven dependency helps freelib-resources copy files into the project -->
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+      <!-- Surefire runs the project's tests -->
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/*IT.java</exclude>
+            <exclude>**/*IntegrationTest.java</exclude>
+          </excludes>
+          <systemPropertyVariables>
+            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+            <vertx.test.port>${http.port}</vertx.test.port>
+          </systemPropertyVariables>
+          <argLine>${jacoco.agent.arg}</argLine>
+        </configuration>
+      </plugin>
+      <!--<![CDATA[ We're not going to use JBake for site generation now, but keeping for later...
+        <plugin>
+          <groupId>br.com.ingenieux</groupId>
+          <artifactId>jbake-maven-plugin</artifactId>
+        </plugin>
+      ]]>-->
+      <!-- Jacoco does code coverage for the test suite -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+      <!-- The Vert.x plugin enables running the application from within Maven for dev -->
+      <plugin>
+        <groupId>io.reactiverse</groupId>
+        <artifactId>vertx-maven-plugin</artifactId>
+        <version>${vertx.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>vertx-plugin</id>
+            <goals>
+              <goal>initialize</goal>
+              <goal>package</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <verticle>${main.verticle}</verticle>
+          <redeploy>true</redeploy>
+        </configuration>
+      </plugin>
+      <!-- The shade plugin generates an all-in-one executable Jar file -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>${shade.plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <manifestEntries>
+                    <Main-Class>io.vertx.core.Launcher</Main-Class>
+                    <Main-Verticle>${main.verticle}</Main-Verticle>
+                  </manifestEntries>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/services/io.vertx.core.spi.VerticleFactory</resource>
+                </transformer>
+              </transformers>
+              <artifactSet>
+                <!-- Exclude duplicate dependencies so we don't see the warning messages -->
+                <excludes>
+                  <exclude>io.vertx:vertx-core</exclude>
+                  <exclude>io.vertx:vertx-web</exclude>
+                  <exclude>io.vertx:vertx-web-common</exclude>
+                  <exclude>io.vertx:vertx-auth-common</exclude>
+                  <exclude>io.vertx:vertx-bridge-common</exclude>
+                  <exclude>io.netty:netty-resolver-dns</exclude>
+                  <exclude>io.netty:netty-handler-proxy</exclude>
+                  <exclude>io.netty:netty-codec</exclude>
+                  <exclude>io.netty:netty-buffer</exclude>
+                  <exclude>io.netty:netty-transport</exclude>
+                  <exclude>io.netty:netty-common</exclude>
+                  <exclude>io.netty:netty-resolver</exclude>
+                  <exclude>io.netty:netty-codec-http</exclude>
+                  <exclude>io.netty:netty-codec-http2</exclude>
+                  <exclude>io.netty:netty-codec-dns</exclude>
+                  <exclude>io.netty:netty-handler</exclude>
+                  <exclude>io.netty:netty-codec-socks</exclude>
+                  <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                  <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                  <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
+                  <exclude>com.github.java-json-tools:json-schema-core</exclude>
+                  <exclude>com.github.java-json-tools:json-schema-validator</exclude>
+                  <exclude>com.github.fge:json-patch</exclude>
+                  <exclude>com.github.fge:jackson-coreutils</exclude>
+                  <exclude>com.github.fge:uri-template</exclude>
+                  <exclude>com.github.fge:msg-simple</exclude>
+                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
+                  <exclude>net.sf.jopt-simple:jopt-simple</exclude>
+                  <exclude>io.swagger.core.v3:swagger-annotations</exclude>
+                  <exclude>io.swagger:swagger-annotations</exclude>
+                  <exclude>io.swagger.core.v3:swagger-models</exclude>
+                  <exclude>io.swagger:swagger-models</exclude>
+                  <exclude>io.vertx:vertx-web-api-contract</exclude>
+                  <exclude>io.swagger.core.v3:swagger-core</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-v3</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-v2-converter</exclude>
+                  <exclude>io.swagger:swagger-parser</exclude>
+                  <exclude>io.swagger:swagger-core</exclude>
+                  <exclude>io.swagger:swagger-compat-spec-parser</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-core</exclude>
+                  <exclude>com.networknt:json-schema-validator</exclude>
+                  <exclude>org.yaml:snakeyaml</exclude>
+                  <exclude>org.mozilla:rhino</exclude>
+                  <exclude>org.slf4j:slf4j-api</exclude>
+                  <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
+                  <exclude>com.github.fge:btf</exclude>
+                  <exclude>javax.xml.bind:jaxb-api</exclude>
+                  <exclude>javax.mail:mailapi</exclude>
+                  <exclude>javax.activation:activation</exclude>
+                  <exclude>javax.validation:validation-api</exclude>
+                  <exclude>com.google.guava:guava</exclude>
+                  <exclude>joda-time:joda-time</exclude>
+                  <exclude>org.apache.httpcomponents:httpclient</exclude>
+                  <exclude>org.apache.httpcomponents:httpcore</exclude>
+                  <exclude>commons-io:commons-io</exclude>
+                  <exclude>commons-logging:commons-logging</exclude>
+                  <exclude>commons-codec:commons-codec</exclude>
+                  <exclude>org.apache.commons:commons-lang3</exclude>
+                  <exclude>org.slf4j:slf4j-ext</exclude>
+                  <exclude>ch.qos.cal10n:cal10n-api</exclude>
+                </excludes>
+              </artifactSet>
+              <outputFile>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</outputFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <!-- Enables pushing project documentation up to an S3 bucket -->
+  <distributionManagement>
+    <site>
+      <id>s3.site</id>
+      <!-- TODO: Create a UCLA S3 bucket for this -->
+      <url>s3://projects.freelibrary.info/${project.name}</url>
+    </site>
+  </distributionManagement>
+
+  <parent>
+    <artifactId>freelib-parent</artifactId>
+    <groupId>info.freelibrary</groupId>
+    <version>3.5.9</version>
+  </parent>
+
+</project>

@@ -1,0 +1,15 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: JP2 Bucketeer API
+  license:
+    name: The 3-Clause BSD License
+servers:
+  - url: http://jp2-bucketeer.library.edu/v1
+paths:
+  /ping:
+    get:
+      operationId: getPing
+      responses:
+        '200':
+          description: OK
