@@ -1,0 +1,16 @@
+language: java
+
+script:
+- mvn package
+
+# We want all PRs built but only merges on master branch
+branches:
+  only:
+  - master
+
+notifications:
+  email:
+    recipients:
+      - ksclarke@ksclarke.io
+    on_success: change
+    on_failure: change
