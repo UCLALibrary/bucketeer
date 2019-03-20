@@ -26,7 +26,7 @@ You can run a development instance of JP2 Bucketeer by typing the following with
 
     mvn vertx:initialize vertx:run
 
-This instance will be refreshed when the code changes so it will reflect the current state of the code. The service can be accessed at [http://localhost:8888](http://localhost:8888).
+This instance will be refreshed when the code changes so it will reflect the current state of the code. The service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping).
 
 ## Contact
 
