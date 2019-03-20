@@ -82,12 +82,11 @@
       <artifactId>vertx-config</artifactId>
       <version>${vertx.version}</version>
     </dependency>
-    <!-- Below dependencies only used for testing -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
     </dependency>
+    <!-- Below dependencies only used for testing -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
