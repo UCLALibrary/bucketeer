@@ -12,7 +12,7 @@ import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
  */
 public class MainVerticle extends AbstractVerticle {
 
-    private static final String DEFAULT_SPEC_PATH = "src/main/resources/bucketeer.yaml";
+    private static final String DEFAULT_SPEC_PATH = "bucketeer.yaml";
 
     /**
      * Starts a Web server.
