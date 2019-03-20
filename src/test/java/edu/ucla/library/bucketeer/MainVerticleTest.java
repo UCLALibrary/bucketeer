@@ -28,10 +28,9 @@ public class MainVerticleTest {
     @Before
     public void setUp(final TestContext aContext) {
         final DeploymentOptions options = new DeploymentOptions();
-        final String defaultPort = Integer.toString(Constants.DEFAULT_PORT);
 
         // Get a randomly selected open port and use that for our tests
-        myPort = Integer.valueOf(System.getProperty("vertx.test.port", defaultPort));
+        myPort = Integer.valueOf(System.getProperty("vertx.test.port"));
         options.setConfig(new JsonObject().put("http.port", myPort));
 
         // Initialize the Vert.x environment and start our main verticle
