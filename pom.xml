@@ -49,7 +49,7 @@
     <vertx.version>3.6.3</vertx.version>
     <freelib.utils.version>0.8.9</freelib.utils.version>
 
-    <!-- Build plugin versions -->
+    <!-- Build plug-in versions -->
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
@@ -74,6 +74,12 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-api-contract</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <!-- A Vert.x plug-in for more flexible configuration control -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
       <version>${vertx.version}</version>
     </dependency>
     <!-- Below dependencies only used for testing -->
