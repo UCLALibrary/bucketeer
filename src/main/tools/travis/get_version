@@ -1,7 +1,0 @@
-#! /bin/bash
-
-#
-# A simple script to return the version of a Maven project.
-#
-
-echo $(mvn -q -Dexec.executable="echo" -Dexec.args='0.0.1-SNAPSHOT' --non-recursive exec:exec)
