@@ -13,3 +13,34 @@ paths:
       responses:
         '200':
           description: OK
+  /{imageId}/{filePath}:
+    get:
+      operationId: loadImage
+      responses:
+        '200':
+          description: loadImage Confirmation message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the load succeeded
+                  message:
+                    type: string
+                    description: any related text about the loadImage operation
+    parameters:
+       - in: path
+         name: imageId
+         required: true
+         schema:
+          type: string
+         description: The image ID
+       - in: path
+         name: filePath
+         required: true
+         schema:
+          type: string
+         description: The local image path
+         allowReserved: true
