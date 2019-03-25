@@ -12,5 +12,20 @@
 
   <!-- Messages to be stored in the MessageCodes class -->
   <entry key="BUCKETEER-000">{}</entry>
+  <entry key="BUCKETEER-001">Failed to convert TIFF to JP2: {}</entry>
+  <entry key="BUCKETEER-002">File doesn't exist and can't be written: {}</entry>
+  <entry key="BUCKETEER-003">Skipping test because it doesn't look like Kakadu is installed</entry>
+  <entry key="BUCKETEER-004">{} starting in thread: {}</entry>
+  <entry key="BUCKETEER-005">Unable to send message to '{}': {}</entry>
+  <entry key="BUCKETEER-006">Image conversion failed: {}</entry>
+  <entry key="BUCKETEER-007">Successfully deployed: {} [{}]</entry>
+  <entry key="BUCKETEER-008">Failed to deploy: {}</entry>
+  <entry key="BUCKETEER-009">S3 Client configured for region: {}</entry>
+  <entry key="BUCKETEER-010">Preparing to send '{}' [{}] to S3 bucket: {}</entry>
+  <entry key="BUCKETEER-011">Operation returned a 'fail' response</entry>
+  <entry key="BUCKETEER-012">Skipping test because we don't have a valid S3 configuration</entry>
+  <entry key="BUCKETEER-013">Initializing verticle: {} [{}]</entry>
+  <entry key="BUCKETEER-014">S3 bucket upload failed: {} -&gt; {}</entry>
+  <entry key="BUCKETEER-015">Failed to close Vert.x test instance</entry>
 
 </properties>

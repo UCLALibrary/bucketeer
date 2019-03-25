@@ -7,6 +7,10 @@ public final class Op {
 
     public static final String LOAD_IMAGE = "loadImage";
 
+    public static final String SUCCESS = "success";
+
+    public static final String FAILURE = "failure";
+
     private Op() {
     }
 
