@@ -19,7 +19,9 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final RequestParameter filePath = params.queryParameter("filePath");
 
         response.setStatusCode(200);
-        response.putHeader("content-type", "text/plain").end("Hello");
+        response.putHeader("imageId", imageId.toString());
+        response.putHeader("filePath", filePath.toString());
+        response.putHeader("content-type", "text/plain").end("SUCCESS!");
     }
 
 }
