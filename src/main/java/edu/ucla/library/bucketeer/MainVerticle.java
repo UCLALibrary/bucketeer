@@ -2,6 +2,7 @@
 package edu.ucla.library.bucketeer;
 
 import edu.ucla.library.bucketeer.handlers.GetPingHandler;
+import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -43,6 +44,7 @@ public class MainVerticle extends AbstractVerticle {
 
                         // Next, we associate handlers with routes from our specification
                         routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
+                        routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                         server.requestHandler(routerFactory.getRouter()).listen(port);
 
                         aFuture.complete();
