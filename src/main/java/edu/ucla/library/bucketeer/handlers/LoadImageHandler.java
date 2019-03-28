@@ -6,7 +6,6 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -23,13 +22,13 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final HttpServerResponse response = aContext.response();
 
         final RequestParameters params = aContext.get("parsedParameters");
-        final RequestParameter imageId = params.queryParameter(Op.IMAGE_ID);
-        final RequestParameter filePath = params.queryParameter(Op.FILE_PATH);
+        final RequestParameter imageId = params.queryParameter(Constants.IMAGE_ID);
+        final RequestParameter filePath = params.queryParameter(Constants.FILE_PATH);
 
         LOGGER.debug(MessageCodes.BUCKETEER_000, "imageID is null: " + (imageId == null));
 
-        final JsonObject json = new JsonObject().put(Op.IMAGE_ID, imageId);
-        json.put(Op.FILE_PATH, filePath);
+        final JsonObject json = new JsonObject().put(Constants.IMAGE_ID, imageId);
+        json.put(Constants.FILE_PATH, filePath);
         response.setStatusCode(200);
         response.putHeader("content-type", "application/json").end(json.toBuffer());
     }

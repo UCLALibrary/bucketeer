@@ -19,12 +19,12 @@ public final class Constants {
     /**
      * The ID for the image that's going to be processed.
      */
-    public static final String IMAGE_ID = "id";
+    public static final String IMAGE_ID = "imageId";
 
     /**
      * The path to the TIFF file that's going to be read.
      */
-    public static final String IMAGE_PATH = "path";
+    public static final String FILE_PATH = "filePath";
 
     /**
      * Private constructor for Constants class.
