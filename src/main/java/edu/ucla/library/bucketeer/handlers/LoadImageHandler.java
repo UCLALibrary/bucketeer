@@ -30,7 +30,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final JsonObject json = new JsonObject().put(Constants.IMAGE_ID, imageId);
         json.put(Constants.FILE_PATH, filePath);
         response.setStatusCode(200);
-        response.putHeader("content-type", "application/json").end(json.toBuffer());
+        response.putHeader("content-type", "application/json").end(jsonConfirm.toBuffer());
     }
 
 }
