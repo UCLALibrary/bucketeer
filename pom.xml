@@ -59,6 +59,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>info.freelibrary</groupId>
+      <artifactId>freelib-utils</artifactId>
+      <version>${freelib.utils.version}</version>
+    </dependency>
     <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -85,6 +90,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <scope>compile</scope>
     </dependency>
     <!-- Below dependencies only used for testing -->
     <dependency>
@@ -322,6 +328,44 @@
                   <exclude>org.apache.commons:commons-lang3</exclude>
                   <exclude>org.slf4j:slf4j-ext</exclude>
                   <exclude>ch.qos.cal10n:cal10n-api</exclude>
+                  <exclude>org.apache.maven:maven-settings-builder</exclude>
+                  <exclude>javax.enterprise:cdi-api</exclude>
+                  <exclude>org.eclipse.sisu:org.eclipse.sisu.inject</exclude>
+                  <exclude>org.apache.maven:maven-plugin-api</exclude>
+                  <exclude>org.apache.maven:maven-core</exclude>
+                  <exclude>info.freelibrary:freelib-utils</exclude>
+                  <exclude>net.java.dev.jna:jna</exclude>
+                  <exclude>org.apache.maven:maven-builder-support</exclude>
+                  <exclude>org.codehaus.plexus:plexus-interpolation</exclude>
+                  <exclude>net.java.dev.jna:jna-platform</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-api</exclude>
+                  <exclude>org.glassfish:javax.json</exclude>
+                  <exclude>org.jboss.forge.roaster:roaster-api</exclude>
+                  <exclude>javax.inject:javax.inject</exclude>
+                  <exclude>org.codehaus.plexus:plexus-component-annotations</exclude>
+                  <exclude>org.apache.maven.shared:maven-shared-utils</exclude>
+                  <exclude>org.apache.maven:maven-model-builder</exclude>
+                  <exclude>org.apache.maven:maven-artifact</exclude>
+                  <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
+                  <exclude>org.apache.maven:maven-settings</exclude>
+                  <exclude>org.apache.maven:maven-model</exclude>
+                  <exclude>javax.annotation:jsr250-api</exclude>
+                  <exclude>org.eclipse.sisu:org.eclipse.sisu.plexus</exclude>
+                  <exclude>com.github.dblock:oshi-core</exclude>
+                  <exclude>com.google.inject:guice</exclude>
+                  <exclude>org.sonatype.plexus:plexus-sec-dispatcher</exclude>
+                  <exclude>org.apache.maven:maven-resolver-provider</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-impl</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-util</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-spi</exclude>
+                  <exclude>org.apache.maven:maven-repository-metadata</exclude>
+                  <exclude>org.codehaus.plexus:plexus-utils</exclude>
+                  <exclude>ch.qos.logback:logback-classic</exclude>
+                  <exclude>aopalliance:aopalliance</exclude>
+                  <exclude>org.sonatype.plexus:plexus-cipher</exclude>
+                  <exclude>net.iharder:base64</exclude>
+                  <exclude>ch.qos.logback:logback-core</exclude>
+                  <exclude>org.jboss.forge.roaster:roaster-jdt</exclude>
                 </excludes>
               </artifactSet>
               <outputFile>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</outputFile>
