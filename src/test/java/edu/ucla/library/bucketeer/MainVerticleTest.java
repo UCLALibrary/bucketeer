@@ -59,13 +59,24 @@ public class MainVerticleTest {
     public void testThatTheServerIsStarted(final TestContext aContext) {
         final Async async = aContext.async();
 
-        // Testing the path defined in our OpenAPI YAML file
+        // Testing the 'ping' path defined in our OpenAPI YAML file
         myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/ping", response -> {
             aContext.assertEquals(response.statusCode(), 200);
 
             // Right now, we just have it returning the word 'Hello'
             response.bodyHandler(body -> {
                 aContext.assertEquals("Hello", body.getString(0, body.length()));
+                async.complete();
+            });
+        });
+        // Testing the main loadImage path defined in our OpenAPI YAML file
+        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/imageFile.tif", response -> {
+            aContext.assertEquals(response.statusCode(), 200);
+            // the confirmation JSON object should match the spec, let's verify that
+            response.bodyHandler(body -> {
+                final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
+                aContext.assertTrue(jsonConfirm.getBoolean("success"));
+                aContext.assertEquals(jsonConfirm.getString("message"), "12345/imageFile.tif");
                 async.complete();
             });
         });
