@@ -8,7 +8,7 @@
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>target/${project.artifactId}-${byDay}.log</file>
+    <file>target/bucketeer-${byDay}.log</file>
     <append>false</append>
     <encoder>
       <pattern>[%level] %logger{45} | %msg%n</pattern>
