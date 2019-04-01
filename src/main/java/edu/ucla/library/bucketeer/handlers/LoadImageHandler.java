@@ -27,8 +27,8 @@ public class LoadImageHandler implements Handler<RoutingContext> {
 
         LOGGER.debug(MessageCodes.BUCKETEER_000, "imageID is null: " + (imageId == null));
 
-        final JsonObject json = new JsonObject().put(Constants.IMAGE_ID, imageId);
-        json.put(Constants.FILE_PATH, filePath);
+        final JsonObject jsonConfirm = new JsonObject().put(Constants.IMAGE_ID, imageId);
+        jsonConfirm.put(Constants.FILE_PATH, filePath);
         response.setStatusCode(200);
         response.putHeader("content-type", "application/json").end(jsonConfirm.toBuffer());
     }
