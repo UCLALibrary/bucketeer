@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.RequestParameter;
 import io.vertx.ext.web.api.RequestParameters;
+import org.codehaus.plexus.util.StringUtils;
 
 public class LoadImageHandler implements Handler<RoutingContext> {
 
@@ -26,6 +27,12 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final RequestParameter filePath = params.queryParameter(Constants.FILE_PATH);
 
         LOGGER.debug(MessageCodes.BUCKETEER_000, "imageID is null: " + (imageId == null));
+
+        /* handle common error conditions */
+        if (StringUtils.isBlank(imageId.toString()) || StringUtils.isBlank(filePath.toString()) ) {
+            response.setStatusCode(400);
+            response.putHeader("content-type", "text/plain").end("400 Bad Request: imageId and filePath are required parameters");
+        }
 
         final JsonObject jsonConfirm = new JsonObject().put(Constants.IMAGE_ID, imageId);
         jsonConfirm.put(Constants.FILE_PATH, filePath);

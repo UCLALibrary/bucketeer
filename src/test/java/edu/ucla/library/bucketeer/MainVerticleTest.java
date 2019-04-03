@@ -69,7 +69,8 @@ public class MainVerticleTest {
                 async.complete();
             });
         });
-        // Testing the main loadImage path defined in our OpenAPI YAML file
+        // Testing the main loadImage path defined in our OpenAPI YAML file returns a correct response
+        // when given complete data
         myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/imageFile.tif", response -> {
             aContext.assertEquals(response.statusCode(), 200);
             // the confirmation JSON object should match the spec, let's verify that
@@ -79,6 +80,12 @@ public class MainVerticleTest {
                 aContext.assertEquals(jsonConfirm.getString("message"), "12345/imageFile.tif");
                 async.complete();
             });
+        });
+        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
+        // when given incomplete data
+        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/", response -> {
+            aContext.assertNotEquals(response.statusCode(), 200);
+            // the confirmation JSON object should match the spec, let's verify that
         });
     }
 
