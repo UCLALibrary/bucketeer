@@ -3,13 +3,13 @@ package edu.ucla.library.bucketeer;
 
 import edu.ucla.library.bucketeer.handlers.GetPingHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
+import edu.ucla.library.bucketeer.handlers.LoadImageFailureHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
-import io.vertx.ext.web.api.validation.ValidationException;
 
 /**
  * Main verticle that starts the application.
@@ -46,20 +46,9 @@ public class MainVerticle extends AbstractVerticle {
                         // Next, we associate handlers with routes from our specification
                         routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
                         routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
+                        // set up matching failureHandlers
+                        routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageFailureHandler());
 
-                        // set up failureHandlers
-                        routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, routingContext -> {
-                            // This is the failure handler
-                            final Throwable failure = routingContext.failure();
-                            if (failure instanceof ValidationException) {
-                                // Handle Validation Exception
-                                routingContext.response()
-                                .setStatusCode(400)
-                                .setStatusMessage("ValidationException thrown! "
-                                  + ((ValidationException) failure).type().name())
-                                    .end();
-                            }
-                        });
                         server.requestHandler(routerFactory.getRouter()).listen(port);
 
                         aFuture.complete();

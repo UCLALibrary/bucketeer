@@ -85,7 +85,6 @@ public class MainVerticleTest {
         // when given incomplete data
         myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), 200);
-            // the confirmation JSON object should match the spec, let's verify that
         });
     }
 
