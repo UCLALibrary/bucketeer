@@ -27,6 +27,11 @@ public final class Constants {
     public static final String FILE_PATH = "filePath";
 
     /**
+     * This content_type is used to send response headers
+     */
+    public static final String CONTENT_TYPE = "content-type";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {
