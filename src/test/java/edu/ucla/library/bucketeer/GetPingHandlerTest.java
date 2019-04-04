@@ -6,7 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -15,7 +14,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class MainVerticleTest {
+public class GetPingHandlerTest {
 
     private Vertx myVertx;
 
@@ -66,26 +65,9 @@ public class MainVerticleTest {
             // Right now, we just have it returning the word 'Hello'
             response.bodyHandler(body -> {
                 aContext.assertEquals("Hello", body.getString(0, body.length()));
-                async.complete();
             });
         });
-        // Testing the main loadImage path defined in our OpenAPI YAML file returns a correct response
-        // when given complete data
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/imageFile.tif", response -> {
-            aContext.assertEquals(response.statusCode(), 200);
-            // the confirmation JSON object should match the spec, let's verify that
-            response.bodyHandler(body -> {
-                final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
-                aContext.assertTrue(jsonConfirm.getBoolean("success"));
-                aContext.assertEquals(jsonConfirm.getString("message"), "12345/imageFile.tif");
-                async.complete();
-            });
-        });
-        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
-        // when given incomplete data
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/", response -> {
-            aContext.assertNotEquals(response.statusCode(), 200);
-        });
+        async.complete();
     }
 
 }
