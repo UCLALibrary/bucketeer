@@ -27,5 +27,6 @@
   <entry key="BUCKETEER-013">Initializing verticle: {} [{}]</entry>
   <entry key="BUCKETEER-014">S3 bucket upload failed: {} -&gt; {}</entry>
   <entry key="BUCKETEER-015">Failed to close Vert.x test instance</entry>
+  <entry key="BUCKETEER-016">Unable to find kdu_compress installed on the system</entry>
 
 </properties>

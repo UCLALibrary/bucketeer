@@ -1,13 +1,22 @@
 
 package edu.ucla.library.bucketeer.converters;
 
+import static edu.ucla.library.bucketeer.Constants.MESSAGES;
+
 import java.io.IOException;
+
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
+
+import edu.ucla.library.bucketeer.MessageCodes;
 
 /**
  * A converter factory returns the type of JP2 converter that the system supports. If KAKADU_HOME is defined, it will
  * use Kakadu; else it will use OpenJPEG.
  */
 public final class ConverterFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConverterFactory.class, MESSAGES);
 
     private static Converter myConverter;
 
@@ -57,8 +66,13 @@ public final class ConverterFactory {
      */
     public static void checkSystemKakadu() throws IOException, InterruptedException {
         if (!hasKakadu) {
-            if (Runtime.getRuntime().exec("kdu_compress -v").waitFor() == 0) {
-                hasKakadu = true;
+            try {
+                if (Runtime.getRuntime().exec("kdu_compress -v").waitFor() == 0) {
+                    hasKakadu = true;
+                }
+            } catch (final IOException details) {
+                // We don't expect to be able to find it so a debug instead of warning or error is okay
+                LOGGER.debug(MessageCodes.BUCKETEER_016);
             }
         }
     }

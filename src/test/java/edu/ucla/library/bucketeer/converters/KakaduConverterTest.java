@@ -20,6 +20,10 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
+/**
+ * Our Kakadu converter test should be running in a single thread since it sets static variables.
+ */
+@net.jcip.annotations.NotThreadSafe
 public class KakaduConverterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverterTest.class, Constants.MESSAGES);
@@ -61,6 +65,9 @@ public class KakaduConverterTest {
         if (myKakaduHome != null) {
             System.setProperty(KakaduConverter.KAKADU_HOME, myKakaduHome);
         }
+
+        // Reset the assumption that Kakadu is installed just to be safe
+        ConverterFactory.hasSystemKakadu(false);
     }
 
     /**
