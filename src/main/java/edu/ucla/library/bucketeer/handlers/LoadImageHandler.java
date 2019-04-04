@@ -26,8 +26,6 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final RequestParameter imageId = params.queryParameter(Constants.IMAGE_ID);
         final RequestParameter filePath = params.queryParameter(Constants.FILE_PATH);
 
-        LOGGER.debug(MessageCodes.BUCKETEER_000, "imageID is null: " + (imageId == null));
-
         /* handle common error conditions */
         if (StringUtils.isBlank(imageId.toString()) || StringUtils.isBlank(filePath.toString()) ) {
             response.setStatusCode(400);
