@@ -9,3 +9,4 @@ buildNumber.properties
 .mvn/timing.properties
 .editorconfig
 src/main/tools
+src/main/generated
