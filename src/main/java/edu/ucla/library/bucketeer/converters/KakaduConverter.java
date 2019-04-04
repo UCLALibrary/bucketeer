@@ -46,7 +46,7 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     @Override
     public File convert(final String aID, final File aTIFF, final Conversion aConversion) throws IOException,
             InterruptedException {
-        final File jp2 = new File(TMP_DIR, URLEncoder.encode(aID, StandardCharsets.UTF_8));
+        final File jp2 = new File(TMP_DIR, URLEncoder.encode(aID, StandardCharsets.UTF_8.toString()));
         final List<String> command = new ArrayList<String>();
         final String conversion = aConversion.name();
 
