@@ -6,7 +6,7 @@
   <artifactId>jp2-bucketeer</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>JP2 Bucketeer</name>
-  <description>A TIFF -&gt; JP2 -&gt; S3 bucket microservice</description>
+  <description>A TIFF to JP2 to S3 bucket microservice</description>
   <url>https://github.com/uclalibrary/jp2-bucketeer</url>
 
   <licenses>
@@ -47,23 +47,30 @@
 
   <properties>
     <vertx.version>3.6.3</vertx.version>
+    <aws.sdk.version>1.11.478</aws.sdk.version>
     <freelib.utils.version>0.8.9</freelib.utils.version>
 
     <!-- Build plug-in versions -->
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
+    <vertx.pairtree.version>0.0.3</vertx.pairtree.version>
+    <jcip.annotations.version>1.0-1</jcip.annotations.version>
 
     <!-- Name of the main Vert.x verticle -->
-    <main.verticle>edu.ucla.library.bucketeer.MainVerticle</main.verticle>
+    <main.verticle>edu.ucla.library.bucketeer.verticles.MainVerticle</main.verticle>
+
+    <!-- AWS configuration properties -->
+    <bucketeer.s3.region>us-west-2</bucketeer.s3.region>
+    <bucketeer.s3.bucket>cantaloupe-jp2k</bucketeer.s3.bucket>
+    <bucketeer.s3.access_key>YOUR_ACCESS_KEY</bucketeer.s3.access_key>
+    <bucketeer.s3.secret_key>YOUR_SECRET_KEY</bucketeer.s3.secret_key>
+
+    <!-- Callback that we alert to the success/failure of the process -->
+    <bucketeer.http.callback>http://localhost/echo-callback</bucketeer.http.callback>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>info.freelibrary</groupId>
-      <artifactId>freelib-utils</artifactId>
-      <version>${freelib.utils.version}</version>
-    </dependency>
     <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -92,7 +99,29 @@
       <artifactId>logback-classic</artifactId>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>info.freelibrary</groupId>
+      <artifactId>freelib-utils</artifactId>
+      <version>${freelib.utils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+      <version>${aws.sdk.version}</version>
+    </dependency>
+    <!-- Just using this for the S3 client (probably should break out?) -->
+    <dependency>
+      <groupId>info.freelibrary</groupId>
+      <artifactId>vertx-pairtree</artifactId>
+      <version>${vertx.pairtree.version}</version>
+    </dependency>
     <!-- Below dependencies only used for testing -->
+    <dependency>
+      <groupId>com.github.stephenc.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+      <version>${jcip.annotations.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -107,8 +136,14 @@
   </dependencies>
 
   <build>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+        <filtering>true</filtering>
+      </testResource>
+    </testResources>
     <plugins>
-      <!-- The build-helper plugin gets us a dynamic port for testing -->
+      <!-- The build-helper plug-in gets us a dynamic port for testing -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -130,7 +165,7 @@
             <configuration>
               <generatedSourcesDirectory>${project.basedir}/src/main/generated</generatedSourcesDirectory>
               <messageFiles>
-                <messageFile>src/main/resources/bucketeer_messages.xml</messageFile>
+                <messageFile>${project.basedir}/src/main/resources/bucketeer_messages.xml</messageFile>
               </messageFiles>
             </configuration>
           </execution>
@@ -205,6 +240,7 @@
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>
+            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
@@ -220,7 +256,7 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
-      <!-- The Vert.x plugin enables running the application from within Maven for dev -->
+      <!-- The Vert.x plug-in enables running the application from within Maven for development -->
       <plugin>
         <groupId>io.reactiverse</groupId>
         <artifactId>vertx-maven-plugin</artifactId>
@@ -239,7 +275,7 @@
           <redeploy>true</redeploy>
         </configuration>
       </plugin>
-      <!-- The shade plugin generates an all-in-one executable Jar file -->
+      <!-- The shade plug-in generates an all-in-one executable Jar file -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -264,108 +300,117 @@
                 </transformer>
               </transformers>
               <artifactSet>
-                <!-- Exclude duplicate dependencies so we don't see the warning messages -->
+                <!-- Exclude duplicate dependencies so we don't see the warning messages; alphabetize! -->
                 <excludes>
-                  <exclude>io.vertx:vertx-core</exclude>
-                  <exclude>io.vertx:vertx-web</exclude>
-                  <exclude>io.vertx:vertx-config</exclude>
-                  <exclude>io.vertx:vertx-web-common</exclude>
-                  <exclude>io.vertx:vertx-auth-common</exclude>
-                  <exclude>io.vertx:vertx-bridge-common</exclude>
-                  <exclude>io.netty:netty-resolver-dns</exclude>
-                  <exclude>io.netty:netty-handler-proxy</exclude>
-                  <exclude>io.netty:netty-codec</exclude>
-                  <exclude>io.netty:netty-buffer</exclude>
-                  <exclude>io.netty:netty-transport</exclude>
-                  <exclude>io.netty:netty-common</exclude>
-                  <exclude>io.netty:netty-resolver</exclude>
-                  <exclude>io.netty:netty-codec-http</exclude>
-                  <exclude>io.netty:netty-codec-http2</exclude>
-                  <exclude>io.netty:netty-codec-dns</exclude>
-                  <exclude>io.netty:netty-handler</exclude>
-                  <exclude>io.netty:netty-codec-socks</exclude>
-                  <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
-                  <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                  <exclude>aopalliance:aopalliance</exclude>
+                  <exclude>ch.qos.cal10n:cal10n-api</exclude>
+                  <exclude>ch.qos.logback:logback-classic</exclude>
+                  <exclude>ch.qos.logback:logback-core</exclude>
+                  <exclude>com.amazonaws:aws-java-sdk-core</exclude>
+                  <exclude>com.amazonaws:aws-java-sdk-kms</exclude>
+                  <exclude>com.amazonaws:aws-java-sdk-s3</exclude>
+                  <exclude>com.amazonaws:jmespath-java</exclude>
                   <exclude>com.fasterxml.jackson.core:jackson-annotations</exclude>
+                  <exclude>com.fasterxml.jackson.core:jackson-core</exclude>
+                  <exclude>com.fasterxml.jackson.core:jackson-databind</exclude>
+                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-cbor</exclude>
+                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
+                  <exclude>com.github.dblock:oshi-core</exclude>
+                  <exclude>com.github.fge:btf</exclude>
+                  <exclude>com.github.fge:jackson-coreutils</exclude>
+                  <exclude>com.github.fge:json-patch</exclude>
+                  <exclude>com.github.fge:msg-simple</exclude>
+                  <exclude>com.github.fge:uri-template</exclude>
                   <exclude>com.github.java-json-tools:json-schema-core</exclude>
                   <exclude>com.github.java-json-tools:json-schema-validator</exclude>
-                  <exclude>com.github.fge:json-patch</exclude>
-                  <exclude>com.github.fge:jackson-coreutils</exclude>
-                  <exclude>com.github.fge:uri-template</exclude>
-                  <exclude>com.github.fge:msg-simple</exclude>
-                  <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
-                  <exclude>net.sf.jopt-simple:jopt-simple</exclude>
-                  <exclude>io.swagger.core.v3:swagger-annotations</exclude>
-                  <exclude>io.swagger:swagger-annotations</exclude>
-                  <exclude>io.swagger.core.v3:swagger-models</exclude>
-                  <exclude>io.swagger:swagger-models</exclude>
-                  <exclude>io.vertx:vertx-web-api-contract</exclude>
-                  <exclude>io.swagger.core.v3:swagger-core</exclude>
-                  <exclude>io.swagger.parser.v3:swagger-parser</exclude>
-                  <exclude>io.swagger.parser.v3:swagger-parser-v3</exclude>
-                  <exclude>io.swagger.parser.v3:swagger-parser-v2-converter</exclude>
-                  <exclude>io.swagger:swagger-parser</exclude>
-                  <exclude>io.swagger:swagger-core</exclude>
-                  <exclude>io.swagger:swagger-compat-spec-parser</exclude>
-                  <exclude>io.swagger.parser.v3:swagger-parser-core</exclude>
-                  <exclude>com.networknt:json-schema-validator</exclude>
-                  <exclude>org.yaml:snakeyaml</exclude>
-                  <exclude>org.mozilla:rhino</exclude>
-                  <exclude>org.slf4j:slf4j-api</exclude>
-                  <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
-                  <exclude>com.github.fge:btf</exclude>
-                  <exclude>javax.xml.bind:jaxb-api</exclude>
-                  <exclude>javax.mail:mailapi</exclude>
-                  <exclude>javax.activation:activation</exclude>
-                  <exclude>javax.validation:validation-api</exclude>
                   <exclude>com.google.guava:guava</exclude>
-                  <exclude>joda-time:joda-time</exclude>
-                  <exclude>org.apache.httpcomponents:httpclient</exclude>
-                  <exclude>org.apache.httpcomponents:httpcore</exclude>
+                  <exclude>com.google.inject:guice</exclude>
+                  <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
+                  <exclude>com.networknt:json-schema-validator</exclude>
+                  <exclude>commons-codec:commons-codec</exclude>
                   <exclude>commons-io:commons-io</exclude>
                   <exclude>commons-logging:commons-logging</exclude>
-                  <exclude>commons-codec:commons-codec</exclude>
-                  <exclude>org.apache.commons:commons-lang3</exclude>
-                  <exclude>org.slf4j:slf4j-ext</exclude>
-                  <exclude>ch.qos.cal10n:cal10n-api</exclude>
-                  <exclude>org.apache.maven:maven-settings-builder</exclude>
-                  <exclude>javax.enterprise:cdi-api</exclude>
-                  <exclude>org.eclipse.sisu:org.eclipse.sisu.inject</exclude>
-                  <exclude>org.apache.maven:maven-plugin-api</exclude>
-                  <exclude>org.apache.maven:maven-core</exclude>
                   <exclude>info.freelibrary:freelib-utils</exclude>
-                  <exclude>net.java.dev.jna:jna</exclude>
-                  <exclude>org.apache.maven:maven-builder-support</exclude>
-                  <exclude>org.codehaus.plexus:plexus-interpolation</exclude>
+                  <exclude>info.freelibrary:vertx-pairtree</exclude>
+                  <exclude>io.netty:netty-buffer</exclude>
+                  <exclude>io.netty:netty-codec-dns</exclude>
+                  <exclude>io.netty:netty-codec-http2</exclude>
+                  <exclude>io.netty:netty-codec-http</exclude>
+                  <exclude>io.netty:netty-codec-socks</exclude>
+                  <exclude>io.netty:netty-codec</exclude>
+                  <exclude>io.netty:netty-common</exclude>
+                  <exclude>io.netty:netty-handler-proxy</exclude>
+                  <exclude>io.netty:netty-handler</exclude>
+                  <exclude>io.netty:netty-resolver-dns</exclude>
+                  <exclude>io.netty:netty-resolver</exclude>
+                  <exclude>io.netty:netty-transport</exclude>
+                  <exclude>io.swagger.core.v3:swagger-annotations</exclude>
+                  <exclude>io.swagger.core.v3:swagger-core</exclude>
+                  <exclude>io.swagger.core.v3:swagger-models</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-core</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-v2-converter</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser-v3</exclude>
+                  <exclude>io.swagger.parser.v3:swagger-parser</exclude>
+                  <exclude>io.swagger:swagger-annotations</exclude>
+                  <exclude>io.swagger:swagger-compat-spec-parser</exclude>
+                  <exclude>io.swagger:swagger-core</exclude>
+                  <exclude>io.swagger:swagger-models</exclude>
+                  <exclude>io.swagger:swagger-parser</exclude>
+                  <exclude>io.vertx:vertx-auth-common</exclude>
+                  <exclude>io.vertx:vertx-bridge-common</exclude>
+                  <exclude>io.vertx:vertx-config</exclude>
+                  <exclude>io.vertx:vertx-core</exclude>
+                  <exclude>io.vertx:vertx-web-api-contract</exclude>
+                  <exclude>io.vertx:vertx-web-common</exclude>
+                  <exclude>io.vertx:vertx-web</exclude>
+                  <exclude>javax.activation:activation</exclude>
+                  <exclude>javax.annotation:jsr250-api</exclude>
+                  <exclude>javax.enterprise:cdi-api</exclude>
+                  <exclude>javax.inject:javax.inject</exclude>
+                  <exclude>javax.mail:mailapi</exclude>
+                  <exclude>javax.validation:validation-api</exclude>
+                  <exclude>javax.xml.bind:jaxb-api</exclude>
+                  <exclude>joda-time:joda-time</exclude>
+                  <exclude>net.iharder:base64</exclude>
                   <exclude>net.java.dev.jna:jna-platform</exclude>
+                  <exclude>net.java.dev.jna:jna</exclude>
+                  <exclude>net.sf.jopt-simple:jopt-simple</exclude>
+                  <exclude>org.apache.commons:commons-lang3</exclude>
+                  <exclude>org.apache.httpcomponents:httpclient</exclude>
+                  <exclude>org.apache.httpcomponents:httpcore</exclude>
                   <exclude>org.apache.maven.resolver:maven-resolver-api</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-impl</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-provider</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-spi</exclude>
+                  <exclude>org.apache.maven.resolver:maven-resolver-util</exclude>
+                  <exclude>org.apache.maven.shared:maven-shared-utils</exclude>
+                  <exclude>org.apache.maven:maven-artifact</exclude>
+                  <exclude>org.apache.maven:maven-builder-support</exclude>
+                  <exclude>org.apache.maven:maven-core</exclude>
+                  <exclude>org.apache.maven:maven-model-builder</exclude>
+                  <exclude>org.apache.maven:maven-model</exclude>
+                  <exclude>org.apache.maven:maven-plugin-api</exclude>
+                  <exclude>org.apache.maven:maven-repository-metadata</exclude>
+                  <exclude>org.apache.maven:maven-resolver-provider</exclude>
+                  <exclude>org.apache.maven:maven-settings-builder</exclude>
+                  <exclude>org.apache.maven:maven-settings</exclude>
+                  <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
+                  <exclude>org.codehaus.plexus:plexus-component-annotations</exclude>
+                  <exclude>org.codehaus.plexus:plexus-interpolation</exclude>
+                  <exclude>org.codehaus.plexus:plexus-utils</exclude>
+                  <exclude>org.eclipse.sisu:org.eclipse.sisu.inject</exclude>
+                  <exclude>org.eclipse.sisu:org.eclipse.sisu.plexus.site</exclude>
+                  <exclude>org.eclipse.sisu:org.eclipse.sisu.plexus</exclude>
                   <exclude>org.glassfish:javax.json</exclude>
                   <exclude>org.jboss.forge.roaster:roaster-api</exclude>
-                  <exclude>javax.inject:javax.inject</exclude>
-                  <exclude>org.codehaus.plexus:plexus-component-annotations</exclude>
-                  <exclude>org.apache.maven.shared:maven-shared-utils</exclude>
-                  <exclude>org.apache.maven:maven-model-builder</exclude>
-                  <exclude>org.apache.maven:maven-artifact</exclude>
-                  <exclude>org.codehaus.plexus:plexus-classworlds</exclude>
-                  <exclude>org.apache.maven:maven-settings</exclude>
-                  <exclude>org.apache.maven:maven-model</exclude>
-                  <exclude>javax.annotation:jsr250-api</exclude>
-                  <exclude>org.eclipse.sisu:org.eclipse.sisu.plexus</exclude>
-                  <exclude>com.github.dblock:oshi-core</exclude>
-                  <exclude>com.google.inject:guice</exclude>
-                  <exclude>org.sonatype.plexus:plexus-sec-dispatcher</exclude>
-                  <exclude>org.apache.maven:maven-resolver-provider</exclude>
-                  <exclude>org.apache.maven.resolver:maven-resolver-impl</exclude>
-                  <exclude>org.apache.maven.resolver:maven-resolver-util</exclude>
-                  <exclude>org.apache.maven.resolver:maven-resolver-spi</exclude>
-                  <exclude>org.apache.maven:maven-repository-metadata</exclude>
-                  <exclude>org.codehaus.plexus:plexus-utils</exclude>
-                  <exclude>ch.qos.logback:logback-classic</exclude>
-                  <exclude>aopalliance:aopalliance</exclude>
-                  <exclude>org.sonatype.plexus:plexus-cipher</exclude>
-                  <exclude>net.iharder:base64</exclude>
-                  <exclude>ch.qos.logback:logback-core</exclude>
                   <exclude>org.jboss.forge.roaster:roaster-jdt</exclude>
+                  <exclude>org.mozilla:rhino</exclude>
+                  <exclude>org.slf4j:slf4j-api</exclude>
+                  <exclude>org.slf4j:slf4j-ext</exclude>
+                  <exclude>org.sonatype.plexus:plexus-cipher</exclude>
+                  <exclude>org.sonatype.plexus:plexus-sec-dispatcher</exclude>
+                  <exclude>org.yaml:snakeyaml</exclude>
+                  <exclude>software.amazon.ion:ion-java</exclude>
                 </excludes>
               </artifactSet>
               <outputFile>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</outputFile>

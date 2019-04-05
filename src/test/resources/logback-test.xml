@@ -8,7 +8,7 @@
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>target/bucketeer-${byDay}.log</file>
+    <file>target/${project.artifactId}-${byDay}.log</file>
     <append>false</append>
     <encoder>
       <pattern>[%level] %logger{45} | %msg%n</pattern>
@@ -23,6 +23,9 @@
   </logger>
   <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="edu.ucla.library" level="DEBUG" additivity="false">
+    <appender-ref ref="STDOUT"/>
   </logger>
 
   <root level="INFO">
