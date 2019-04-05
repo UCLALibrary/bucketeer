@@ -31,12 +31,12 @@
         <gpg.keyname>${env.BUILD_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.BUILD_PASSPHRASE}</gpg.passphrase>
 
-        <!--
+        <!--<![CDATA[
         <bucketeer.s3.bucket></bucketeer.s3.bucket>
         <bucketeer.s3.access_key></bucketeer.s3.access_key>
         <bucketeer.s3.secret_key></bucketeer.s3.secret_key>
         <bucketeer.s3.region></bucketeer.s3.region>
-        -->
+        ]]>-->
       </properties>
     </profile>
   </profiles>

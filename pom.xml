@@ -227,7 +227,42 @@
       </plugin>
       <!-- Maven dependency helps freelib-resources copy files into the project -->
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-dependency-analyzer</artifactId>
+            <version>${maven.dependency.analyzer.version}</version>
+            <exclusions>
+              <exclusion>
+                <artifactId>maven-project</artifactId>
+                <groupId>org.apache.maven</groupId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>unpack-build-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>info.freelibrary</groupId>
+                  <artifactId>freelib-resources</artifactId>
+                  <version>${freelib.resources.version}</version>
+                  <type>jar</type>
+                  <includes>eclipse/**/*,checkstyle/**/*,pmd/**/*,travis/**/*</includes>
+                  <outputDirectory>${basedir}/target/build-resources</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- Surefire runs the project's tests -->
       <plugin>
@@ -245,12 +280,6 @@
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
       </plugin>
-      <!--<![CDATA[ We're not going to use JBake for site generation now, but keeping for later...
-        <plugin>
-          <groupId>br.com.ingenieux</groupId>
-          <artifactId>jbake-maven-plugin</artifactId>
-        </plugin>
-      ]]>-->
       <!-- Jacoco does code coverage for the test suite -->
       <plugin>
         <groupId>org.jacoco</groupId>
