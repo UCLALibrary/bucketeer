@@ -59,15 +59,15 @@ public class GetPingHandlerTest {
         final Async async = aContext.async();
 
         // Testing the 'ping' path defined in our OpenAPI YAML file
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/ping", response -> {
+        myVertx.createHttpClient().getNow(myPort, Constants.UNSPECIFIED_HOST, "/ping", response -> {
             aContext.assertEquals(response.statusCode(), 200);
 
             // Right now, we just have it returning the word 'Hello'
             response.bodyHandler(body -> {
                 aContext.assertEquals("Hello", body.getString(0, body.length()));
+                async.complete();
             });
         });
-        async.complete();
     }
 
 }

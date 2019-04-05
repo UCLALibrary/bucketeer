@@ -32,6 +32,11 @@ public final class Constants {
     public static final String CONTENT_TYPE = "content-type";
 
     /**
+     * unspecified-host is just a wildcard host name
+     */
+    public static final String UNSPECIFIED_HOST = "0.0.0.0";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {

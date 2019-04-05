@@ -50,7 +50,7 @@ public class LoadImageHandlerTest {
     }
 
     /**
-     * Our LoadImageHandler tests.
+     * Confirm that the response from LoadImageHander matches the spec
      *
      * @param aContext A testing context
      */
@@ -60,28 +60,31 @@ public class LoadImageHandlerTest {
         final Async async = aContext.async();
         // Testing the main loadImage path defined in our OpenAPI YAML file returns a correct response
         // when given complete data
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/imageFile.tif", response -> {
+        myVertx.createHttpClient().getNow(myPort, Constants.UNSPECIFIED_HOST, "/12345/imageFile.tif", response -> {
             aContext.assertEquals(response.statusCode(), 200);
             // the confirmation JSON object should match the spec, let's verify that
             response.bodyHandler(body -> {
                 final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
                 aContext.assertTrue(jsonConfirm.getBoolean("success"));
                 aContext.assertEquals(jsonConfirm.getString("message"), "12345/imageFile.tif");
+                async.complete();
             });
         });
-        async.complete();
     }
+    /**
+     * Confirm that LoadImageHander fails if we do not provide an ID
+     *
+     * @param aContext A testing context
+     */
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
         final Async async = aContext.async();
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
         // when given incomplete data
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/12345/", response -> {
+        myVertx.createHttpClient().getNow(myPort, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), 200);
+            async.complete();
         });
-        async.complete();
     }
-    
-    
 }
