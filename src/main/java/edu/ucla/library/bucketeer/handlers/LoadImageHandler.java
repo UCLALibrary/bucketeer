@@ -6,6 +6,7 @@ package edu.ucla.library.bucketeer.handlers;
 
 import edu.ucla.library.bucketeer.Constants;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -20,9 +21,9 @@ public class LoadImageHandler implements Handler<RoutingContext> {
     @Override
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
-
-        final String imageId = aContext.pathParams().get(Constants.IMAGE_ID);
-        final String filePath = aContext.pathParams().get(Constants.FILE_PATH);
+        final HttpServerRequest request = aContext.request();
+        final String imageId = request.getParam(Constants.IMAGE_ID);
+        final String filePath = request.getParam(Constants.FILE_PATH);
 
         /* handle common error conditions */
         if (StringUtils.isBlank(imageId) || StringUtils.isBlank(filePath) ) {
