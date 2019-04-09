@@ -29,12 +29,14 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         if (StringUtils.isBlank(imageId) || StringUtils.isBlank(filePath) ) {
             response.setStatusCode(400);
             response.putHeader(Constants.CONTENT_TYPE, "text/plain").end("400 Bad Request: imageId/filePath required");
+            response.close();
         }
 
         final JsonObject jsonConfirm = new JsonObject().put(Constants.IMAGE_ID, imageId);
         jsonConfirm.put(Constants.FILE_PATH, filePath);
         response.setStatusCode(200);
         response.putHeader(Constants.CONTENT_TYPE, "application/json").end(jsonConfirm.toBuffer());
+        response.close();
     }
 
 }
