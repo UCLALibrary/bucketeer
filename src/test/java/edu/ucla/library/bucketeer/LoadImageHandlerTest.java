@@ -1,6 +1,9 @@
 
 package edu.ucla.library.bucketeer;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +23,7 @@ public class LoadImageHandlerTest {
 
     private Vertx myVertx;
 
-    private int myPort;
+    private int port;
 
     /**
      * Test set up.
@@ -28,12 +31,14 @@ public class LoadImageHandlerTest {
      * @param aContext A testing context
      */
     @Before
-    public void setUp(final TestContext aContext) {
+    public void setUp(final TestContext aContext) throws IOException {
         final DeploymentOptions options = new DeploymentOptions();
+        final ServerSocket socket = new ServerSocket(0);
+        final int port = socket.getLocalPort();
 
-        // Get a randomly selected open port and use that for our tests
-        myPort = Integer.valueOf(System.getProperty("vertx.test.port"));
-        options.setConfig(new JsonObject().put("http.port", myPort));
+        aContext.put(Config.HTTP_PORT, port);
+        options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
+        socket.close();
 
         // Initialize the Vert.x environment and start our main verticle
         myVertx = Vertx.vertx();
@@ -61,7 +66,7 @@ public class LoadImageHandlerTest {
         final Async async = aContext.async();
         // Testing the main loadImage path defined in our OpenAPI YAML file returns a correct response
         // when given complete data
-        myVertx.createHttpClient().getNow(myPort, Constants.UNSPECIFIED_HOST, "/12345/imageFile.tif", response -> {
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/imageFile.tif", response -> {
             aContext.assertEquals(response.statusCode(), 200);
             // the confirmation JSON object should match the spec, let's verify that
             response.bodyHandler(body -> {
@@ -83,7 +88,7 @@ public class LoadImageHandlerTest {
         final Async async = aContext.async();
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
         // when given incomplete data
-        myVertx.createHttpClient().getNow(myPort, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), 200);
             async.complete();
         });
