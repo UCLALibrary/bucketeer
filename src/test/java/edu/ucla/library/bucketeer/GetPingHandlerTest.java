@@ -13,6 +13,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+@net.jcip.annotations.NotThreadSafe
 @RunWith(VertxUnitRunner.class)
 public class GetPingHandlerTest {
 
