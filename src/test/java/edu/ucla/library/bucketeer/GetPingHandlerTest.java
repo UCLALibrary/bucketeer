@@ -17,7 +17,6 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@net.jcip.annotations.NotThreadSafe
 @RunWith(VertxUnitRunner.class)
 public class GetPingHandlerTest {
 
@@ -64,6 +63,7 @@ public class GetPingHandlerTest {
     @SuppressWarnings("deprecation")
     public void testThatTheServerIsStarted(final TestContext aContext) {
         final Async async = aContext.async();
+        final int port = aContext.get(Config.HTTP_PORT);
 
         // Testing the 'ping' path defined in our OpenAPI YAML file
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/ping", response -> {

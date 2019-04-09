@@ -14,6 +14,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.converters.ConverterFactory;
 import edu.ucla.library.bucketeer.handlers.GetPingHandler;
+import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -64,6 +65,7 @@ public class MainVerticle extends AbstractVerticle {
 
                         // Next, we associate handlers with routes from our specification
                         routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
+                        routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                         server.requestHandler(routerFactory.getRouter()).listen(port);
 
                         // Deploy our verticles that convert and upload images to S3
