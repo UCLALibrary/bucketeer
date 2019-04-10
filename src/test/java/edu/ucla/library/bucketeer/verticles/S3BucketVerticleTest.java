@@ -88,6 +88,9 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
                     asyncTask.complete();
                 });
+            } else {
+                aContext.fail(config.cause());
+                asyncTask.complete();
             }
         });
     }

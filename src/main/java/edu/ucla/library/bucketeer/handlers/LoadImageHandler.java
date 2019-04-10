@@ -3,15 +3,14 @@ package edu.ucla.library.bucketeer.handlers;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.api.RequestParameter;
-import io.vertx.ext.web.api.RequestParameters;
 
 public class LoadImageHandler implements Handler<RoutingContext> {
 
@@ -20,17 +19,26 @@ public class LoadImageHandler implements Handler<RoutingContext> {
     @Override
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
+        final HttpServerRequest request = aContext.request();
 
-        final RequestParameters params = aContext.get("parsedParameters");
-        final RequestParameter imageId = params.queryParameter(Constants.IMAGE_ID);
-        final RequestParameter filePath = params.queryParameter(Constants.FILE_PATH);
+        final String imageId = request.getParam(Constants.IMAGE_ID);
+        final String filePath = request.getParam(Constants.FILE_PATH);
 
-        LOGGER.debug(MessageCodes.BUCKETEER_000, "imageID is null: " + (imageId == null));
+        if (StringUtils.isEmpty(imageId) || StringUtils.isEmpty(filePath)) {
+            response.setStatusCode(400);
+            response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(
+                    "400 Bad Request: imageId/filePath required");
+            response.close();
+        } else {
+            final JsonObject json = new JsonObject();
 
-        final JsonObject json = new JsonObject().put(Constants.IMAGE_ID, imageId);
-        json.put(Constants.FILE_PATH, filePath);
-        response.setStatusCode(200);
-        response.putHeader("content-type", "application/json").end(json.toBuffer());
+            json.put(Constants.IMAGE_ID, imageId);
+            json.put(Constants.FILE_PATH, filePath);
+
+            response.setStatusCode(200);
+            response.putHeader(Constants.CONTENT_TYPE, "application/json").end(json.toBuffer());
+            response.close();
+        }
     }
 
 }
