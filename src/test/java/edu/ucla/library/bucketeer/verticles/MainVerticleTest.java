@@ -1,12 +1,15 @@
 
-package edu.ucla.library.bucketeer;
+package edu.ucla.library.bucketeer.verticles;
+
+import java.io.IOException;
+import java.net.ServerSocket;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import edu.ucla.library.bucketeer.verticles.MainVerticle;
+import edu.ucla.library.bucketeer.Config;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -19,20 +22,20 @@ public class MainVerticleTest {
 
     private Vertx myVertx;
 
-    private int myPort;
-
     /**
      * Test set up.
      *
      * @param aContext A testing context
      */
     @Before
-    public void setUp(final TestContext aContext) {
+    public void setUp(final TestContext aContext) throws IOException {
         final DeploymentOptions options = new DeploymentOptions();
+        final ServerSocket socket = new ServerSocket(0);
+        final int port = socket.getLocalPort();
 
-        // Get a randomly selected open port and use that for our tests
-        myPort = Integer.valueOf(System.getProperty("vertx.test.port"));
-        options.setConfig(new JsonObject().put("http.port", myPort));
+        aContext.put(Config.HTTP_PORT, port);
+        options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
+        socket.close();
 
         // Initialize the Vert.x environment and start our main verticle
         myVertx = Vertx.vertx();
@@ -58,16 +61,21 @@ public class MainVerticleTest {
     @SuppressWarnings("deprecation")
     public void testThatTheServerIsStarted(final TestContext aContext) {
         final Async async = aContext.async();
+        final int port = aContext.get(Config.HTTP_PORT);
 
         // Testing the path defined in our OpenAPI YAML file
-        myVertx.createHttpClient().getNow(myPort, "0.0.0.0", "/ping", response -> {
-            aContext.assertEquals(response.statusCode(), 200);
+        myVertx.createHttpClient().getNow(port, "0.0.0.0", "/ping", response -> {
+            final int statusCode = response.statusCode();
 
-            // Right now, we just have it returning the word 'Hello'
-            response.bodyHandler(body -> {
-                aContext.assertEquals("Hello", body.getString(0, body.length()));
+            if (statusCode == 200) {
+                response.bodyHandler(body -> {
+                    aContext.assertEquals("Hello", body.getString(0, body.length()));
+                    async.complete();
+                });
+            } else {
+                aContext.fail("Failed status code: " + statusCode);
                 async.complete();
-            });
+            }
         });
     }
 
