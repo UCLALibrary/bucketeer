@@ -92,4 +92,22 @@ public class LoadImageHandlerTest {
         });
     }
 
+    /**
+     * Confirm that LoadImageHander fails if we do not provide an ID
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    @SuppressWarnings("deprecation")
+    public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
+        final Async async = aContext.async();
+        final int port = aContext.get(Config.HTTP_PORT);
+        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
+        // when given incomplete data
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
+            aContext.assertNotEquals(response.statusCode(), 200);
+            async.complete();
+        });
+    }
+
 }
