@@ -14,6 +14,7 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import io.vertx.core.DeploymentOptions;
@@ -78,7 +79,7 @@ public class LoadImageHandlerTest {
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/imageFile.tif", response -> {
             final int statusCode = response.statusCode();
 
-            if (response.statusCode() == 200) {
+            if (response.statusCode() == HTTP.OK) {
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
 
@@ -111,7 +112,7 @@ public class LoadImageHandlerTest {
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
         // incomplete data
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
-            aContext.assertNotEquals(response.statusCode(), 200);
+            aContext.assertNotEquals(response.statusCode(), HTTP.OK);
             async.complete();
         });
     }

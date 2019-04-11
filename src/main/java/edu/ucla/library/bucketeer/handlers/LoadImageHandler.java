@@ -6,6 +6,7 @@ import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.HTTP;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -25,7 +26,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final String filePath = request.getParam(Constants.FILE_PATH);
 
         if (StringUtils.isEmpty(imageId) || StringUtils.isEmpty(filePath)) {
-            response.setStatusCode(400);
+            response.setStatusCode(HTTP.BAD_REQUEST);
             response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(
                     "400 Bad Request: imageId/filePath required");
             response.close();
@@ -35,7 +36,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             json.put(Constants.IMAGE_ID, imageId);
             json.put(Constants.FILE_PATH, filePath);
 
-            response.setStatusCode(200);
+            response.setStatusCode(HTTP.OK);
             response.putHeader(Constants.CONTENT_TYPE, "application/json").end(json.toBuffer());
             response.close();
         }

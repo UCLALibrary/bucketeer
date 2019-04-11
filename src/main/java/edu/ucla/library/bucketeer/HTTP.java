@@ -15,6 +15,12 @@ public final class HTTP {
     /** Not found response */
     public static final int NOT_FOUND = 404;
 
+    /** Generic internal server error */
+    public static final int INTERNAL_SERVER_ERROR = 500;
+
+    /** Bad request */
+    public static final int BAD_REQUEST = 400;
+
     /**
      * A private constructor for the constants class.
      */
