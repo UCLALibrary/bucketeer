@@ -69,6 +69,8 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
+        LOGGER.debug("Entering '{}' method", Thread.currentThread().getStackTrace()[1].getMethodName());
+
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 
