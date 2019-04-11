@@ -32,5 +32,7 @@
   <entry key="BUCKETEER-018">Validation error: {}</entry>
   <entry key="BUCKETEER-019">Error: {}</entry>
   <entry key="BUCKETEER-020">400 Bad Request: imageId and filePath required</entry>
+  <entry key="BUCKETEER-021">Running test on port: {}</entry>
+  <entry key="BUCKETEER-022">Unexpected status code: {}</entry>
 
 </properties>

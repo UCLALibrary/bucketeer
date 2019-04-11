@@ -42,7 +42,7 @@ public class LoadImageHandlerTest {
         final ServerSocket socket = new ServerSocket(0);
         final int port = socket.getLocalPort();
 
-        LOGGER.debug("Running test on port: " + port);
+        LOGGER.debug(MessageCodes.BUCKETEER_021, port);
 
         aContext.put(Config.HTTP_PORT, port);
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
@@ -89,7 +89,7 @@ public class LoadImageHandlerTest {
                     async.complete();
                 });
             } else {
-                aContext.fail("Failed status code: " + statusCode);
+                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode));
                 async.complete();
             }
 
