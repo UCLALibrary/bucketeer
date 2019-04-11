@@ -14,6 +14,7 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -69,7 +70,8 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
-        LOGGER.debug(Constants.FORMAT_METHOD_NAME, Thread.currentThread().getStackTrace()[1].getMethodName());
+        LOGGER.debug(MessageCodes.BUCKETEER_017, Thread.currentThread().getStackTrace()[1].getMethodName());
+
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 
@@ -101,10 +103,13 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
-        LOGGER.debug(Constants.FORMAT_METHOD_NAME, Thread.currentThread().getStackTrace()[1].getMethodName());
+        LOGGER.debug(MessageCodes.BUCKETEER_017, Thread.currentThread().getStackTrace()[1].getMethodName());
+
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
-        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response
+
+        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
+        // incomplete data
         // when given incomplete data
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), 200);
