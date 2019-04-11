@@ -31,5 +31,6 @@
   <entry key="BUCKETEER-017">--> Entering '{}' method</entry>
   <entry key="BUCKETEER-018">Validation error: {}</entry>
   <entry key="BUCKETEER-019">Error: {}</entry>
+  <entry key="BUCKETEER-020">400 Bad Request: imageId and filePath required</entry>
 
 </properties>

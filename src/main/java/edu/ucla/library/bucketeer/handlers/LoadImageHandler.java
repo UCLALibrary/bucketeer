@@ -7,6 +7,7 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -26,18 +27,19 @@ public class LoadImageHandler implements Handler<RoutingContext> {
         final String filePath = request.getParam(Constants.FILE_PATH);
 
         if (StringUtils.isEmpty(imageId) || StringUtils.isEmpty(filePath)) {
+            final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_020);
+
             response.setStatusCode(HTTP.BAD_REQUEST);
-            response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(
-                    "400 Bad Request: imageId/filePath required");
+            response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(responseMessage);
             response.close();
         } else {
-            final JsonObject json = new JsonObject();
+            final JsonObject responseJson = new JsonObject();
 
-            json.put(Constants.IMAGE_ID, imageId);
-            json.put(Constants.FILE_PATH, filePath);
+            responseJson.put(Constants.IMAGE_ID, imageId);
+            responseJson.put(Constants.FILE_PATH, filePath);
 
             response.setStatusCode(HTTP.OK);
-            response.putHeader(Constants.CONTENT_TYPE, "application/json").end(json.toBuffer());
+            response.putHeader(Constants.CONTENT_TYPE, "application/json").end(responseJson.toBuffer());
             response.close();
         }
     }
