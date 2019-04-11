@@ -110,7 +110,6 @@ public class LoadImageHandlerTest {
 
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
         // incomplete data
-        // when given incomplete data
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), 200);
             async.complete();

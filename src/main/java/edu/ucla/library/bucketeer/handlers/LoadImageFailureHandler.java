@@ -6,6 +6,7 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -20,16 +21,18 @@ public class LoadImageFailureHandler implements Handler<RoutingContext> {
         final HttpServerResponse response = aContext.response();
         final Throwable failure = aContext.failure();
 
+        LOGGER.error(failure, failure.getMessage());
+
         if (failure instanceof ValidationException) {
-            response.setStatusCode(400).setStatusMessage("ValidationException thrown! " +
-                    ((ValidationException) failure).type().name()).end();
+            final String errorType = ((ValidationException) failure).type().name();
+            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_018, errorType);
+
+            response.setStatusCode(400).setStatusMessage(errorMessage).end();
             response.close();
         } else {
-            final String exceptionName = failure.getClass().getName();
+            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_019, failure.getClass().getName());
 
-            LOGGER.error(failure, failure.getMessage());
-
-            response.setStatusCode(500).setStatusMessage("Exception thrown! " + exceptionName).end();
+            response.setStatusCode(500).setStatusMessage(errorMessage).end();
             response.close();
         }
     }

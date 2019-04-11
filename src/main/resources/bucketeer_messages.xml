@@ -29,5 +29,7 @@
   <entry key="BUCKETEER-015">Failed to close Vert.x test instance</entry>
   <entry key="BUCKETEER-016">Unable to find kdu_compress installed on the system</entry>
   <entry key="BUCKETEER-017">--> Entering '{}' method</entry>
+  <entry key="BUCKETEER-018">Validation error: {}</entry>
+  <entry key="BUCKETEER-019">Error: {}</entry>
 
 </properties>
