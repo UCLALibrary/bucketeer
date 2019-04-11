@@ -27,6 +27,16 @@ public final class Constants {
     public static final String FILE_PATH = "filePath";
 
     /**
+     * The IP for an unspecified host.
+     */
+    public static final String UNSPECIFIED_HOST = "0.0.0.0";
+
+    /**
+     * The content-type setting for an HTTP response.
+     */
+    public static final String CONTENT_TYPE = "content-type";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {
