@@ -81,9 +81,10 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 vertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
                     if (!deployment.succeeded()) {
                         final Throwable details = deployment.cause();
+                        final String message = details.getMessage();
 
-                        LOGGER.error(details, details.getMessage());
-                        aContext.fail(details.getMessage());
+                        LOGGER.error(details, message);
+                        aContext.fail(message);
                     }
 
                     asyncTask.complete();
