@@ -69,8 +69,7 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
-        LOGGER.debug("Entering '{}' method", Thread.currentThread().getStackTrace()[1].getMethodName());
-
+        LOGGER.debug(Constants.FORMAT_METHOD_NAME, Thread.currentThread().getStackTrace()[1].getMethodName());
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 
@@ -102,6 +101,7 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
+        LOGGER.debug(Constants.FORMAT_METHOD_NAME, Thread.currentThread().getStackTrace()[1].getMethodName());
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response

@@ -37,6 +37,11 @@ public final class Constants {
     public static final String CONTENT_TYPE = "content-type";
 
     /**
+     * The string for outputting the method name for debug logging
+     */
+    public static final String FORMAT_METHOD_NAME = "--> Entering '{}' method";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {
