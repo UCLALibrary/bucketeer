@@ -263,7 +263,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Surefire runs the project's tests -->
+      <!-- Surefire runs the project's unit tests -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
@@ -278,6 +278,27 @@
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
+      </plugin>
+      <!-- Failsafe runs the project's integration tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.18.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <systemPropertyVariables>
+                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+                <vertx.test.port>${http.port}</vertx.test.port>
+                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- Jacoco does code coverage for the test suite -->
       <plugin>
@@ -448,6 +469,87 @@
           </execution>
         </executions>
       </plugin>
+      <!-- Build-helper-maven-plugin grabs a port for our integration tests -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
+        <executions>
+          <execution>
+            <id>reserve-network-port</id>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+            <phase>process-sources</phase>
+            <configuration>
+              <portNames>
+                <portName>http.port</portName>
+              </portNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- We use the maven-antrun-plugin to start the application before the integration tests
+and stop them afterward -->
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>start-vertx-app</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <systemPropertyVariables>
+                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+                <vertx.test.port>${http.port}</vertx.test.port>
+                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+              </systemPropertyVariables>
+              <target>
+                <!--
+                Launch the application as in 'production' using the fatjar.
+                We pass the generated configuration, configuring the http port to the picked one
+                ${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar
+                -->
+                <exec executable="${java.home}/bin/java"
+                      dir="${project.build.directory}/build-artifact"
+                      spawn="true">
+                  <arg value="-jar"/>
+                  <arg value="${project.artifactId}-${project.version}.jar"/>
+                  <arg value="-conf"/>
+                  <arg value="${project.build.directory}/test-classes/my-it-config.json"/>
+                </exec>
+              </target>
+              
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop-vertx-app</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <!--
+                Kill the started process.
+                Finding the right process is a bit tricky. Warning: requires Bash, Windows user, install Bash.
+                -->
+              <target>
+                <exec executable="bash"
+                      dir="${project.build.directory}"
+                      spawn="false">
+                  <arg value="-c"/>
+                  <arg value="ps ax | grep -Ei '[\-]DtestPort=${http.port}\s+\-jar\s+${project.artifactId}' | awk 'NR==1{print $1}' | xargs kill -SIGTERM"/>
+                </exec>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+      
     </plugins>
   </build>
 
