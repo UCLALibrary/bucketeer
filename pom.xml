@@ -48,13 +48,15 @@
   <properties>
     <vertx.version>3.6.3</vertx.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
-    <freelib.utils.version>0.8.10</freelib.utils.version>
+    <freelib.utils.version>0.8.9</freelib.utils.version>
+    <rest-assured.version>3.3.0</rest-assured.version>
+    <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
     <!-- Build plug-in versions -->
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
-    <vertx.super.s3.version>1.0.0</vertx.super.s3.version>
+    <vertx.pairtree.version>0.0.3</vertx.pairtree.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
 
     <!-- Name of the main Vert.x verticle -->
@@ -109,10 +111,11 @@
       <artifactId>aws-java-sdk-s3</artifactId>
       <version>${aws.sdk.version}</version>
     </dependency>
+    <!-- Just using this for the S3 client (probably should break out?) -->
     <dependency>
       <groupId>info.freelibrary</groupId>
-      <artifactId>vertx-super-s3</artifactId>
-      <version>${vertx.super.s3.version}</version>
+      <artifactId>vertx-pairtree</artifactId>
+      <version>${vertx.pairtree.version}</version>
     </dependency>
     <!-- Below dependencies only used for testing -->
     <dependency>
@@ -133,10 +136,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.jayway.restassured</groupId>
+      <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>2.4.0</version>
-      <scope>test</scope>
+      <version>${rest-assured.version}</version>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
@@ -285,7 +287,7 @@
           </excludes>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <vertx.test.port>${http.port}</vertx.test.port>
+            <http.port>${http.port}</http.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
@@ -295,20 +297,28 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>2.18.1</version>
+        <version>${maven.failsafe.plugin.version}</version>
+        <configuration>
+          <includes>
+            <include>**/*IT.java</include>
+            <include>**/*IntegrationTest.java</include>
+          </includes>
+          <excludes>
+            <exclude>**/*.xml</exclude>
+            <exclude>**/*.md</exclude>
+          </excludes>
+          <systemPropertyVariables>
+            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+            <vertx.test.port>${http.port}</vertx.test.port>
+            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+          </systemPropertyVariables>
+        </configuration>
         <executions>
           <execution>
             <goals>
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
-            <configuration>
-              <systemPropertyVariables>
-                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-                <vertx.test.port>${http.port}</vertx.test.port>
-                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
-              </systemPropertyVariables>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -481,67 +491,43 @@
           </execution>
         </executions>
       </plugin>
-      <!-- We use the maven-antrun-plugin to start the application before the integration tests
-and stop them afterward -->
+      <!-- We use the maven-exec-plugin to start the bucketeer jar before the 
+           integration tests and stop the jar afterward -->
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>start-vertx-app</id>
+            <id>start-bucketeer</id>
             <phase>pre-integration-test</phase>
             <goals>
-              <goal>run</goal>
+              <goal>exec</goal>
             </goals>
             <configuration>
-              <systemPropertyVariables>
-                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-                <vertx.test.port>${http.port}</vertx.test.port>
-                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
-              </systemPropertyVariables>
-              <target>
-                <!--
-                Launch the application as in 'production' using the fatjar.
-                We pass the generated configuration, configuring the http port to the picked one
-                ${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar
-                -->
-                <exec executable="${java.home}/bin/java"
-                      dir="${project.build.directory}/build-artifact"
-                      spawn="true">
-                  <arg value="-jar"/>
-                  <arg value="${project.artifactId}-${project.version}.jar"/>
-                  <arg value="-conf"/>
-                  <arg value="${project.build.directory}/test-classes/my-it-config.json"/>
-                </exec>
-              </target>
-              
+              <executable>${project.basedir}/src/test/scripts/pre-it-startup.sh</executable>
+              <workingDirectory>${project.basedir}/target</workingDirectory>
+              <arguments>
+                <argument>java</argument>
+                <!-- http.port is set in the parent project from freelibrary, according to @ksclarke -->
+                <argument>-Dhttp.port=${http.port}</argument>
+                <argument>-jar</argument>
+                <argument>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</argument>
+              </arguments>
             </configuration>
           </execution>
           <execution>
-            <id>stop-vertx-app</id>
+            <id>stop-bucketeer</id>
             <phase>post-integration-test</phase>
             <goals>
-              <goal>run</goal>
+              <goal>exec</goal>
             </goals>
             <configuration>
-              <!--
-                Kill the started process.
-                Finding the right process is a bit tricky. Warning: requires Bash, Windows user, install Bash.
-                -->
-              <target>
-                <exec executable="bash"
-                      dir="${project.build.directory}"
-                      spawn="false">
-                  <arg value="-c"/>
-                  <arg value="ps ax | grep -Ei '[\-]DtestPort=${http.port}\s+\-jar\s+${project.artifactId}' | awk 'NR==1{print $1}' | xargs kill -SIGTERM"/>
-                </exec>
-              </target>
+              <executable>${project.basedir}/src/test/scripts/post-it-shutdown.sh</executable>
+              <workingDirectory>${project.basedir}/target</workingDirectory>
             </configuration>
           </execution>
         </executions>
       </plugin>
-      
-      
     </plugins>
   </build>
 
