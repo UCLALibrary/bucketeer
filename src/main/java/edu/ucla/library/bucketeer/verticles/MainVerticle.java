@@ -62,7 +62,7 @@ public class MainVerticle extends AbstractVerticle {
                 OpenAPI3RouterFactory.create(vertx, apiSpec, creation -> {
                     if (creation.succeeded()) {
                         final OpenAPI3RouterFactory routerFactory = creation.result();
-                        final int port = config().getInteger(Config.HTTP_PORT, DEFAULT_PORT);
+                        final int port = config.getInteger(Config.HTTP_PORT, DEFAULT_PORT);
 
                         // Next, we associate handlers with routes from our specification
                         routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
