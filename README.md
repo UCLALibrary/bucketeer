@@ -12,7 +12,7 @@ This will put the executable Jar in the `target/build-artifact` directory.
 
 The application, in its simplest form, can be run with the following command:
 
-    java -jar target/build-artifact/jp2-bucketeer-*.jar
+    java -Dvertx-config-path=target/test-classes/test-config.properties -jar target/build-artifact/jp2-bucketeer-*.jar
 
 To generate the site's documentation, run:
 

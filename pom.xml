@@ -302,6 +302,7 @@
         <configuration>
           <verticle>${main.verticle}</verticle>
           <redeploy>true</redeploy>
+          <runArgs>-Dvertx-config-path=target/test-classes/test-config.properties</runArgs>
         </configuration>
       </plugin>
       <!-- The shade plug-in generates an all-in-one executable Jar file -->
