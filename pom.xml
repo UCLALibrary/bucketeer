@@ -287,7 +287,7 @@
           </excludes>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <http.port>${http.port}</http.port>
+            <vertx.test.port>${http.port}</vertx.test.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
@@ -309,7 +309,7 @@
           </excludes>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <vertx.test.port>${http.port}</vertx.test.port>
+            <http.port>${http.port}</http.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
           </systemPropertyVariables>
         </configuration>
@@ -508,6 +508,7 @@
               <workingDirectory>${project.basedir}/target</workingDirectory>
               <arguments>
                 <argument>java</argument>
+                <argument>-Dvertx-config-path=${project.build.directory}/test-classes/test-config.properties</argument>
                 <!-- http.port is set in the parent project from freelibrary, according to @ksclarke -->
                 <argument>-Dhttp.port=${http.port}</argument>
                 <argument>-jar</argument>
