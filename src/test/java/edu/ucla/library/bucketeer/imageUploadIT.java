@@ -13,6 +13,11 @@ import info.freelibrary.util.LoggerFactory;
 
 /**
  * This test confirms that our entire imageUpload process works as expected.
+ * From the ticket that requested this integration test (IIIF-166):
+ * This should confirm that a request at the front end of the service goes
+ * through the router, to the converter, and ends up in the S3 upload (with the
+ * item being requested being uploaded (assuming it exists on our file system)).
+ * We won't test callback at this point in time. That's for a later ticket.
  */
 public class imageUploadIT {
     private static final Logger LOGGER = LoggerFactory.getLogger(imageUploadIT.class, Constants.MESSAGES);
