@@ -45,7 +45,7 @@ public class imageUploadIT {
         get("/12345/imageFile.tif").then()
             .assertThat()
             .statusCode(200)
-            .body("imageID", equalTo("123456"))
+            .body("imageId", equalTo("12345"))
             .body("filePath", equalTo("imageFile.tif"));
     }
 }
