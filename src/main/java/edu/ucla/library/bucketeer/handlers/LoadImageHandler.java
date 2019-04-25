@@ -33,8 +33,8 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(responseMessage);
             response.close();
         } else {
-          // TODO: OK, we have a complete imageLoad request... let's do something with it
-          // we do this by passing a message to the ImageWorker Verticle
+          // OK, we have a complete imageLoad request... let's do something with it.
+          // We do this by passing a message to the ImageWorker Verticle
           // the message ImageWorker expects is a json object, with the following
           // parameters: filePath, imageId
 
@@ -46,7 +46,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
               sendMessage(imageWorkJson, ImageWorkerVerticle.class.getName());
           } catch (final Exception details) {
             //TODO fix the message code here
-              LOGGER.error(details, MessageCodes.BUCKETEER_006, details.getMessage());
+              LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
           }
 
 

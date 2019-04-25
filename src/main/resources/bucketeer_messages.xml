@@ -34,5 +34,6 @@
   <entry key="BUCKETEER-020">400 Bad Request: imageId and filePath required</entry>
   <entry key="BUCKETEER-021">Running test on port: {}</entry>
   <entry key="BUCKETEER-022">Unexpected status code: {}</entry>
+  <entry key="BUCKETEER-023">Image worker failed: {}</entry>
 
 </properties>
