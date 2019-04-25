@@ -33,6 +33,23 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(responseMessage);
             response.close();
         } else {
+          // TODO: OK, we have a complete imageLoad request... let's do something with it
+          // we do this by passing a message to the ImageWorker Verticle
+          // the message ImageWorker expects is a json object, with the following
+          // parameters: filePath, imageId
+
+          try {
+              final JsonObject imageWorkJson = new JsonObject();
+              imageWorkJson.put(Constants.IMAGE_ID, imageId);
+              imageWorkJson.put(Constants.FILE_PATH, filePath);
+              // FIXME: Sending request and not waiting for response; let's get response and check for fail
+              sendMessage(imageWorkJson, ImageWorkerVerticle.class.getName());
+          } catch (final Exception details) {
+            //TODO fix the message code here
+              LOGGER.error(details, MessageCodes.BUCKETEER_006, details.getMessage());
+          }
+
+
             final JsonObject responseJson = new JsonObject();
 
             responseJson.put(Constants.IMAGE_ID, imageId);
