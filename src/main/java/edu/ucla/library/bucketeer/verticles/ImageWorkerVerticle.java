@@ -34,7 +34,7 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
         getJsonConsumer().handler(aMessage -> {
             final JsonObject json = aMessage.body();
             final File tiffFile = new File(json.getString(Constants.FILE_PATH));
-            final String imageID = json.getString(Constants.FILE_PATH);
+            final String imageID = json.getString(Constants.IMAGE_ID);
             final Converter converter = ConverterFactory.getConverter();
 
             try {
