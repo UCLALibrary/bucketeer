@@ -2,6 +2,11 @@ package edu.ucla.library.bucketeer;
 
 import static org.hamcrest.Matchers.equalTo;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.UUID;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -22,6 +27,9 @@ import info.freelibrary.util.LoggerFactory;
 public class imageUploadIT {
     private static final Logger LOGGER = LoggerFactory.getLogger(imageUploadIT.class, Constants.MESSAGES);
     private static final Integer PORT = Integer.parseInt(System.getProperty("http.port"));
+    private File myTIFF;
+    private String myUUID;
+    private String myImageLoadRequest;
     /**
      * Use RestAssured to connect to our service
      */
@@ -42,15 +50,29 @@ public class imageUploadIT {
 
     /**
      * check that we can load an image
+     * @throws UnsupportedEncodingException 
      */
     @Test
-    public final void checkThatWeCanLoadAnImage() {
-        // attempt to load a testImage.tif file
-        // TODO: get the system path to our test image
-        get("/12345/imageFile.tif").then()
+    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException {
+        
+        // let's use our test.if file
+        myTIFF = new File("src/test/resources/images/test.tif");
+        // and we'll pick a random ID for it
+        myUUID = UUID.randomUUID().toString();
+        
+        myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
+        LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
+
+        // now attempt to load it and verify the response is OK
+        get(myImageLoadRequest).then()
             .assertThat()
             .statusCode(200)
-            .body("imageId", equalTo("12345"))
-            .body("filePath", equalTo("imageFile.tif"));
+            .body("imageId", equalTo(myUUID))
+            .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8")));
+        
+        // we should probably wait a bit for things to happen
+
+        // then we should check the S3 bucket to which we are sending JP2s
+        
     }
 }

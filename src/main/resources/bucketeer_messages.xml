@@ -45,5 +45,6 @@
   <entry key="BUCKETEER-031">Failed to deploy main verticle for testing</entry>
   <entry key="BUCKETEER-032">No known converter</entry>
   <entry key="BUCKETEER-033">Using test image for kakadu conversion: {}</entry>
+  <entry key="BUCKETEER-034">Image Load Request: {}</entry>
 
 </properties>
