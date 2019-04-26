@@ -15,7 +15,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.core.eventbus.Message;
 
 public class LoadImageHandler implements Handler<RoutingContext> {
 
@@ -43,28 +42,30 @@ public class LoadImageHandler implements Handler<RoutingContext> {
           // the message ImageWorker expects is a json object, with the following
           // parameters: filePath, imageId
 
-          try {
-              final JsonObject imageWorkJson = new JsonObject();
-              imageWorkJson.put(Constants.IMAGE_ID, imageId);
-              imageWorkJson.put(Constants.FILE_PATH, filePath);
-              final DeliveryOptions options = new DeliveryOptions();
-              //FIXME: this should be in a utility method somewhere
-              // send a message to the imageworker verticle that we have work for it to do
-              eventBus.send(IMAGEWORKERVERTICLENAME, imageWorkJson, options, workerResponse -> {
-                  if (workerResponse.failed()) {
-                      if (workerResponse.cause() != null) {
-                          LOGGER.error(workerResponse.cause(), MessageCodes.BUCKETEER_005, IMAGEWORKERVERTICLENAME, imageWorkJson);
-                      } else {
-                          LOGGER.error(MessageCodes.BUCKETEER_005, IMAGEWORKERVERTICLENAME, imageWorkJson);
-                      }
-                  }
-              });
+            try {
+                final JsonObject imageWorkJson = new JsonObject();
+                imageWorkJson.put(Constants.IMAGE_ID, imageId);
+                imageWorkJson.put(Constants.FILE_PATH, filePath);
+                final DeliveryOptions options = new DeliveryOptions();
+                //FIXME: this should be in a utility method somewhere
+                // send a message to the imageworker verticle that we have work for it to do
+                eventBus.send(IMAGEWORKERVERTICLENAME, imageWorkJson, options, workerResponse -> {
+                    if (workerResponse.failed()) {
+                        if (workerResponse.cause() != null) {
+                            LOGGER.error(workerResponse.cause(), MessageCodes.BUCKETEER_005,
+                                    IMAGEWORKERVERTICLENAME, imageWorkJson);
+                        } else {
+                            LOGGER.error(MessageCodes.BUCKETEER_005, IMAGEWORKERVERTICLENAME,
+                                    imageWorkJson);
+                        }
+                    }
+                });
 
 
 
-          } catch (final Exception details) {
-              LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
-          }
+            } catch (final Exception details) {
+                LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
+            }
 
 
             final JsonObject responseJson = new JsonObject();
