@@ -8,6 +8,7 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -19,7 +20,7 @@ import io.vertx.ext.web.RoutingContext;
 public class LoadImageHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadImageHandler.class, Constants.MESSAGES);
-    private static final String IMAGEWORKERVERTICLENAME = "edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle";
+    private static final String IMAGEWORKERVERTICLENAME = ImageWorkerVerticle.class.getName();
 
     @Override
     public void handle(final RoutingContext aContext) {
