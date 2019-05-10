@@ -1,6 +1,7 @@
 package edu.ucla.library.bucketeer;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -71,13 +72,14 @@ public class imageUploadIT {
     public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException {
         
         final Vertx vertx;
+        vertx = Vertx.vertx();
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
-        
-        
         
         configRetriever.getConfig(config -> {
             if (config.succeeded()) {
+                LOGGER.debug("config succeeded");
                 final JsonObject jsonConfig = config.result();
+                LOGGER.debug(jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET));
                 myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
 
                 // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
@@ -87,7 +89,7 @@ public class imageUploadIT {
                 }
             }
         
-        // let's use our test.if file
+        // let's use our test.tif file
         myTIFF = new File("src/test/resources/images/test.tif");
         // and we'll pick a random ID for it
         myUUID = UUID.randomUUID().toString();
@@ -95,18 +97,37 @@ public class imageUploadIT {
         myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
         LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
-        // now attempt to load it and verify the response is OK
-        get(myImageLoadRequest).then()
-            .assertThat()
-            .statusCode(200)
-            .body("imageId", equalTo(myUUID))
-            .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8")));
-        
-        // we should probably wait a bit for things to happen
+        });
 
-        // then we should check the S3 bucket to which we are sending JP2s
-        
-        assertTrue(amazonS3.doesObjectExist(bucketName, defaultTestFileName ));
+
+        if (isExecutable) {
+            
+            // let's use our test.tif file
+            myTIFF = new File("src/test/resources/images/test.tif");
+            final String defaultTestFileName = myTIFF.getName();
+            LOGGER.debug("defaultTestFileName:");
+            LOGGER.debug(defaultTestFileName);
+            // and we'll pick a random ID for it
+            myUUID = UUID.randomUUID().toString();
+            
+            myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
+            LOGGER.debug(MessageCodes.BUCKETEER_024, myImageLoadRequest);
+    
+            // now attempt to load it and verify the response is OK
+            get(myImageLoadRequest).then()
+                .assertThat()
+                .statusCode(200)
+                .body("imageId", equalTo(myUUID))
+                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8")));
+            
+            // we should probably wait a bit for things to happen
+    
+            // then we should check the S3 bucket to which we are sending JP2s
+            
+            assertTrue(amazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
+        } else {
+            LOGGER.debug("configuration not found, skipping integration test");
+        }
         
     }
 }
