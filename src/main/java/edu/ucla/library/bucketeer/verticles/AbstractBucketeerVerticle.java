@@ -17,13 +17,14 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
         final Logger logger = getLogger();
 
         if (logger.isDebugEnabled()) {
-            logger.debug(MessageCodes.BUCKETEER_013, getClass().getName(), deploymentID());
+            logger.debug(MessageCodes.BUCKETEER_028, getClass().getName(), deploymentID());
         }
 
         aFuture.complete();
     }
 
     protected MessageConsumer<JsonObject> getJsonConsumer() {
+        getLogger().debug(MessageCodes.BUCKETEER_025, getClass().getName());
         return vertx.eventBus().consumer(getClass().getName());
     }
 

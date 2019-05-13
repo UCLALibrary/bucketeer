@@ -46,7 +46,7 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     @Override
     public File convert(final String aID, final File aTIFF, final Conversion aConversion) throws IOException,
             InterruptedException {
-        final File jp2 = new File(TMP_DIR, URLEncoder.encode(aID, StandardCharsets.UTF_8.toString()));
+        final File jp2 = new File(TMP_DIR, URLEncoder.encode(aID, StandardCharsets.UTF_8.toString()) + ".jpx");
         final List<String> command = new ArrayList<String>();
         final String conversion = aConversion.name();
 
@@ -59,10 +59,21 @@ public class KakaduConverter extends AbstractConverter implements Converter {
             command.addAll(LOSSY_OPTION);
         }
 
-        // Run the TIFF -> JP2 conversion
-        run(new ProcessBuilder(command), aID, LOGGER);
+        // Check to see if we're running a test on a system without Kakadu (e.g. Travis)
+        if (ConverterFactory.hasSystemKakadu()) {
+            run(new ProcessBuilder(command), aID, LOGGER);
+        } else {
+            final File testJp2 = new File("src/test/resources/images", jp2.getName());
 
-        // If conversion was successful, return the resulting JP2 file
+            // If test image exists, use the test image, but warn that we're doing that
+            if (testJp2.exists()) {
+                LOGGER.warn(MessageCodes.BUCKETEER_033, testJp2);
+                return testJp2;
+            } else {
+                run(new ProcessBuilder(command), aID, LOGGER);
+            }
+        }
+
         return jp2;
     }
 

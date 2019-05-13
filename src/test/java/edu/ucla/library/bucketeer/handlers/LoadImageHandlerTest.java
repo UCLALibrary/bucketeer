@@ -75,24 +75,44 @@ public class LoadImageHandlerTest {
 
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
+        final String encodedImagePath = "/test/src%2Ftest%2Fresources%2Fimages%2Ftest.tif";
 
-        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/imageFile.tif", response -> {
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, encodedImagePath, response -> {
             final int statusCode = response.statusCode();
 
             if (response.statusCode() == HTTP.OK) {
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
+                    final String id = "test";
 
-                    aContext.assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), "12345");
-                    aContext.assertEquals(jsonConfirm.getString(Constants.FILE_PATH), "imageFile.tif");
+                    aContext.assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), id);
+                    aContext.assertEquals(jsonConfirm.getString(Constants.FILE_PATH),
+                            "src/test/resources/images/test.tif");
 
-                    async.complete();
+                    jsonConfirm.put(Constants.WAIT_COUNT, 0);
+
+                    // Check every 5 seconds to see if our process is done
+                    myVertx.setPeriodic(5000, timer -> {
+                        if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id + ".jpx") != null) {
+                            async.complete();
+                        } else {
+                            int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
+
+                            // Keep trying for a minute
+                            if (counter++ >= 12) {
+                                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_027));
+                                async.complete();
+                            } else {
+                                LOGGER.debug(MessageCodes.BUCKETEER_029);
+                                jsonConfirm.put(Constants.WAIT_COUNT, counter);
+                            }
+                        }
+                    });
                 });
             } else {
                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode));
                 async.complete();
             }
-
         });
     }
 

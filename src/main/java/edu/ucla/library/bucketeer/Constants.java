@@ -37,6 +37,16 @@ public final class Constants {
     public static final String CONTENT_TYPE = "content-type";
 
     /**
+     * The record of completed S3 uploads.
+     */
+    public static final String RESULTS_MAP = "s3-uploads";
+
+    /**
+     * A name for wait counters.
+     */
+    public static final String WAIT_COUNT = "wait-count";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {

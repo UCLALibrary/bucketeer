@@ -19,7 +19,6 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Op;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -40,14 +39,10 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
 
-    private static final String DEFAULT_S3_BUCKET = "cantaloupe-jp2k";
-
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
     private String myImageKey;
-
-    private String myS3Bucket;
 
     /** We can't, as of yet, execute these tests without a non-default S3 configuration */
     private boolean isExecutable;
@@ -70,7 +65,6 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 final JsonObject jsonConfig = config.result();
 
                 myImageKey = UUID.randomUUID().toString() + ".jp2";
-                myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
 
                 // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
                 if (jsonConfig.containsKey(Config.S3_ACCESS_KEY) && !jsonConfig.getString(Config.S3_ACCESS_KEY,
@@ -79,7 +73,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 }
 
                 vertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
-                    if (!deployment.succeeded()) {
+                    if (deployment.failed()) {
                         final Throwable details = deployment.cause();
                         final String message = details.getMessage();
 
@@ -142,17 +136,14 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
         message.put(Constants.FILE_PATH, JP2_PATH);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
-            if (send.succeeded()) {
-                final String response = send.result().body().toString();
-
-                if (!response.equals(Op.SUCCESS)) {
-                    aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_011));
-                }
-            } else {
+            if (send.failed()) {
                 final Throwable details = send.cause();
 
-                LOGGER.error(details, details.getMessage());
-                aContext.fail(details.getMessage());
+                if (details != null) {
+                    LOGGER.error(details, details.getMessage());
+                }
+
+                aContext.fail();
             }
 
             asyncTask.complete();

@@ -5,9 +5,11 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
 import java.io.IOException;
 
+import info.freelibrary.util.I18nRuntimeException;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
 /**
@@ -17,6 +19,8 @@ import edu.ucla.library.bucketeer.MessageCodes;
 public final class ConverterFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConverterFactory.class, MESSAGES);
+
+    private static final String KDU_VERSION_EXEC = "kdu_compress -v";
 
     private static Converter myConverter;
 
@@ -37,6 +41,23 @@ public final class ConverterFactory {
             } else {
                 myConverter = new OpenJPEGConverter();
             }
+        }
+
+        return myConverter;
+    }
+
+    /**
+     * Gets the converter that's found on the system.
+     *
+     * @return The TIFF to JP2 converter
+     */
+    public static Converter getConverter(final Class<?> aClass) {
+        if (aClass.getName().equals(KakaduConverter.class.getName())) {
+            myConverter = new KakaduConverter();
+        } else if (aClass.getName().equals(OpenJPEGConverter.class.getName())) {
+            myConverter = new OpenJPEGConverter();
+        } else {
+            throw new I18nRuntimeException(Constants.MESSAGES, MessageCodes.BUCKETEER_032);
         }
 
         return myConverter;
@@ -67,7 +88,7 @@ public final class ConverterFactory {
     public static void checkSystemKakadu() throws IOException, InterruptedException {
         if (!hasKakadu) {
             try {
-                if (Runtime.getRuntime().exec("kdu_compress -v").waitFor() == 0) {
+                if (Runtime.getRuntime().exec(KDU_VERSION_EXEC).waitFor() == 0) {
                     hasKakadu = true;
                 }
             } catch (final IOException details) {

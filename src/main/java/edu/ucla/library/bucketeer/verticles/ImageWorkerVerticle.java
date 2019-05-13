@@ -16,6 +16,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.converters.Conversion;
 import edu.ucla.library.bucketeer.converters.Converter;
 import edu.ucla.library.bucketeer.converters.ConverterFactory;
+import edu.ucla.library.bucketeer.converters.KakaduConverter;
 import io.vertx.core.json.JsonObject;
 
 public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
@@ -35,16 +36,23 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
             final JsonObject json = aMessage.body();
             final File tiffFile = new File(json.getString(Constants.FILE_PATH));
             final String imageID = json.getString(Constants.IMAGE_ID);
-            final Converter converter = ConverterFactory.getConverter();
+            final Converter converter = ConverterFactory.getConverter(KakaduConverter.class);
+
+            LOGGER.debug(MessageCodes.BUCKETEER_024, imageID, json.getString(Constants.FILE_PATH));
 
             try {
                 final File jp2 = converter.convert(imageID, tiffFile, Conversion.LOSSLESS);
-                final JsonObject message = new JsonObject().put(Constants.FILE_PATH, jp2.getAbsolutePath());
+                final JsonObject message = new JsonObject();
 
-                // FIXME: Sending request and not waiting for response; let's get response and check for fail
+                message.put(Constants.FILE_PATH, jp2.getAbsolutePath());
+                message.put(Constants.IMAGE_ID, jp2.getName());
+
                 sendMessage(message, S3BucketVerticle.class.getName());
             } catch (final Exception details) {
-                LOGGER.error(details, MessageCodes.BUCKETEER_006, details.getMessage());
+                final String message = details.getMessage() != null ? details.getMessage() : LOGGER.getMessage(
+                        MessageCodes.BUCKETEER_030);
+
+                LOGGER.error(details, MessageCodes.BUCKETEER_006, message);
 
                 // Reply to Samvera callback
             }
