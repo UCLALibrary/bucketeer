@@ -22,6 +22,8 @@ import static io.restassured.RestAssured.get;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -75,11 +77,11 @@ public class imageUploadIT {
 
     /**
      * check that we can load an image
-     * @throws UnsupportedEncodingException 
+     * @throws UnsupportedEncodingException, SdkClientException, AmazonServiceException 
      */
     @SuppressWarnings("deprecation")
     @Test
-    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException {
+    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException, SdkClientException, AmazonServiceException {
         
         final Vertx vertx;
         vertx = Vertx.vertx();
@@ -117,8 +119,7 @@ public class imageUploadIT {
             // let's use our test.tif file
             myTIFF = new File("src/test/resources/images/test.tif");
             final String defaultTestFileName = myTIFF.getName();
-            LOGGER.debug("defaultTestFileName:");
-            LOGGER.debug(defaultTestFileName);
+            LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
             // and we'll pick a random ID for it
             myUUID = UUID.randomUUID().toString();
             
@@ -141,7 +142,7 @@ public class imageUploadIT {
             amazonS3 = new AmazonS3Client(myAWSCredentials);
     
             // then we should check the S3 bucket to which we are sending JP2s
-            assertTrue(amazonS3.doesBucketExist(myS3Bucket));
+            assertTrue(amazonS3.doesBucketExistV2(myS3Bucket));
             assertTrue(amazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
