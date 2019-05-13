@@ -1,6 +1,7 @@
 package edu.ucla.library.bucketeer;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -21,7 +22,10 @@ import static io.restassured.RestAssured.get;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
@@ -40,8 +44,13 @@ public class imageUploadIT {
     private String myImageLoadRequest;
     private AmazonS3 amazonS3;
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
+    private static final String DEFAULT_SECRET_KEY = "YOUR_SECRET_KEY";
     private static final String DEFAULT_S3_BUCKET = "cantaloupe-jp2k";
     private String myS3Bucket;
+    private String myS3AccessKey;
+    private String myS3SecretKey;
+    private AWSCredentials myAWSCredentials;
+
     
     /** We can't, as of yet, execute these tests without a non-default S3 configuration */
     private boolean isExecutable;
@@ -68,6 +77,7 @@ public class imageUploadIT {
      * check that we can load an image
      * @throws UnsupportedEncodingException 
      */
+    @SuppressWarnings("deprecation")
     @Test
     public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException {
         
@@ -81,6 +91,8 @@ public class imageUploadIT {
                 final JsonObject jsonConfig = config.result();
                 LOGGER.debug(jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET));
                 myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
+                myS3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY, DEFAULT_ACCESS_KEY);
+                myS3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY, DEFAULT_SECRET_KEY);
 
                 // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
                 if (jsonConfig.containsKey(Config.S3_ACCESS_KEY) && !jsonConfig.getString(Config.S3_ACCESS_KEY,
@@ -121,9 +133,15 @@ public class imageUploadIT {
                 .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8")));
             
             // we should probably wait a bit for things to happen
+            
+            // get myAWSCredentials ready
+            myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
+            
+            // instantiate the amazonS3 client
+            amazonS3 = new AmazonS3Client(myAWSCredentials);
     
             // then we should check the S3 bucket to which we are sending JP2s
-            
+            assertTrue(amazonS3.doesBucketExist(myS3Bucket));
             assertTrue(amazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
