@@ -35,5 +35,15 @@
   <entry key="BUCKETEER-021">Running test on port: {}</entry>
   <entry key="BUCKETEER-022">Unexpected status code: {}</entry>
   <entry key="BUCKETEER-023">Image worker failed: {}</entry>
+  <entry key="BUCKETEER-024">Image worker received image request: {} [{}]</entry>
+  <entry key="BUCKETEER-025">Getting message consumer for: {}</entry>
+  <entry key="BUCKETEER-026">Image file '{}' successfully uploaded to S3</entry>
+  <entry key="BUCKETEER-027">Gave up without receiving a successful result</entry>
+  <entry key="BUCKETEER-028">Deconstructing verticle: {} [{}]</entry>
+  <entry key="BUCKETEER-029">Waiting for test results...</entry>
+  <entry key="BUCKETEER-030">Unknown reason</entry>
+  <entry key="BUCKETEER-031">Failed to deploy main verticle for testing</entry>
+  <entry key="BUCKETEER-032">No known converter</entry>
+  <entry key="BUCKETEER-033">Using test image for kakadu conversion: {}</entry>
 
 </properties>

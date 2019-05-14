@@ -51,19 +51,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
                 imageWorkJson.put(Constants.IMAGE_ID, imageId);
                 imageWorkJson.put(Constants.FILE_PATH, filePath);
 
-                // FIXME: this should be in a utility method somewhere
-                // send a message to the image worker verticle that we have work for it to do
-                eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options, workerResponse -> {
-                    if (workerResponse.failed()) {
-                        if (workerResponse.cause() != null) {
-                            LOGGER.error(workerResponse.cause(), MessageCodes.BUCKETEER_005, IMAGE_WORKER_VERTICLE,
-                                    imageWorkJson);
-                        } else {
-                            LOGGER.error(MessageCodes.BUCKETEER_005, IMAGE_WORKER_VERTICLE, imageWorkJson);
-                        }
-                    }
-                });
-
+                eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
             } catch (final Exception details) {
                 LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
             }

@@ -12,7 +12,6 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.converters.ConverterFactory;
 import edu.ucla.library.bucketeer.handlers.GetPingHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageFailureHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
@@ -46,9 +45,6 @@ public class MainVerticle extends AbstractVerticle {
     public void start(final Future<Void> aFuture) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
         final HttpServer server = vertx.createHttpServer();
-
-        // Cheat for now and assume we have Kakadu installed
-        ConverterFactory.hasSystemKakadu(true);
 
         // We pull our application's configuration before configuring the server
         configRetriever.getConfig(configuration -> {

@@ -9,9 +9,9 @@ import javax.naming.ConfigurationException;
 
 import com.amazonaws.regions.RegionUtils;
 
-import info.freelibrary.pairtree.s3.S3Client;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.vertx.s3.S3Client;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
@@ -68,20 +68,18 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
             vertx.fileSystem().open(jp2Path, new OpenOptions().setRead(true), open -> {
                 if (open.succeeded()) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Image file opened: {}", imageID);
-                    }
-
                     myS3Client.put(s3Bucket, imageID, open.result(), response -> {
                         final int statusCode = response.statusCode();
 
+                        // If we get a successful upload response code, note this in our results map
                         if (statusCode == HTTP.OK) {
+                            vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageID, true);
+                            LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
                             message.reply(Op.SUCCESS);
                         } else {
                             LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
                             message.reply(Op.FAILURE);
                         }
-
                     });
                 }
             });

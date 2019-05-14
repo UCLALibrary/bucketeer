@@ -98,7 +98,7 @@ public class KakaduConverterTest {
 
         if (ConverterFactory.hasSystemKakadu()) {
             final KakaduConverter converter = (KakaduConverter) ConverterFactory.getConverter();
-            final File jp2 = new File(TMP_DIR, myUUID);
+            final File jp2 = new File(TMP_DIR, myUUID + ".jpx");
 
             try {
                 converter.convert(myUUID, myTIFF, Conversion.LOSSLESS);
