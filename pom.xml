@@ -111,7 +111,6 @@
       <artifactId>aws-java-sdk-s3</artifactId>
       <version>${aws.sdk.version}</version>
     </dependency>
-    <!-- Just using this for the S3 client (probably should break out?) -->
     <dependency>
       <groupId>info.freelibrary</groupId>
       <artifactId>vertx-super-s3</artifactId>
