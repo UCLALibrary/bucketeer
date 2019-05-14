@@ -48,7 +48,7 @@
   <properties>
     <vertx.version>3.6.3</vertx.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
-    <freelib.utils.version>0.8.9</freelib.utils.version>
+    <freelib.utils.version>0.8.10</freelib.utils.version>
     <rest-assured.version>3.3.0</rest-assured.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
@@ -56,7 +56,7 @@
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
-    <vertx.pairtree.version>0.0.3</vertx.pairtree.version>
+    <vertx.super.s3.version>1.0.0</vertx.super.s3.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
 
     <!-- Name of the main Vert.x verticle -->
@@ -114,8 +114,8 @@
     <!-- Just using this for the S3 client (probably should break out?) -->
     <dependency>
       <groupId>info.freelibrary</groupId>
-      <artifactId>vertx-pairtree</artifactId>
-      <version>${vertx.pairtree.version}</version>
+      <artifactId>vertx-super-s3</artifactId>
+      <version>${vertx.super.s3.version}</version>
     </dependency>
     <!-- Below dependencies only used for testing -->
     <dependency>

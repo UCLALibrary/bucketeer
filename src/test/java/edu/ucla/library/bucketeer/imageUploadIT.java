@@ -28,7 +28,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ObjectMetadata;
 
 /**
  * This test confirms that our entire imageUpload process works as expected.
@@ -108,7 +107,11 @@ public class imageUploadIT {
         // and we'll pick a random ID for it
         myUUID = UUID.randomUUID().toString();
         
-        myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
+        try {
+            myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
+        } catch (UnsupportedEncodingException details) {
+            LOGGER.error(details.getMessage(), details);
+        }
         LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
         });
