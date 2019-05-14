@@ -127,7 +127,7 @@ public class imageUploadIT {
             myUUID = UUID.randomUUID().toString();
             
             myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
-            LOGGER.debug(MessageCodes.BUCKETEER_024, myImageLoadRequest);
+            LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
     
             // now attempt to load it and verify the response is OK
             get(myImageLoadRequest).then()
