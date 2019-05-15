@@ -237,8 +237,9 @@
           <consoleOutput>true</consoleOutput>
           <logViolationsToConsole>true</logViolationsToConsole>
           <violationSeverity>warning</violationSeverity>
-          <configLocation>src/main/tools/checkstyle/checkstyle.xml</configLocation>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <!-- Override rules until upstream project is updated -->
+          <configLocation>${basedir}/src/main/resources/checkstyle.xml</configLocation>
         </configuration>
       </plugin>
 
