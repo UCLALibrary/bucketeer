@@ -47,5 +47,7 @@
   <entry key="BUCKETEER-033">Using test image for kakadu conversion: {}</entry>
   <entry key="BUCKETEER-034">Image Load Request: {}</entry>
   <entry key="BUCKETEER-035">defaultTestFilename: {}</entry>
+  <entry key="BUCKETEER-036">myDerivativeJP2: {}</entry>
+  
 
 </properties>

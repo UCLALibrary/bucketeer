@@ -48,6 +48,7 @@ public class ImageUploadIT {
 
     private File myTIFF;
     private String myUUID;
+    private String myDerivativeJP2;
     private String myImageLoadRequest;
     private AmazonS3 myAmazonS3;
 
@@ -117,7 +118,9 @@ public class ImageUploadIT {
             final String defaultTestFileName = myTIFF.getName();
             LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
             // and we'll pick a random ID for it
-            myUUID = UUID.randomUUID().toString();
+            myUUID = "TEST-" + UUID.randomUUID().toString();
+            myDerivativeJP2 = myUUID + ".jp2";
+            LOGGER.debug(MessageCodes.BUCKETEER_036, myDerivativeJP2);
 
             myImageLoadRequest = SLASH + myUUID + SLASH + URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8);
             LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
@@ -129,7 +132,26 @@ public class ImageUploadIT {
                 .body("imageId", equalTo(myUUID))
                 .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
 
-            // we should probably wait a bit for things to happen
+              // TODO: implement this wait timer if S3 seems slow enough to cause test failures
+//            // Check every 5 seconds to see if our process is done
+//            vertx.setPeriodic(5000, timer -> {
+//                if (vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(myUUID + ".jp2") != null) {
+//                    // break out of this loop and keep going
+//                } else {
+//                    int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
+//
+//                    // Keep trying for a minute
+//                    if (counter++ >= 12) {
+//                        aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_027));
+//                        async.complete();
+//                    } else {
+//                        LOGGER.debug(MessageCodes.BUCKETEER_029);
+//                        jsonConfirm.put(Constants.WAIT_COUNT, counter);
+//                    }
+//                }
+//            });
+
+
 
             // get myAWSCredentials ready
             myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
@@ -139,7 +161,7 @@ public class ImageUploadIT {
 
             // then we should check the S3 bucket to which we are sending JP2s
             assertTrue(myAmazonS3.doesBucketExistV2(myS3Bucket));
-            assertTrue(myAmazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
+            assertTrue(myAmazonS3.doesObjectExist(myS3Bucket, myDerivativeJP2 ));
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
         }
