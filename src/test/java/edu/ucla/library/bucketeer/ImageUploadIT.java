@@ -1,7 +1,6 @@
 package edu.ucla.library.bucketeer;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -37,22 +36,27 @@ import com.amazonaws.services.s3.AmazonS3Client;
  * item being requested being uploaded (assuming it exists on our file system)).
  * We won't test callback at this point in time. That's for a later ticket.
  */
-public class imageUploadIT {
-    private static final Logger LOGGER = LoggerFactory.getLogger(imageUploadIT.class, Constants.MESSAGES);
+public class ImageUploadIT {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ImageUploadIT.class, Constants.MESSAGES);
     private static final Integer PORT = Integer.parseInt(System.getProperty("http.port"));
-    private File myTIFF;
-    private String myUUID;
-    private String myImageLoadRequest;
-    private AmazonS3 amazonS3;
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
     private static final String DEFAULT_SECRET_KEY = "YOUR_SECRET_KEY";
     private static final String DEFAULT_S3_BUCKET = "cantaloupe-jp2k";
+    private static final String TEST_FILE_PATH = "src/test/resources/images/test.tif";
+    private static final String SLASH = "/";
+    private static final String UTF8 = "UTF-8";
+
+    private File myTIFF;
+    private String myUUID;
+    private String myImageLoadRequest;
+    private AmazonS3 myAmazonS3;
+
     private String myS3Bucket;
     private String myS3AccessKey;
     private String myS3SecretKey;
     private AWSCredentials myAWSCredentials;
 
-    
+
     /** We can't, as of yet, execute these tests without a non-default S3 configuration */
     private boolean isExecutable;
 
@@ -76,16 +80,17 @@ public class imageUploadIT {
 
     /**
      * check that we can load an image
-     * @throws UnsupportedEncodingException, SdkClientException, AmazonServiceException 
+     * @throws UnsupportedEncodingException
      */
     @SuppressWarnings("deprecation")
     @Test
-    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException, SdkClientException, AmazonServiceException {
-        
+    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException,
+            SdkClientException, AmazonServiceException {
+
         final Vertx vertx;
         vertx = Vertx.vertx();
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
-        
+
         configRetriever.getConfig(config -> {
             if (config.succeeded()) {
                 LOGGER.debug("config succeeded");
@@ -101,55 +106,43 @@ public class imageUploadIT {
                     isExecutable = true;
                 }
             }
-        
-        // let's use our test.tif file
-        myTIFF = new File("src/test/resources/images/test.tif");
-        // and we'll pick a random ID for it
-        myUUID = UUID.randomUUID().toString();
-        
-        try {
-            myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
-        } catch (UnsupportedEncodingException details) {
-            LOGGER.error(details.getMessage(), details);
-        }
-        LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
         });
 
 
         if (isExecutable) {
-            
+
             // let's use our test.tif file
-            myTIFF = new File("src/test/resources/images/test.tif");
+            myTIFF = new File(TEST_FILE_PATH);
             final String defaultTestFileName = myTIFF.getName();
             LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
             // and we'll pick a random ID for it
             myUUID = UUID.randomUUID().toString();
-            
-            myImageLoadRequest = "/" +  myUUID + "/" + URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8");
+
+            myImageLoadRequest = SLASH + myUUID + SLASH + URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8);
             LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
-    
+
             // now attempt to load it and verify the response is OK
             get(myImageLoadRequest).then()
                 .assertThat()
                 .statusCode(200)
                 .body("imageId", equalTo(myUUID))
-                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), "UTF-8")));
-            
+                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
+
             // we should probably wait a bit for things to happen
-            
+
             // get myAWSCredentials ready
             myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
-            
-            // instantiate the amazonS3 client
-            amazonS3 = new AmazonS3Client(myAWSCredentials);
-    
+
+            // instantiate the myAmazonS3 client
+            myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+
             // then we should check the S3 bucket to which we are sending JP2s
-            assertTrue(amazonS3.doesBucketExistV2(myS3Bucket));
-            assertTrue(amazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
+            assertTrue(myAmazonS3.doesBucketExistV2(myS3Bucket));
+            assertTrue(myAmazonS3.doesObjectExist(myS3Bucket, defaultTestFileName ));
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
         }
-        
+
     }
 }

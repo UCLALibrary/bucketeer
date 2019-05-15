@@ -43,4 +43,3 @@ paths:
          schema:
           type: string
          description: The local image path
-         allowReserved: true

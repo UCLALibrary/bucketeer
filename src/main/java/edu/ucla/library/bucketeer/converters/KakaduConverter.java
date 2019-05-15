@@ -21,6 +21,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 public class KakaduConverter extends AbstractConverter implements Converter {
 
     public static final String KAKADU_HOME = "KAKADU_HOME";
+    public static final String RATE = "-rate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverter.class, Constants.MESSAGES);
 
@@ -32,11 +33,9 @@ public class KakaduConverter extends AbstractConverter implements Converter {
             "Cprecincts={256,256},{256,256},{128,128}", "Stiles={512,512}", "Corder=RPCL", "ORGgen_plt=yes",
             "ORGtparts=R", "Cblk={64,64}", "Cuse_sop=yes", "Cuse_eph=yes", "-flush_period", "1024");
 
-    @SuppressWarnings({ "checkstyle:multiplestringliterals" })
-    private static final List<String> LOSSLESS_OPTIONS = Arrays.asList("Creversible=yes", "-rate", "-");
+    private static final List<String> LOSSLESS_OPTIONS = Arrays.asList("Creversible=yes", RATE, "-");
 
-    @SuppressWarnings({ "checkstyle:multiplestringliterals" })
-    private static final List<String> LOSSY_OPTION = Arrays.asList("-rate", "3");
+    private static final List<String> LOSSY_OPTION = Arrays.asList(RATE, "3");
 
     // private static final List<String> ALPHA_OPTION = Arrays.asList("-jp2_alpha");
 
