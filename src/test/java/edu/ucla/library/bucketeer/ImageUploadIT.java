@@ -138,8 +138,7 @@ public class ImageUploadIT {
                 .assertThat()
                 .statusCode(200)
                 .body("imageId", equalTo(myUUID))
-                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)))
-                .body(equalTo("let's just see what you look like"));
+                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
 
 
             // get myAWSCredentials ready
