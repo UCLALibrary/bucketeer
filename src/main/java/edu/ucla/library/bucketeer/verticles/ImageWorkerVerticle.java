@@ -41,11 +41,11 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
             LOGGER.debug(MessageCodes.BUCKETEER_024, imageID, json.getString(Constants.FILE_PATH));
 
             try {
-                final File jp2 = converter.convert(imageID, tiffFile, Conversion.LOSSLESS);
+                final File jpx = converter.convert(imageID, tiffFile, Conversion.LOSSLESS);
                 final JsonObject message = new JsonObject();
 
-                message.put(Constants.FILE_PATH, jp2.getAbsolutePath());
-                message.put(Constants.IMAGE_ID, jp2.getName());
+                message.put(Constants.FILE_PATH, jpx.getAbsolutePath());
+                message.put(Constants.IMAGE_ID, jpx.getName());
 
                 sendMessage(message, S3BucketVerticle.class.getName());
             } catch (final Exception details) {
