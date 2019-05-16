@@ -98,16 +98,16 @@ public class KakaduConverterTest {
 
         if (ConverterFactory.hasSystemKakadu()) {
             final KakaduConverter converter = (KakaduConverter) ConverterFactory.getConverter();
-            final File jp2 = new File(TMP_DIR, myUUID + ".jpx");
+            final File jpx = new File(TMP_DIR, myUUID + ".jpx");
 
             try {
                 converter.convert(myUUID, myTIFF, Conversion.LOSSLESS);
 
                 // Check that the JP2 exists and that it's not an empty file
-                assertTrue(jp2.exists());
-                assertTrue(jp2.length() > 30000);
+                assertTrue(jpx.exists());
+                assertTrue(jpx.length() > 30000);
             } finally {
-                jp2.delete();
+                jpx.delete();
             }
         } else {
             LOGGER.warn(MessageCodes.BUCKETEER_003);

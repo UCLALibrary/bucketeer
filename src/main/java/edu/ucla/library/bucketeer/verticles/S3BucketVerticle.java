@@ -59,14 +59,14 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
         getJsonConsumer().handler(message -> {
             final JsonObject storageRequest = message.body().mergeIn(config);
             final String imageID = storageRequest.getString(Constants.IMAGE_ID);
-            final String jp2Path = storageRequest.getString(Constants.FILE_PATH);
+            final String jpxPath = storageRequest.getString(Constants.FILE_PATH);
             final String s3Bucket = storageRequest.getString(Config.S3_BUCKET);
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, jp2Path, s3Bucket);
+                LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, jpxPath, s3Bucket);
             }
 
-            vertx.fileSystem().open(jp2Path, new OpenOptions().setRead(true), open -> {
+            vertx.fileSystem().open(jpxPath, new OpenOptions().setRead(true), open -> {
                 if (open.succeeded()) {
                     myS3Client.put(s3Bucket, imageID, open.result(), response -> {
                         final int statusCode = response.statusCode();

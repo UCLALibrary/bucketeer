@@ -33,7 +33,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticleTest.class, MESSAGES);
 
-    private static final String JP2_PATH = "src/test/resources/images/test.jp2";
+    private static final String JPX_PATH = "src/test/resources/images/test.jpx";
 
     private static final String VERTICLE_NAME = S3BucketVerticle.class.getName();
 
@@ -64,7 +64,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
 
-                myImageKey = UUID.randomUUID().toString() + ".jp2";
+                myImageKey = UUID.randomUUID().toString() + ".jpx";
 
                 // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
                 if (jsonConfig.containsKey(Config.S3_ACCESS_KEY) && !jsonConfig.getString(Config.S3_ACCESS_KEY,
@@ -133,7 +133,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
         final Async asyncTask = aContext.async();
 
         message.put(Constants.IMAGE_ID, myImageKey);
-        message.put(Constants.FILE_PATH, JP2_PATH);
+        message.put(Constants.FILE_PATH, JPX_PATH);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
