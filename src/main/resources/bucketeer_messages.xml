@@ -48,6 +48,5 @@
   <entry key="BUCKETEER-034">Image Load Request: {}</entry>
   <entry key="BUCKETEER-035">defaultTestFilename: {}</entry>
   <entry key="BUCKETEER-036">myDerivativeJP2: {}</entry>
-  
-
+  <entry key="BUCKETEER-037">checking for JP2, attempt number {}</entry>
 </properties>

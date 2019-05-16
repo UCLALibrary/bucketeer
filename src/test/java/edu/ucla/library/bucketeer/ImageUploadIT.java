@@ -46,6 +46,7 @@ public class ImageUploadIT {
     private static final String TEST_FILE_PATH = "src/test/resources/images/test.tif";
     private static final String SLASH = "/";
     private static final String UTF8 = "UTF-8";
+    private static final String DOESNOTEXIST = ") does not exist!";
 
     private File myTIFF;
     private String myUUID;
@@ -67,7 +68,7 @@ public class ImageUploadIT {
      */
     @BeforeClass
     public static void configureRestAssured() {
-        RestAssured.baseURI = "http://localhost";
+        RestAssured.baseURI = "http://127.0.0.1";
         RestAssured.port = PORT;
         LOGGER.debug(MessageCodes.BUCKETEER_021, RestAssured.port);
     }
@@ -126,12 +127,20 @@ public class ImageUploadIT {
             myImageLoadRequest = SLASH + myUUID + SLASH + URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8);
             LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
+            // first, let's sanity-check our service ping endpoint before we do anything real
+            RestAssured.when().get(SLASH + "ping").then()
+                .assertThat()
+                .statusCode(200)
+                .body(equalTo("Hello"));
+
             // now attempt to load it and verify the response is OK
-            get(myImageLoadRequest).then()
+            RestAssured.when().get(myImageLoadRequest).then()
                 .assertThat()
                 .statusCode(200)
                 .body("imageId", equalTo(myUUID))
-                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
+                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)))
+                .body(equalTo("let's just see what you look like"));
+
 
             // get myAWSCredentials ready
             myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
@@ -155,11 +164,12 @@ public class ImageUploadIT {
                     // this is just here so we can interrupt our way out of this loop
                     e.printStackTrace(); // we might consider usin a logger instead of this?
                 }
+                LOGGER.debug(MessageCodes.BUCKETEER_037 , counter);
                 // check for our object again
                 doesObjectExist = myAmazonS3.doesObjectExist(myS3Bucket,myDerivativeJP2);
             }
-            assertTrue("Bucket does not exist!", doesBucketExist);
-            assertTrue("JP2 does not exist!", doesObjectExist);
+            assertTrue(" --> Bucket (" + myS3Bucket + DOESNOTEXIST, doesBucketExist);
+            assertTrue(" --> JP2 (" + myDerivativeJP2 + DOESNOTEXIST, doesObjectExist);
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
         }
