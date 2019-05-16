@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -119,7 +120,7 @@ public class ImageUploadIT {
             LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
             // and we'll pick a random ID for it
             myUUID = "TEST-" + UUID.randomUUID().toString();
-            myDerivativeJP2 = myUUID + ".jp2";
+            myDerivativeJP2 = myUUID + ".jpx";
             LOGGER.debug(MessageCodes.BUCKETEER_036, myDerivativeJP2);
 
             myImageLoadRequest = SLASH + myUUID + SLASH + URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8);
@@ -132,36 +133,33 @@ public class ImageUploadIT {
                 .body("imageId", equalTo(myUUID))
                 .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
 
-              // TODO: implement this wait timer if S3 seems slow enough to cause test failures
-//            // Check every 5 seconds to see if our process is done
-//            vertx.setPeriodic(5000, timer -> {
-//                if (vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(myUUID + ".jp2") != null) {
-//                    // break out of this loop and keep going
-//                } else {
-//                    int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
-//
-//                    // Keep trying for a minute
-//                    if (counter++ >= 12) {
-//                        aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_027));
-//                        async.complete();
-//                    } else {
-//                        LOGGER.debug(MessageCodes.BUCKETEER_029);
-//                        jsonConfirm.put(Constants.WAIT_COUNT, counter);
-//                    }
-//                }
-//            });
-
-
-
             // get myAWSCredentials ready
             myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
 
             // instantiate the myAmazonS3 client
             myAmazonS3 = new AmazonS3Client(myAWSCredentials);
 
-            // then we should check the S3 bucket to which we are sending JP2s
-            assertTrue(myAmazonS3.doesBucketExistV2(myS3Bucket));
-            assertTrue(myAmazonS3.doesObjectExist(myS3Bucket, myDerivativeJP2 ));
+            // check the S3 bucket to which we are sending JP2s, do they exist?
+            boolean doesBucketExist = false;
+            boolean doesObjectExist = false;
+            doesBucketExist = myAmazonS3.doesBucketExistV2(myS3Bucket);
+            doesObjectExist = myAmazonS3.doesObjectExist(myS3Bucket,myDerivativeJP2);
+
+            // try again every 5 seconds, for a minute
+            int counter = 0;
+            while (doesBucketExist && !doesObjectExist && counter++ < 12) {
+                // wait 5 seconds before we check again
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException e) {
+                    // this is just here so we can interrupt our way out of this loop
+                    e.printStackTrace(); // we might consider usin a logger instead of this?
+                }
+                // check for our object again
+                doesObjectExist = myAmazonS3.doesObjectExist(myS3Bucket,myDerivativeJP2);
+            }
+            assertTrue("Bucket does not exist!", doesBucketExist);
+            assertTrue("JP2 does not exist!", doesObjectExist);
         } else {
             LOGGER.debug("configuration not found, skipping integration test");
         }
