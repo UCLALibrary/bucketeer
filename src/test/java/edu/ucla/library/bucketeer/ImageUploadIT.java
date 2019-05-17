@@ -147,13 +147,6 @@ public class ImageUploadIT {
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
                     assertThat(jsonConfirm.getString("imageId")).isEqualTo(myUUID);
-                    try {
-                        assertThat(jsonConfirm.getString("filePath"))
-                            .isEqualTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8));
-                    } catch (UnsupportedEncodingException e) {
-                        // TODO Auto-generated catch block, replace with LOGGER
-                        e.printStackTrace();
-                    }
                 });
 
             });
