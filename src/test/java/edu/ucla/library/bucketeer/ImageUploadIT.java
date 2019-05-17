@@ -1,6 +1,6 @@
 package edu.ucla.library.bucketeer;
 
-import static org.hamcrest.Matchers.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -12,13 +12,11 @@ import java.util.concurrent.TimeUnit;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import io.restassured.RestAssured;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-import static io.restassured.RestAssured.get;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -45,14 +43,17 @@ public class ImageUploadIT {
     private static final String DEFAULT_S3_BUCKET = "cantaloupe-jp2k";
     private static final String TEST_FILE_PATH = "src/test/resources/images/test.tif";
     private static final String SLASH = "/";
+    private static final String PING = "/ping";
     private static final String UTF8 = "UTF-8";
     private static final String DOESNOTEXIST = ") does not exist!";
+    private static final String HELLO = "Hello";
 
     private File myTIFF;
     private String myUUID;
     private String myDerivativeJP2;
     private String myImageLoadRequest;
     private AmazonS3 myAmazonS3;
+    private int myStatusCode;
 
     private String myS3Bucket;
     private String myS3AccessKey;
@@ -68,7 +69,7 @@ public class ImageUploadIT {
      */
     @BeforeClass
     public static void configureRestAssured() {
-        RestAssured.baseURI = "http://127.0.0.1";
+        RestAssured.baseURI = "0.0.0.0";
         RestAssured.port = PORT;
         LOGGER.debug(MessageCodes.BUCKETEER_021, RestAssured.port);
     }
@@ -128,18 +129,33 @@ public class ImageUploadIT {
             LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
             // first, let's sanity-check our service ping endpoint before we do anything real
-            RestAssured.when().get(SLASH + "ping").then()
-                .assertThat()
-                .statusCode(200)
-                .body(equalTo("Hello"));
+            vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, PING, response -> {
+                // validate the response
+                myStatusCode = response.statusCode();
+                assertThat(myStatusCode).isEqualTo(200);
+                response.bodyHandler(body -> {
+                    assertThat(body.getString(0, body.length())).isEqualTo(HELLO);
+                });
+            });
 
             // now attempt to load it and verify the response is OK
-            RestAssured.when().get(myImageLoadRequest).then()
-                .assertThat()
-                .statusCode(200)
-                .body("imageId", equalTo(myUUID))
-                .body("filePath", equalTo(URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8)));
+            vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, myImageLoadRequest, response -> {
+                // validate the response
+                myStatusCode = response.statusCode();
+                assertThat(myStatusCode).isEqualTo(200);
+                response.bodyHandler(body -> {
+                    final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
+                    assertThat(jsonConfirm.getString("imageId")).isEqualTo(myUUID);
+                    try {
+                        assertThat(jsonConfirm.getString("filePath")).isEqualTo(
+                                URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8));
+                    } catch (UnsupportedEncodingException e) {
+                        // TODO Auto-generated catch block, replace with LOGGER
+                        e.printStackTrace();
+                    }
+                });
 
+            });
 
             // get myAWSCredentials ready
             myAWSCredentials = new BasicAWSCredentials(myS3AccessKey, myS3SecretKey);
