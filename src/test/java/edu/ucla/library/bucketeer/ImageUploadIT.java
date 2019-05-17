@@ -146,7 +146,9 @@ public class ImageUploadIT {
                 assertThat(myStatusCode).isEqualTo(200);
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
-                    assertThat(jsonConfirm.getString("imageId")).isEqualTo(myUUID);
+                    assertThat(jsonConfirm.getString(Constants.IMAGE_ID)).isEqualTo(myUUID);
+                    // @ksclarke wanted me to be sure there aren't any pickles in here --@hardyoyo
+                    assertThat(jsonConfirm.getString(Constants.IMAGE_ID)).isNotEqualTo("pickles");
                 });
 
             });
