@@ -50,4 +50,5 @@
   <entry key="BUCKETEER-036">myDerivativeJP2: {}</entry>
   <entry key="BUCKETEER-037">checking for JP2, attempt number {}</entry>
   <entry key="BUCKETEER-038">S3 config successfully retrieved</entry>
+  <entry key="BUCKETEER-039">Configuration not found: S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY are required.</entry>
 </properties>
