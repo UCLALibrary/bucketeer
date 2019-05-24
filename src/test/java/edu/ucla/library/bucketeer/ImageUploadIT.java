@@ -48,6 +48,16 @@ public class ImageUploadIT {
     private static final String DOESNOTEXIST = ") does not exist!";
     private static final String HELLO = "Hello";
 
+    private static String myS3Bucket;
+    private static String myS3AccessKey;
+    private static String myS3SecretKey;
+    private static AWSCredentials myAWSCredentials;
+
+    private static Vertx vertx = Vertx.vertx();
+
+    /** We can't, as of yet, execute these tests without a non-default S3 configuration */
+    private static boolean isExecutable;
+
     private File myTIFF;
     private String myUUID;
     private String myDerivativeJP2;
@@ -55,51 +65,22 @@ public class ImageUploadIT {
     private AmazonS3 myAmazonS3;
     private int myStatusCode;
 
-    private String myS3Bucket;
-    private String myS3AccessKey;
-    private String myS3SecretKey;
-    private AWSCredentials myAWSCredentials;
-
-
-    /** We can't, as of yet, execute these tests without a non-default S3 configuration */
-    private boolean isExecutable;
-
     /**
-     * Use RestAssured to connect to our service
+     * Use RestAssured to connect to our service, and fetch our configuration
      */
     @BeforeClass
     public static void configureRestAssured() {
         RestAssured.baseURI = "0.0.0.0";
         RestAssured.port = PORT;
         LOGGER.debug(MessageCodes.BUCKETEER_021, RestAssured.port);
-    }
 
-    /**
-     * And... turn off RestAssured...
-     */
-    @AfterClass
-    public static void unconfigureRestAssured() {
-        RestAssured.reset();
-    }
 
-    /**
-     * check that we can load an image
-     * @throws UnsupportedEncodingException
-     */
-    @SuppressWarnings("deprecation")
-    @Test
-    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException,
-            SdkClientException, AmazonServiceException {
-
-        final Vertx vertx;
-        vertx = Vertx.vertx();
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
 
         configRetriever.getConfig(config -> {
             if (config.succeeded()) {
-                LOGGER.debug("config succeeded");
+                LOGGER.debug(MessageCodes.BUCKETEER_038);
                 final JsonObject jsonConfig = config.result();
-                LOGGER.debug(jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET));
                 myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
                 myS3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY, DEFAULT_ACCESS_KEY);
                 myS3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY, DEFAULT_SECRET_KEY);
@@ -110,8 +91,30 @@ public class ImageUploadIT {
                     isExecutable = true;
                 }
             }
-
         });
+
+
+    }
+
+    /**
+     * And... turn off RestAssured...
+     */
+    @AfterClass
+    public static void unconfigureRestAssured() {
+        RestAssured.reset();
+    }
+
+
+    /**
+     * check that we can load an image
+     * @throws UnsupportedEncodingException
+     */
+    @SuppressWarnings("deprecation")
+    @Test
+    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException,
+            SdkClientException, AmazonServiceException {
+
+
 
 
         if (isExecutable) {

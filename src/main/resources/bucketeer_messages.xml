@@ -49,4 +49,5 @@
   <entry key="BUCKETEER-035">defaultTestFilename: {}</entry>
   <entry key="BUCKETEER-036">myDerivativeJP2: {}</entry>
   <entry key="BUCKETEER-037">checking for JP2, attempt number {}</entry>
+  <entry key="BUCKETEER-038">S3 config successfully retrieved</entry>
 </properties>
