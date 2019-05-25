@@ -1,6 +1,7 @@
 package edu.ucla.library.bucketeer;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -11,10 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.naming.ConfigurationException;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import io.restassured.RestAssured;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -76,13 +75,12 @@ public class ImageUploadIT {
     private int myStatusCode;
 
     /**
-     * Use RestAssured to connect to our service... Also, fetch our S3 configuration
+     * fetch our S3 configuration
      */
     @BeforeClass
-    public static void configureRestAssured() {
-        RestAssured.baseURI = "0.0.0.0";
-        RestAssured.port = PORT;
-        LOGGER.debug(MessageCodes.BUCKETEER_021, RestAssured.port);
+    public static void configureS3() {
+
+        LOGGER.debug(MessageCodes.BUCKETEER_021, PORT);
 
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
 
@@ -102,15 +100,6 @@ public class ImageUploadIT {
             }
         });
     }
-
-    /**
-     * And... turn off RestAssured...
-     */
-    @AfterClass
-    public static void unconfigureRestAssured() {
-        RestAssured.reset();
-    }
-
 
     /**
      * check that we can load an image
@@ -156,9 +145,9 @@ public class ImageUploadIT {
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, PING, response -> {
             // validate the response
             myStatusCode = response.statusCode();
-            assertThat(myStatusCode).isEqualTo(200);
+            assertEquals(200, myStatusCode);
             response.bodyHandler(body -> {
-                assertThat(body.getString(0, body.length())).isEqualTo(HELLO);
+                assertEquals(body.getString(0, body.length()), HELLO);
             });
             LOGGER.debug("JP2-Bucketeer service confirmed to be available.");
         });
@@ -167,12 +156,12 @@ public class ImageUploadIT {
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, myImageLoadRequest, response -> {
                 // validate the response
                 myStatusCode = response.statusCode();
-                assertThat(myStatusCode).isEqualTo(200);
+                assertEquals(myStatusCode, 200);
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
-                    assertThat(jsonConfirm.getString(Constants.IMAGE_ID)).isEqualTo(myUUID);
+                    assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), myUUID);
                     // @ksclarke wanted me to be sure there aren't any pickles in here --@hardyoyo
-                    assertThat(jsonConfirm.getString(Constants.IMAGE_ID)).isNotEqualTo("pickles");
+                    assertFalse(jsonConfirm.getString(Constants.IMAGE_ID).equals("pickles"));
                 });
 
                 // get myAWSCredentials ready
