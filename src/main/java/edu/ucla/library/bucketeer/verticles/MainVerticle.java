@@ -41,7 +41,6 @@ public class MainVerticle extends AbstractVerticle {
      * Starts a Web server.
      */
     @Override
-    @SuppressWarnings("rawtypes")
     public void start(final Future<Void> aFuture) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
         final HttpServer server = vertx.createHttpServer();

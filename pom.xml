@@ -49,6 +49,7 @@
     <vertx.version>3.6.3</vertx.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
     <freelib.utils.version>0.8.10</freelib.utils.version>
+    <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
     <!-- Build plug-in versions -->
     <shade.plugin.version>2.4.3</shade.plugin.version>
@@ -71,6 +72,7 @@
   </properties>
 
   <dependencies>
+
     <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -82,12 +84,14 @@
       <artifactId>vertx-web</artifactId>
       <version>${vertx.version}</version>
     </dependency>
+
     <!-- OpenAPI for Vert.x - https://vertx.io/docs/vertx-web-api-contract/java/ -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-api-contract</artifactId>
       <version>${vertx.version}</version>
     </dependency>
+
     <!-- A Vert.x plug-in for more flexible configuration control -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -114,6 +118,7 @@
       <artifactId>vertx-super-s3</artifactId>
       <version>${vertx.super.s3.version}</version>
     </dependency>
+
     <!-- Below dependencies only used for testing -->
     <dependency>
       <groupId>com.github.stephenc.jcip</groupId>
@@ -141,6 +146,7 @@
         <filtering>true</filtering>
       </testResource>
     </testResources>
+
     <plugins>
       <!-- The build-helper plug-in gets us a dynamic port for testing -->
       <plugin>
@@ -170,6 +176,7 @@
           </execution>
         </executions>
       </plugin>
+
       <!-- PMD is an extensible cross-language static code analyzer -->
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
@@ -210,20 +217,32 @@
           </execution>
         </executions>
       </plugin>
+
       <!-- Checkstyle ensures adherence to coding standards -->
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <consoleOutput>true</consoleOutput>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <violationSeverity>warning</violationSeverity>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
+          <!-- Override rules until upstream project is updated -->
+          <configLocation>${basedir}/src/main/resources/checkstyle.xml</configLocation>
+        </configuration>
       </plugin>
+
       <!-- Enforcer enforces some basic characteristics of the project -->
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
+
       <!-- Codacy runs automated code reviews and code analytics -->
       <plugin>
         <groupId>com.gavinmogan</groupId>
         <artifactId>codacy-maven-plugin</artifactId>
         <version>${codacy.plugin.version}</version>
       </plugin>
+
       <!-- Maven dependency helps freelib-resources copy files into the project -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -263,7 +282,8 @@
           </execution>
         </executions>
       </plugin>
-      <!-- Surefire runs the project's tests -->
+
+      <!-- Surefire runs the project's unit tests -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
@@ -279,11 +299,42 @@
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
       </plugin>
+
+      <!-- Failsafe runs the project's integration tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*IT.java</include>
+            <include>**/*IntegrationTest.java</include>
+          </includes>
+          <excludes>
+            <exclude>**/*.xml</exclude>
+            <exclude>**/*.md</exclude>
+          </excludes>
+          <systemPropertyVariables>
+            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+            <http.port>${http.port}</http.port>
+            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+          </systemPropertyVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Jacoco does code coverage for the test suite -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
+
       <!-- The Vert.x plug-in enables running the application from within Maven for development -->
       <plugin>
         <groupId>io.reactiverse</groupId>
@@ -304,6 +355,7 @@
           <runArgs>-Dvertx-config-path=target/test-classes/test-config.properties</runArgs>
         </configuration>
       </plugin>
+
       <!-- The shade plug-in generates an all-in-one executable Jar file -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -448,6 +500,44 @@
           </execution>
         </executions>
       </plugin>
+
+      <!-- We use the maven-exec-plugin to start the bucketeer jar before the integration tests and stop the jar afterward -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>start-bucketeer</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${project.basedir}/src/test/scripts/pre-it-startup.sh</executable>
+              <workingDirectory>${project.basedir}/target</workingDirectory>
+              <arguments>
+                <argument>java</argument>
+                <argument>-Dvertx-config-path=${project.build.directory}/test-classes/test-config.properties</argument>
+                <!-- http.port is set in the parent project from freelibrary, according to @ksclarke -->
+                <argument>-Dhttp.port=${http.port}</argument>
+                <argument>-jar</argument>
+                <argument>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop-bucketeer</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${project.basedir}/src/test/scripts/post-it-shutdown.sh</executable>
+              <workingDirectory>${project.basedir}/target</workingDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -463,7 +553,6 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>3.5.9</version>
+    <version>3.6.4</version>
   </parent>
-
 </project>
