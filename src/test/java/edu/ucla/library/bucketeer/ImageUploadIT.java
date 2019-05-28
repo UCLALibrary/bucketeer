@@ -63,14 +63,6 @@ public class ImageUploadIT {
 
     private static final String UTF8 = "UTF-8";
 
-    private static final String ARROW_BUCKET = " --> Bucket (";
-
-    private static final String ARROW_JP2 = " --> JP2 ";
-
-    private static final String ERRDOESNOTEXIST = ") does not exist!";
-
-    private static final String ERRHASALENGTHOFZERO = ") has a length of zero";
-
     private static final String HELLO = "Hello";
 
     private static String myS3Bucket;
@@ -131,6 +123,26 @@ public class ImageUploadIT {
     }
 
     /**
+     * confirm that the service is up (might run AFTER the next test, that's OK)
+     */
+    @SuppressWarnings("deprecation")
+    @Test
+    public final void checkThatServiceIsUp(final TestContext aContext) {
+        final Async asyncTask = aContext.async();
+        // first, let's sanity-check our service ping endpoint before we do anything real
+        vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, PING, response -> {
+            // validate the response
+            myStatusCode = response.statusCode();
+            aContext.assertEquals(200, myStatusCode);
+            response.bodyHandler(body -> {
+                aContext.assertEquals(body.getString(0, body.length()), HELLO);
+                LOGGER.debug("JP2-Bucketeer service confirmed to be available.");
+                asyncTask.complete();
+            });
+        });
+    }
+
+    /**
      * check that we can load an image
      *
      * @throws UnsupportedEncodingException
@@ -163,18 +175,7 @@ public class ImageUploadIT {
         myImageLoadRequest = SLASH + myUUID + SLASH + URLEncoder.encode(myTIFF.getAbsolutePath(), UTF8);
         LOGGER.debug(MessageCodes.BUCKETEER_034, myImageLoadRequest);
 
-        // first, let's sanity-check our service ping endpoint before we do anything real
-        vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, PING, response -> {
-            // validate the response
-            myStatusCode = response.statusCode();
-            assertEquals(200, myStatusCode);
-            response.bodyHandler(body -> {
-                assertEquals(body.getString(0, body.length()), HELLO);
-            });
-            LOGGER.debug("JP2-Bucketeer service confirmed to be available.");
-        });
-
-        // now attempt to load it and verify the response is OK
+        // attempt to load our image and verify the response is OK
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, myImageLoadRequest, response -> {
             // validate the response
             myStatusCode = response.statusCode();
@@ -213,9 +214,9 @@ public class ImageUploadIT {
             }
             final ObjectMetadata myObjectMetadata = myAmazonS3.getObjectMetadata(myS3Bucket, myDerivativeJP2);
             final boolean objectLengthIsNonZero = myObjectMetadata.getContentLength() < 0;
-            assertTrue(ARROW_BUCKET + myS3Bucket + ERRDOESNOTEXIST, doesBucketExist);
-            assertTrue(ARROW_JP2 + myDerivativeJP2 + ERRDOESNOTEXIST, doesObjectExist);
-            assertTrue(ARROW_JP2 + myDerivativeJP2 + ERRHASALENGTHOFZERO, objectLengthIsNonZero);
+            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_040, myS3Bucket), doesBucketExist);
+            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_041, myDerivativeJP2), doesObjectExist);
+            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_042, myDerivativeJP2), objectLengthIsNonZero);
 
             // clean up the test JP2 file
             myAmazonS3.deleteObject(myS3Bucket, myDerivativeJP2);

@@ -51,4 +51,7 @@
   <entry key="BUCKETEER-037">checking for JP2, attempt number {}</entry>
   <entry key="BUCKETEER-038">S3 config successfully retrieved</entry>
   <entry key="BUCKETEER-039">Configuration not found: S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY are required.</entry>
+  <entry key="BUCKETEER-040"> --> Bucket ({}) does not exist!</entry>
+  <entry key="BUCKETEER-041"> --> JP2 ({}) does not exist!</entry>
+  <entry key="BUCKETEER-042"> --> JP2 ({}) has a length of zero!</entry>
 </properties>
