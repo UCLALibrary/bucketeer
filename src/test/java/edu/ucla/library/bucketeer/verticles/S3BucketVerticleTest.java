@@ -145,7 +145,8 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
                 aContext.fail();
             }
-
+            // TODO: clean up the file we just sent to S3
+            
             asyncTask.complete();
         });
     }
