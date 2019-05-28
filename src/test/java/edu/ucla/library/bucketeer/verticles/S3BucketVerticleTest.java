@@ -13,9 +13,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.regions.RegionUtils;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-
+import info.freelibrary.vertx.s3.S3Client;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
@@ -41,6 +43,8 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
+
+    private S3Client myS3Client;
 
     private String myImageKey;
 
@@ -80,7 +84,19 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                         LOGGER.error(details, message);
                         aContext.fail(message);
                     }
+                    if (myS3Client == null) {
+                        final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
+                        final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
+                        final String s3RegionName = jsonConfig.getString(Config.S3_REGION);
+                        final String s3Region = RegionUtils.getRegion(s3RegionName).getServiceEndpoint("s3");
 
+                        myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, s3Region);
+
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
+                        }
+                    }
+                    final String s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
                     asyncTask.complete();
                 });
             } else {
@@ -107,6 +123,9 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 LOGGER.error(message);
                 aContext.fail(message);
             }
+
+            // TODO clean up our test files
+            myS3Client.delete(s3Bucket, myImageKey);
 
             async.complete();
         });
@@ -145,8 +164,6 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
                 aContext.fail();
             }
-            // TODO: clean up the file we just sent to S3
-            
             asyncTask.complete();
         });
     }
