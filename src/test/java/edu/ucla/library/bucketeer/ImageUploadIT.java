@@ -184,7 +184,7 @@ public class ImageUploadIT {
                         TimeUnit.SECONDS.sleep(5);
                     } catch (InterruptedException e) {
                         // this is just here so we can interrupt our way out of this loop
-                        e.printStackTrace(); // we might consider usin a logger instead of this?
+                        e.printStackTrace(); // we might consider using a logger instead of this?
                     }
                     LOGGER.debug(MessageCodes.BUCKETEER_037 , counter);
                     // check for our object again
@@ -195,8 +195,12 @@ public class ImageUploadIT {
                 assertTrue(ARROW_BUCKET + myS3Bucket + ERRDOESNOTEXIST, doesBucketExist);
                 assertTrue(ARROW_JP2 + myDerivativeJP2 + ERRDOESNOTEXIST, doesObjectExist);
                 assertTrue(ARROW_JP2 + myDerivativeJP2 + ERRHASALENGTHOFZERO, objectLengthIsNonZero);
+
+                // clean up the test JP2 file
+                myAmazonS3.deleteObject(myS3Bucket, myDerivativeJP2);
             }
         );
 
     }
+
 }
