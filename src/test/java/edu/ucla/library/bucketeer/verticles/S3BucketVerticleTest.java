@@ -13,11 +13,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.amazonaws.regions.RegionUtils;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-import info.freelibrary.vertx.s3.S3Client;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
@@ -41,15 +43,20 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
 
+    private static String s3Bucket = "unconfigured";
+
+    private static AWSCredentials myAWSCredentials;
+
+
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
-
-    private S3Client myS3Client;
 
     private String myImageKey;
 
     /** We can't, as of yet, execute these tests without a non-default S3 configuration */
     private boolean isExecutable;
+
+    private AmazonS3 myAmazonS3;
 
     /**
      * The tests' set up.
@@ -57,6 +64,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      * @throws Exception If there is trouble starting Vert.x or configuring the tests
      */
+    @SuppressWarnings("deprecation")
     @Before
     public void setUp(final TestContext aContext) throws Exception {
         final Vertx vertx = myRunTestOnContextRule.vertx();
@@ -84,19 +92,18 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                         LOGGER.error(details, message);
                         aContext.fail(message);
                     }
-                    if (myS3Client == null) {
+                    if (myAmazonS3 == null) {
                         final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
                         final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
-                        final String s3RegionName = jsonConfig.getString(Config.S3_REGION);
-                        final String s3Region = RegionUtils.getRegion(s3RegionName).getServiceEndpoint("s3");
 
-                        myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, s3Region);
+                        // get myAWSCredentials ready
+                        myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
 
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
-                        }
+                        // instantiate the myAmazonS3 client
+                        myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+
                     }
-                    final String s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
+                    s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
                     asyncTask.complete();
                 });
             } else {
@@ -124,8 +131,8 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 aContext.fail(message);
             }
 
-            // TODO clean up our test files
-            myS3Client.delete(s3Bucket, myImageKey);
+            // clean up our test files
+            myAmazonS3.deleteObject(s3Bucket, myImageKey);
 
             async.complete();
         });
