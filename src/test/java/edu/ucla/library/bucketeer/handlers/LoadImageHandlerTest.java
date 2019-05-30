@@ -9,14 +9,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
+import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -29,18 +34,27 @@ public class LoadImageHandlerTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadImageHandlerTest.class, Constants.MESSAGES);
 
+    private static String s3Bucket = "unconfigured";
+    private static final String DOT_JPX = ".jpx";
+
+    private static AWSCredentials myAWSCredentials;
+
     private Vertx myVertx;
+
+    private AmazonS3 myAmazonS3;
 
     /**
      * Test set up.
      *
      * @param aContext A testing context
      */
+    @SuppressWarnings("deprecation")
     @Before
     public void setUp(final TestContext aContext) throws IOException {
         final DeploymentOptions options = new DeploymentOptions();
         final ServerSocket socket = new ServerSocket(0);
         final int port = socket.getLocalPort();
+        final Async asyncTask = aContext.async();
 
         LOGGER.debug(MessageCodes.BUCKETEER_021, port);
 
@@ -51,6 +65,33 @@ public class LoadImageHandlerTest {
         // Initialize the Vert.x environment and start our main verticle
         myVertx = Vertx.vertx();
         myVertx.deployVerticle(MainVerticle.class.getName(), options, aContext.asyncAssertSuccess());
+        final ConfigRetriever configRetriever = ConfigRetriever.create(myVertx);
+
+        // grab some configs
+        configRetriever.getConfig(config -> {
+            if (config.succeeded()) {
+                final JsonObject jsonConfig = config.result();
+                // set up our Amazon S3 client
+                if (myAmazonS3 == null) {
+                    final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
+                    final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
+
+                    // get myAWSCredentials ready
+                    myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+
+                    // instantiate the myAmazonS3 client
+                    myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+
+                    // grab our bucket name
+                    s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
+
+                }
+            }
+            asyncTask.complete();
+        }
+        );
+
+
     }
 
     /**
@@ -93,7 +134,9 @@ public class LoadImageHandlerTest {
 
                     // Check every 5 seconds to see if our process is done
                     myVertx.setPeriodic(5000, timer -> {
-                        if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id + ".jpx") != null) {
+                        if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id + DOT_JPX) != null) {
+                            // clean up the created .jpx file
+                            myAmazonS3.deleteObject(s3Bucket, id + DOT_JPX );
                             async.complete();
                         } else {
                             int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
