@@ -13,9 +13,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
@@ -39,6 +43,11 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
 
+    private static String s3Bucket = "unconfigured";
+
+    private static AWSCredentials myAWSCredentials;
+
+
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
@@ -47,12 +56,15 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
     /** We can't, as of yet, execute these tests without a non-default S3 configuration */
     private boolean isExecutable;
 
+    private AmazonS3 myAmazonS3;
+
     /**
      * The tests' set up.
      *
      * @param aContext A test context
      * @throws Exception If there is trouble starting Vert.x or configuring the tests
      */
+    @SuppressWarnings("deprecation")
     @Before
     public void setUp(final TestContext aContext) throws Exception {
         final Vertx vertx = myRunTestOnContextRule.vertx();
@@ -80,7 +92,18 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                         LOGGER.error(details, message);
                         aContext.fail(message);
                     }
+                    if (myAmazonS3 == null) {
+                        final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
+                        final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
 
+                        // get myAWSCredentials ready
+                        myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+
+                        // instantiate the myAmazonS3 client
+                        myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+
+                    }
+                    s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
                     asyncTask.complete();
                 });
             } else {
@@ -107,6 +130,9 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 LOGGER.error(message);
                 aContext.fail(message);
             }
+
+            // clean up our test files
+            myAmazonS3.deleteObject(s3Bucket, myImageKey);
 
             async.complete();
         });
@@ -145,7 +171,6 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
                 aContext.fail();
             }
-
             asyncTask.complete();
         });
     }
