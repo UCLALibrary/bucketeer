@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import edu.ucla.library.bucketeer.Config;
+import edu.ucla.library.bucketeer.Constants;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -64,7 +65,7 @@ public class MainVerticleTest {
         final int port = aContext.get(Config.HTTP_PORT);
 
         // Testing the path defined in our OpenAPI YAML file
-        myVertx.createHttpClient().getNow(port, "0.0.0.0", "/ping", response -> {
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/ping", response -> {
             final int statusCode = response.statusCode();
 
             if (statusCode == 200) {
