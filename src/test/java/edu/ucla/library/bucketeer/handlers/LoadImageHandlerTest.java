@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -16,6 +17,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
@@ -24,9 +26,11 @@ import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
@@ -35,9 +39,13 @@ public class LoadImageHandlerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadImageHandlerTest.class, Constants.MESSAGES);
 
     private static String s3Bucket = "unconfigured";
+
     private static final String DOT_JPX = ".jpx";
 
     private static AWSCredentials myAWSCredentials;
+
+    @Rule
+    public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
     private Vertx myVertx;
 
@@ -62,13 +70,10 @@ public class LoadImageHandlerTest {
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
         socket.close();
 
-        // Initialize the Vert.x environment and start our main verticle
-        myVertx = Vertx.vertx();
-        myVertx.deployVerticle(MainVerticle.class.getName(), options, aContext.asyncAssertSuccess());
-        final ConfigRetriever configRetriever = ConfigRetriever.create(myVertx);
+        myVertx = myRunTestOnContextRule.vertx();
 
         // grab some configs
-        configRetriever.getConfig(config -> {
+        ConfigRetriever.create(myVertx).getConfig(config -> {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
                 // set up our Amazon S3 client
@@ -86,12 +91,18 @@ public class LoadImageHandlerTest {
                     s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
 
                 }
+
+                myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
+                    if (deployment.succeeded()) {
+                        asyncTask.complete();
+                    } else {
+                        aContext.fail(deployment.cause());
+                    }
+                });
+            } else {
+                aContext.fail(config.cause());
             }
-            asyncTask.complete();
-        }
-        );
-
-
+        });
     }
 
     /**
@@ -117,11 +128,14 @@ public class LoadImageHandlerTest {
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final String encodedImagePath = "/test/src%2Ftest%2Fresources%2Fimages%2Ftest.tif";
+        final RequestOptions request = new RequestOptions();
 
-        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, encodedImagePath, response -> {
+        request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(encodedImagePath);
+
+        myVertx.createHttpClient().getNow(request, response -> {
             final int statusCode = response.statusCode();
 
-            if (response.statusCode() == HTTP.OK) {
+            if (statusCode == HTTP.OK) {
                 response.bodyHandler(body -> {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
                     final String id = "test";
@@ -135,8 +149,7 @@ public class LoadImageHandlerTest {
                     // Check every 5 seconds to see if our process is done
                     myVertx.setPeriodic(5000, timer -> {
                         if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id + DOT_JPX) != null) {
-                            // clean up the created .jpx file
-                            myAmazonS3.deleteObject(s3Bucket, id + DOT_JPX );
+                            myAmazonS3.deleteObject(s3Bucket, id + DOT_JPX);
                             async.complete();
                         } else {
                             int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
@@ -144,7 +157,6 @@ public class LoadImageHandlerTest {
                             // Keep trying for a minute
                             if (counter++ >= 12) {
                                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_027));
-                                async.complete();
                             } else {
                                 LOGGER.debug(MessageCodes.BUCKETEER_029);
                                 jsonConfirm.put(Constants.WAIT_COUNT, counter);
@@ -154,7 +166,6 @@ public class LoadImageHandlerTest {
                 });
             } else {
                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode));
-                async.complete();
             }
         });
     }
