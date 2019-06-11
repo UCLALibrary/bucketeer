@@ -9,12 +9,15 @@ servers:
 paths:
   /ping:
     get:
+      summary: ping, is this thing on?
       operationId: getPing
       responses:
         '200':
           description: OK
   /{imageId}/{filePath}:
     get:
+      summary: loadImage, local TIFF -> JP2 in S3
+      description: Reads a TIFF file from the file system, turns it into a lossy JP2 image, and uploads that image into the configured S3 bucket.
       operationId: loadImage
       responses:
         '200':
