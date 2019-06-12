@@ -2,10 +2,16 @@ openapi: "3.0.0"
 info:
   version: 1.0.0
   title: JP2 Bucketeer API
+  description: A TIFF to JP2 to S3 Bucket Microservice
   license:
     name: The 3-Clause BSD License
+    url: https://opensource.org/licenses/BSD-3-Clause
+  contact:
+    name: Kevin S. Clarke
+    email: ksclarke@library.ucla.edu
+    url: https://www.library.ucla.edu/staff/kevin-sean-clarke
 servers:
-  - url: http://jp2-bucketeer.library.edu/api
+  - url: http://jp2-bucketeer.library.edu/
 paths:
   /ping:
     get:
