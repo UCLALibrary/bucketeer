@@ -19,6 +19,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.Vertx;
+import io.vertx.core.file.AsyncFile;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.JsonObject;
 
@@ -51,9 +52,9 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
             myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, s3Region);
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
-            }
+            // Trace is only for developer use; don't turn on when running on a server
+            LOGGER.trace(MessageCodes.BUCKETEER_045, s3AccessKey, s3SecretKey);
+            LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
         }
 
         getJsonConsumer().handler(message -> {
@@ -62,13 +63,15 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
             final String jpxPath = storageRequest.getString(Constants.FILE_PATH);
             final String s3Bucket = storageRequest.getString(Config.S3_BUCKET);
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, jpxPath, s3Bucket);
-            }
+            LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, jpxPath, s3Bucket);
 
             vertx.fileSystem().open(jpxPath, new OpenOptions().setRead(true), open -> {
                 if (open.succeeded()) {
-                    myS3Client.put(s3Bucket, imageID, open.result(), response -> {
+                    final AsyncFile asyncFile = open.result();
+
+                    LOGGER.debug(MessageCodes.BUCKETEER_044, imageID, jpxPath, s3Bucket);
+
+                    myS3Client.put(s3Bucket, imageID, asyncFile, response -> {
                         final int statusCode = response.statusCode();
 
                         // If we get a successful upload response code, note this in our results map
@@ -80,7 +83,12 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                             LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
                             message.reply(Op.FAILURE);
                         }
+
+                        asyncFile.close();
                     });
+                } else {
+                    LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, jpxPath));
+                    message.reply(Op.FAILURE);
                 }
             });
 
