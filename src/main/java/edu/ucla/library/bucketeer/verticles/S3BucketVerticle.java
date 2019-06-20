@@ -52,9 +52,9 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
             myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, s3Region);
 
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
-            }
+            // Trace is only for developer use; don't turn on when running on a server
+            LOGGER.trace(MessageCodes.BUCKETEER_045, s3AccessKey, s3SecretKey);
+            LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
         }
 
         getJsonConsumer().handler(message -> {
