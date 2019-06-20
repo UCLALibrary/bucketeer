@@ -54,4 +54,6 @@
   <entry key="BUCKETEER-040"> --> Bucket ({}) does not exist!</entry>
   <entry key="BUCKETEER-041"> --> JP2 ({}) does not exist!</entry>
   <entry key="BUCKETEER-042"> --> JP2 ({}) has a length of zero!</entry>
+  <entry key="BUCKETEER-043">Failed to read JPX file: {}</entry>
+  <entry key="BUCKETEER-044">Sending '{}' [{}] to S3 bucket: {}</entry>
 </properties>
