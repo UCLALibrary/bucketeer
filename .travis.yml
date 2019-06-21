@@ -23,6 +23,8 @@ jobs:
       language: minimal
       # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
       install: which curl
+      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
+      script: which curl
       deploy:
         - provider: script
           script: ./trigger-docker-build.sh
@@ -34,6 +36,8 @@ jobs:
       language: minimal
       # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
       install: which curl
+      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
+      script: which curl
       deploy:
         - provider: script
           script: ./trigger-docker-build.sh
