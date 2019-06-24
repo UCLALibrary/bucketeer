@@ -1,7 +1,7 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: JP2 Bucketeer API
+  title: Bucketeer API
   description: A TIFF to JP2 to S3 Bucket Microservice
   license:
     name: The 3-Clause BSD License
@@ -11,7 +11,7 @@ info:
     email: ksclarke@library.ucla.edu
     url: https://www.library.ucla.edu/staff/kevin-sean-clarke
 servers:
-  - url: http://jp2-bucketeer.library.edu/
+  - url: http://bucketeer.library.edu/
 paths:
   /ping:
     get:
@@ -52,3 +52,4 @@ paths:
          schema:
           type: string
          description: The local image path
+
