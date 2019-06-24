@@ -3,11 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>jp2-bucketeer</artifactId>
+  <artifactId>bucketeer</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>JP2 Bucketeer</name>
+  <name>Bucketeer</name>
   <description>A TIFF to JP2 to S3 bucket microservice</description>
-  <url>https://github.com/uclalibrary/jp2-bucketeer</url>
+  <url>https://github.com/uclalibrary/bucketeer</url>
 
   <licenses>
     <license>
@@ -17,14 +17,14 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git@github.com:uclalibrary/jp2-bucketeer.git</connection>
+    <connection>scm:git:git@github.com:uclalibrary/bucketeer.git</connection>
     <developerConnection>scm:git:git@github.com:uclalibrary/bucketeer.git</developerConnection>
-    <url>git@github.com:uclalibrary/jp2-bucketeer.git</url>
+    <url>git@github.com:uclalibrary/bucketeer.git</url>
   </scm>
 
   <issueManagement>
     <system>GitHub</system>
-    <url>https://github.com/uclalibrary/jp2-bucketeer/issues</url>
+    <url>https://github.com/uclalibrary/bucketeer/issues</url>
   </issueManagement>
 
   <developers>
@@ -564,4 +564,5 @@
     <groupId>info.freelibrary</groupId>
     <version>3.6.4</version>
   </parent>
+
 </project>
