@@ -167,6 +167,26 @@
           mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
       ]]>-->
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+            <execution>
+            <id>enforce-versions</id>
+            <goals>
+                <goal>enforce</goal>
+            </goals>
+            <configuration>
+                <rules>
+                   <requireJavaVersion>
+                        <version>11</version>
+                    </requireJavaVersion>
+               </rules>
+            </configuration>
+            </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-utils</artifactId>
         <version>${freelib.utils.version}</version>
