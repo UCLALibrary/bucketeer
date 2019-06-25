@@ -7,7 +7,7 @@ install:
   - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
 
 script:
-- mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
+  - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
 
 # We want all PRs built but only merges on master branch and tags under semantic version scheme
 branches:
