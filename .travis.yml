@@ -1,7 +1,6 @@
 language: java
 
 jdk:
-- oraclejdk11
 - openjdk11
 
 install:
@@ -9,6 +8,11 @@ install:
 
 script:
 - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
+
+# Cache Maven local repository to save time on builds
+cache:
+  directories:
+  - $HOME/.m2
 
 # We want all PRs built but only merges on master branch and tags under semantic version scheme
 branches:
