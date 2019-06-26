@@ -15,34 +15,34 @@ branches:
   - master
   - /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
 
-#jobs:
-#  include:
-#    - stage: Deploy Latest Build
-#      name: Trigger Docker Latest Build
-#      language: minimal
-#      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
-#      install: which curl
-#      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
-#      script: which curl
-#      deploy:
-#        - provider: script
-#          script: ./trigger-docker-build.sh
-#          on:
-#            branch: master
-#      if: (NOT type IN (pull_request)) AND (branch = master)
-#    - stage: Deploy Tag Build
-#      name: Trigger Docker Tag Build
-#      language: minimal
-#      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
-#      install: which curl
-#      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
-#      script: which curl
-#      deploy:
-#        - provider: script
-#          script: ./trigger-docker-build.sh
-#          on:
-#            tags: true
-#      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
+jobs:
+  include:
+    - stage: Deploy Latest Build
+      name: Trigger Docker Latest Build
+      language: minimal
+      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
+      install: which curl
+      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
+      script: which curl
+      deploy:
+        - provider: script
+          script: ./trigger-docker-build.sh
+          on:
+            branch: master
+      if: (NOT type IN (pull_request)) AND (branch = master)
+    - stage: Deploy Tag Build
+      name: Trigger Docker Tag Build
+      language: minimal
+      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
+      install: which curl
+      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
+      script: which curl
+      deploy:
+        - provider: script
+          script: ./trigger-docker-build.sh
+          on:
+            tags: true
+      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:
