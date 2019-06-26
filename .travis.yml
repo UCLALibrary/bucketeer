@@ -25,6 +25,7 @@ jobs:
       install:
         - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
+        - if [[ $AWS_ACCESS_KEY_ID == "" ]]; then echo 'ACCESS KEY IS EMPTY'; else echo 'ACCESS KEY IS NOT EMPTY'; fi
         - mvn verify -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}"
     - stage: Trigger Latest Build
       name: Trigger Docker Latest Build
