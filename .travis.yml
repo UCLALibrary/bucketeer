@@ -1,14 +1,3 @@
-#language: java
-
-#jdk:
-#- openjdk11
-
-#install:
-#  - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
-
-#script:
-#  - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
-
 # We want all PRs built but only merges on master branch and tags under semantic version scheme
 branches:
   only:
@@ -25,27 +14,25 @@ jobs:
       install:
         - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
-        - if [[ $AWS_ACCESS_KEY_ID == "" ]]; then echo 'ACCESS KEY IS EMPTY'; else echo 'ACCESS KEY IS NOT EMPTY'; fi
-        - if [[ $JENKINS_USER == "" ]]; then echo 'JENKINS USER IS EMPTY'; else echo 'JENKINS USER IS NOT EMPTY'; fi
         - mvn verify -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}"
     - stage: Trigger Latest Build
       name: Trigger Docker Latest Build
       language: minimal
       deploy:
         - provider: script
-          script: ./helloworld.sh
+          script: ./trigger-docker-build.sh
           on:
             branch: master
-#      if: (NOT type IN (pull_request)) AND (branch = master)
+      if: (NOT type IN (pull_request)) AND (branch = master)
     - stage: Trigger Tag Build
       name: Trigger Docker Tag Build
       language: minimal
       deploy:
         - provider: script
-          script: ./helloworld.sh
+          script: ./trigger-docker-build.sh
           on:
             tags: true
-#      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
+      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:
