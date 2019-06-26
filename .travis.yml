@@ -17,8 +17,8 @@ branches:
 
 jobs:
   include:
-    - stage: OpenJDK11 Test
-      name: Run tests on OpenJDK11
+    - stage: Build and Test on OpenJDK11
+      name: Build and Test on OpenJDK11
       language: java
       jdk:
         - openjdk11
@@ -26,32 +26,24 @@ jobs:
         - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
         - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
-    - stage: Deploy Latest Build
+    - stage: Trigger Latest Build
       name: Trigger Docker Latest Build
       language: minimal
-      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
-      install: which curl
-      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
-      script: which curl
       deploy:
         - provider: script
           script: ./helloworld.sh
           on:
             branch: master
-      if: (NOT type IN (pull_request)) AND (branch = master)
-    - stage: Deploy Tag Build
+#      if: (NOT type IN (pull_request)) AND (branch = master)
+    - stage: Trigger Tag Build
       name: Trigger Docker Tag Build
       language: minimal
-      # This install line must be kept here to override the global install call. Maven is not installed in the minimal containers
-      install: which curl
-      # This script line must be kept here to override the global script call. Maven is not installed in the minimal containers
-      script: which curl
       deploy:
         - provider: script
           script: ./helloworld.sh
           on:
             tags: true
-      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
+#      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:
