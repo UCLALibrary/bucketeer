@@ -1,13 +1,13 @@
-language: java
+#language: java
 
-jdk:
-- openjdk11
+#jdk:
+#- openjdk11
 
-install:
-  - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+#install:
+#  - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
 
-script:
-  - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
+#script:
+#  - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
 
 # We want all PRs built but only merges on master branch and tags under semantic version scheme
 branches:
@@ -17,6 +17,15 @@ branches:
 
 jobs:
   include:
+    - stage: openjdk11 test
+      name: Testing Criteria
+      language: java
+      jdk:
+        - openjdk11
+      install:
+        - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+      script:
+        - mvn verify -Dbucketeer.s3.access_key="$AWS_ACCESS_KEY_ID" -Dbucketeer.s3.secret_key="$AWS_SECRET_ACCESS_KEY"
     - stage: Deploy Latest Build
       name: Trigger Docker Latest Build
       language: minimal
