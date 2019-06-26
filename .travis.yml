@@ -26,10 +26,10 @@ jobs:
       script: which curl
       deploy:
         - provider: script
-          script: ./trigger-docker-build.sh
+          script: ./helloworld.sh
           on:
             branch: master
-      if: (NOT type IN (pull_request)) AND (branch = master)
+#      if: (NOT type IN (pull_request)) AND (branch = master)
     - stage: Deploy Tag Build
       name: Trigger Docker Tag Build
       language: minimal
@@ -39,10 +39,10 @@ jobs:
       script: which curl
       deploy:
         - provider: script
-          script: ./trigger-docker-build.sh
+          script: ./helloworld.sh
           on:
             tags: true
-      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
+#      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:
