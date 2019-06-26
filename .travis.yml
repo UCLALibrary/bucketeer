@@ -17,8 +17,8 @@ branches:
 
 jobs:
   include:
-    - stage: openjdk11 test
-      name: Testing Criteria
+    - stage: OpenJDK11 Test
+      name: Run tests on OpenJDK11
       language: java
       jdk:
         - openjdk11
@@ -38,7 +38,7 @@ jobs:
           script: ./helloworld.sh
           on:
             branch: master
-#      if: (NOT type IN (pull_request)) AND (branch = master)
+      if: (NOT type IN (pull_request)) AND (branch = master)
     - stage: Deploy Tag Build
       name: Trigger Docker Tag Build
       language: minimal
@@ -51,7 +51,7 @@ jobs:
           script: ./helloworld.sh
           on:
             tags: true
-#      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
+      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:
