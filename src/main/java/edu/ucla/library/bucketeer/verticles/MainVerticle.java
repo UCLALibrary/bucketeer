@@ -24,7 +24,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
+import io.vertx.ext.web.handler.StaticHandler;
 
 /**
  * Main verticle that starts the application.
@@ -58,12 +60,20 @@ public class MainVerticle extends AbstractVerticle {
                     if (creation.succeeded()) {
                         final OpenAPI3RouterFactory routerFactory = creation.result();
                         final int port = config.getInteger(Config.HTTP_PORT, DEFAULT_PORT);
+                        final Router router;
 
                         // Next, we associate handlers with routes from our specification
                         routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
                         routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                         routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageFailureHandler());
-                        server.requestHandler(routerFactory.getRouter()).listen(port);
+
+                        // After that, we can get a router that's been configured by our OpenAPI spec
+                        router = routerFactory.getRouter();
+
+                        // Serve Bucketeer documentation (must be first route: order index = 0)
+                        router.get("/docs/*").order(0).handler(StaticHandler.create().setWebRoot("webroot"));
+
+                        server.requestHandler(router).listen(port);
 
                         // Deploy our verticles that convert and upload images to S3
                         deployVerticles(config, deployment -> {
