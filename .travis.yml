@@ -20,7 +20,7 @@ jobs:
       language: minimal
       deploy:
         - provider: script
-          script: ./trigger-docker-build.sh
+          script: .travis/trigger-docker-build.sh
           on:
             branch: master
       if: (NOT type IN (pull_request)) AND (branch = master)
@@ -29,7 +29,7 @@ jobs:
       language: minimal
       deploy:
         - provider: script
-          script: ./trigger-docker-build.sh
+          script: .travis/trigger-docker-build.sh
           on:
             tags: true
       if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
