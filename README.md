@@ -14,19 +14,25 @@ The application, in its simplest form, can be run with the following command:
 
     java -Dvertx-config-path=target/test-classes/test-config.properties -jar target/build-artifact/bucketeer-*.jar
 
-To generate the site's documentation, run:
+To generate the site's Javadocs documentation, run:
 
     mvn site
 
 This will generate the documentation in the `target/site` directory.
 
+If you'd like to run Bucketeer in a Docker container, a [repository to build a Docker image](https://github.com/uclalibrary/docker-bucketeer) is available. Using it requires you to supply your own AWS credentials and to have a licensed copy of Kakadu.
+
 ## Running the Application for Development
 
 You can run a development instance of Bucketeer by typing the following within the project root:
 
-    mvn vertx:initialize vertx:run
+    mvn vertx:run
 
-This instance will be refreshed when the code changes so it will reflect the current state of the code. The service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping).
+A completely clean build (erasing the previous build before doing a new one), is also an option:
+
+    mvn clean vertx:run
+
+Once run, the service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping). The API documentation can be accessed at [http://localhost:8888/docs](http://localhost:8888/docs)
 
 ## Testing Considerations
 

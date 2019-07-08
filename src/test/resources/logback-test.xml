@@ -15,21 +15,13 @@
     </encoder>
   </appender>
 
-  <logger name="io.netty" level="ERROR" additivity="false">
-    <appender-ref ref="STDOUT" />
-  </logger>
-  <logger name="io.vertx" level="ERROR" additivity="false">
-    <appender-ref ref="STDOUT" />
-  </logger>
-  <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false">
-    <appender-ref ref="STDOUT" />
-  </logger>
-  <logger name="edu.ucla.library" level="DEBUG" additivity="false">
-    <appender-ref ref="STDOUT"/>
-  </logger>
+  <logger name="io.netty" level="ERROR" additivity="false" />
+  <logger name="io.vertx" level="ERROR" additivity="false" />
+  <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false" />
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </root>
 
 </configuration>

@@ -147,15 +147,7 @@
   </dependencies>
 
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>logback.xml</exclude>
-          <exclude>checkstyle.xml</exclude>
-        </excludes>
-      </resource>
-    </resources>
+    <!-- Non-test resources are configured in the profiles below -->
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -402,15 +394,22 @@
           <execution>
             <id>vertx-plugin</id>
             <goals>
-              <goal>initialize</goal>
               <goal>package</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <verticle>${main.verticle}</verticle>
-          <redeploy>true</redeploy>
-          <runArgs>-Dvertx-config-path=target/test-classes/test-config.properties</runArgs>
+          <redeploy>false</redeploy>
+          <runArgs>
+            <!-- I think SLF4J is the default, but let's be specific -->
+            <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
+            <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
+          </runArgs>
+          <jvmArgs>
+            <!-- Set this to trigger our dev build, which copies the logback.xml to the runtime classpath -->
+            <jvmArg>-Denv=dev</jvmArg>
+          </jvmArgs>
         </configuration>
       </plugin>
 
@@ -598,6 +597,54 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Running in dev mode (using vertx-maven-plugin's vertx:run goal) -->
+    <profile>
+      <id>dev</id>
+      <activation>
+        <property>
+          <name>env</name>
+          <value>dev</value>
+        </property>
+      </activation>
+      <build>
+        <resources>
+          <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <excludes>
+              <exclude>checkstyle.xml</exclude>
+            </excludes>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+    <!-- The profile for non-dev builds -->
+    <profile>
+      <id>normal</id>
+      <activation>
+        <property>
+          <name>env</name>
+          <value>!dev</value>
+        </property>
+      </activation>
+      <build>
+        <resources>
+          <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+            <excludes>
+              <!-- We don't need our Checkstyle rules in the Jar we build -->
+              <exclude>checkstyle.xml</exclude>
+              <!-- We don't want a log configuration file in the Jar we build -->
+              <exclude>logback.xml</exclude>
+            </excludes>
+          </resource>
+        </resources>
+      </build>
+    </profile>
+  </profiles>
 
   <!-- Enables pushing project documentation up to an S3 bucket -->
   <distributionManagement>
