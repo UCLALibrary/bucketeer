@@ -53,6 +53,7 @@
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
     <!-- Build plug-in versions -->
+    <clean.plugin.version>3.1.0</clean.plugin.version>
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
@@ -150,6 +151,7 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
+        <filtering>true</filtering>
         <excludes>
           <exclude>logback.xml</exclude>
           <exclude>checkstyle.xml</exclude>
@@ -164,11 +166,41 @@
     </testResources>
 
     <plugins>
+      <!-- Clean the logback.xml file before running the shade plugin to package the Jar -->
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>${clean.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>auto-clean-logging-config</id>
+            <phase>package</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <failOnError>false</failOnError>
+              <filesets>
+                <fileset>
+                  <directory>target/classes</directory>
+                  <includes>
+                    <include>logback.xml</include>
+                  </includes>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- The build-helper plug-in gets us a dynamic port for testing -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
+
+      <!-- Generate the MessageCodes class from the message codes resource file -->
       <!--<![CDATA[
         To run the generate-codes plugin outside of a full build, run:
           mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
@@ -193,6 +225,7 @@
         </executions>
       </plugin>
 
+      <!-- Copy static pages over to the application's Web root -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
@@ -224,6 +257,8 @@
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
+
+      <!-- Generate HTML Javadocs for the project's code -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <dependencies>
@@ -246,7 +281,6 @@
           </additionalJOptions>
           <links>
             <link>https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/</link>
-            <!-- <link>https://vertx.io/docs/apidocs/</link> -->
           </links>
           <sourcepath>src/main/java:src/main/generated</sourcepath>
         </configuration>
@@ -402,14 +436,12 @@
           <execution>
             <id>vertx-plugin</id>
             <goals>
-              <goal>initialize</goal>
               <goal>package</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <verticle>${main.verticle}</verticle>
-          <redeploy>true</redeploy>
           <runArgs>-Dvertx-config-path=target/test-classes/test-config.properties</runArgs>
         </configuration>
       </plugin>
@@ -559,7 +591,7 @@
         </executions>
       </plugin>
 
-      <!-- We use the maven-exec-plugin to start the bucketeer jar before the integration tests and stop the jar afterward -->
+      <!-- Start and stop the bucketeer jar before and after the integration tests run -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -576,7 +608,7 @@
               <arguments>
                 <argument>java</argument>
                 <argument>-Dvertx-config-path=${project.build.directory}/test-classes/test-config.properties</argument>
-                <!-- http.port is set in the parent project from freelibrary, according to @ksclarke -->
+                <!-- http.port is set in the parent project, freelib-build-tools -->
                 <argument>-Dhttp.port=${http.port}</argument>
                 <argument>-jar</argument>
                 <argument>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</argument>
@@ -599,14 +631,85 @@
     </plugins>
   </build>
 
-  <!-- Enables pushing project documentation up to an S3 bucket -->
-  <distributionManagement>
-    <site>
-      <id>s3.site</id>
-      <!-- TODO: Create a UCLA S3 bucket for this -->
-      <url>s3://projects.freelibrary.info/${project.name}</url>
-    </site>
-  </distributionManagement>
+<!-- A live testing mode that will spin up the server locally when the following is run: mvn -Plive test -->
+  <profiles>
+    <profile>
+      <id>live</id>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+        <jacoco.skip>true</jacoco.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-logging-config-for-testing</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${basedir}/src/main/resources</directory>
+                      <filtering>true</filtering>
+                      <includes>
+                        <include>logback.xml</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-application-config-for-testing</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/test-classes/</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${basedir}/src/test/resources</directory>
+                      <filtering>true</filtering>
+                      <includes>
+                        <include>test-config.properties</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>io.reactiverse</groupId>
+            <artifactId>vertx-maven-plugin</artifactId>
+            <version>${vertx.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>vertx-plugin</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <verticle>${main.verticle}</verticle>
+              <redeploy>false</redeploy>
+              <runArgs>
+                <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
+                <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
+              </runArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <parent>
     <artifactId>freelib-parent</artifactId>

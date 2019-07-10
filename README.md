@@ -1,6 +1,6 @@
 # Bucketeer  &nbsp;[![Build Status](https://travis-ci.com/UCLALibrary/bucketeer.svg?branch=master)](https://travis-ci.com/UCLALibrary/bucketeer) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
 
-A TIFF to JP2 to S3 bucket microservice. It will read a TIFF file from the file system, turn it into a lossy JP2 image, and upload that image into a configurable S3 bucket. This is a work in progress.
+A TIFF to JP2 to S3 bucket microservice. It will read a TIFF file from the file system, turn it into a lossy JP2 image, and upload that image into a configurable S3 bucket. To use this project, you need to have a copy of the Kakadu binaries on your system's PATH.
 
 ## Building the Project
 
@@ -14,19 +14,21 @@ The application, in its simplest form, can be run with the following command:
 
     java -Dvertx-config-path=target/test-classes/test-config.properties -jar target/build-artifact/bucketeer-*.jar
 
-To generate the site's documentation, run:
+To generate the site's Javadocs documentation, run:
 
     mvn site
 
 This will generate the documentation in the `target/site` directory.
 
+If you'd like to run Bucketeer in a Docker container, a [repository to build a Docker image](https://github.com/uclalibrary/docker-bucketeer) is available. Using it requires you to supply your own AWS credentials and to have a licensed copy of the Kakadu source code.
+
 ## Running the Application for Development
 
 You can run a development instance of Bucketeer by typing the following within the project root:
 
-    mvn vertx:initialize vertx:run
+    mvn -Plive test
 
-This instance will be refreshed when the code changes so it will reflect the current state of the code. The service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping).
+Once run, the service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping). The API documentation can be accessed at [http://localhost:8888/docs](http://localhost:8888/docs)
 
 ## Testing Considerations
 
