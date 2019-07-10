@@ -1,6 +1,5 @@
-#! /bin/sh
+#! /bin/bash
 
-# We have to provide a little wrapper script for exec-maven-plugin to background our job
-$* > /dev/null 2>&1 &
-echo $! > bucketeer-it.pid
-exit 0
+# And we do a little clean up after the integration tests have been run
+kill `cat bucketeer-it.pid`
+rm bucketeer-it.pid
