@@ -52,7 +52,8 @@
     <freelib.utils.version>0.8.10</freelib.utils.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
-    <!-- Build plug-in versions -->
+    <!-- Build plugin versions -->
+    <clean.plugin.version>3.1.0</clean.plugin.version>
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
@@ -99,7 +100,7 @@
       <version>${slf4j.ext.version}</version>
     </dependency>
 
-    <!-- A Vert.x plug-in for more flexible configuration control -->
+    <!-- A Vert.x plugin for more flexible configuration control -->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-config</artifactId>
@@ -147,7 +148,16 @@
   </dependencies>
 
   <build>
-    <!-- Non-test resources are configured in the profiles below -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>logback.xml</exclude>
+          <exclude>checkstyle.xml</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <testResources>
       <testResource>
         <directory>src/test/resources</directory>
@@ -156,11 +166,41 @@
     </testResources>
 
     <plugins>
-      <!-- The build-helper plug-in gets us a dynamic port for testing -->
+      <!-- This cleans up resources used by the vertx-maven-plugin (so they don't get packaged in the Jar file) -->
+      <!-- <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>${clean.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>auto-clean-logging-config</id>
+            <phase>package</phase>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <configuration>
+              <excludeDefaultDirectories>true</excludeDefaultDirectories>
+              <failOnError>false</failOnError>
+              <filesets>
+                <fileset>
+                  <directory>target/classes</directory>
+                  <includes>
+                    <include>logback.xml</include>
+                  </includes>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>-->
+
+      <!-- The build-helper plugin gets a free port to use in testing the application -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
+
+      <!-- freelib-utils generates a MessageCodes class from the message codes resource file -->
       <!--<![CDATA[
         To run the generate-codes plugin outside of a full build, run:
           mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
@@ -185,6 +225,7 @@
         </executions>
       </plugin>
 
+      <!-- The static Web resources are copied into the path that the Jar packager expects -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
@@ -216,6 +257,8 @@
       <plugin>
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
+
+      <!-- Javadocs provide documentation for the Java classes in the project -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <dependencies>
@@ -385,35 +428,7 @@
         <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
 
-      <!-- The Vert.x plug-in enables running the application from within Maven for development -->
-      <plugin>
-        <groupId>io.reactiverse</groupId>
-        <artifactId>vertx-maven-plugin</artifactId>
-        <version>${vertx.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>vertx-plugin</id>
-            <goals>
-              <goal>package</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <verticle>${main.verticle}</verticle>
-          <redeploy>false</redeploy>
-          <runArgs>
-            <!-- I think SLF4J is the default, but let's be specific -->
-            <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
-            <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
-          </runArgs>
-          <jvmArgs>
-            <!-- Set this to trigger our dev build, which copies the logback.xml to the runtime classpath -->
-            <jvmArg>-Denv=dev</jvmArg>
-          </jvmArgs>
-        </configuration>
-      </plugin>
-
-      <!-- The shade plug-in generates an all-in-one executable Jar file -->
+      <!-- The shade plugin generates an all-in-one executable Jar file -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -558,7 +573,7 @@
         </executions>
       </plugin>
 
-      <!-- We use the maven-exec-plugin to start the bucketeer jar before the integration tests and stop the jar afterward -->
+      <!-- The maven-exec-plugin starts and stops the bucketeer jar for the integration tests -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -575,7 +590,7 @@
               <arguments>
                 <argument>java</argument>
                 <argument>-Dvertx-config-path=${project.build.directory}/test-classes/test-config.properties</argument>
-                <!-- http.port is set in the parent project from freelibrary, according to @ksclarke -->
+                <!-- http.port is set in the parent project, freelib-build-tools -->
                 <argument>-Dhttp.port=${http.port}</argument>
                 <argument>-jar</argument>
                 <argument>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</argument>
@@ -599,61 +614,103 @@
   </build>
 
   <profiles>
-    <!-- Running in dev mode (using vertx-maven-plugin's vertx:run goal) -->
     <profile>
       <id>dev</id>
-      <activation>
-        <property>
-          <name>env</name>
-          <value>dev</value>
-        </property>
-      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
       <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <excludes>
-              <exclude>checkstyle.xml</exclude>
-            </excludes>
-          </resource>
-        </resources>
-      </build>
-    </profile>
-    <!-- The profile for non-dev builds -->
-    <profile>
-      <id>normal</id>
-      <activation>
-        <property>
-          <name>env</name>
-          <value>!dev</value>
-        </property>
-      </activation>
-      <build>
-        <resources>
-          <resource>
-            <directory>src/main/resources</directory>
-            <filtering>true</filtering>
-            <excludes>
-              <!-- We don't need our Checkstyle rules in the Jar we build -->
-              <exclude>checkstyle.xml</exclude>
-              <!-- We don't want a log configuration file in the Jar we build -->
-              <exclude>logback.xml</exclude>
-            </excludes>
-          </resource>
-        </resources>
+        <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-web-resources-for-testing</id>
+                <phase>process-test-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/webroot</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${basedir}/src/main/webroot</directory>
+                    </resource>
+                    <resource>
+                      <directory>${basedir}/src/main/resources</directory>
+                      <includes>
+                        <include>bucketeer.yaml</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-logging-config-for-testing</id>
+                <phase>process-test-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/classes/</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${basedir}/src/main/resources</directory>
+                      <filtering>true</filtering>
+                      <includes>
+                        <include>logback.xml</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-application-config-for-testing</id>
+                <phase>process-test-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/testclasses/</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${basedir}/src/test/resources</directory>
+                      <filtering>true</filtering>
+                      <includes>
+                        <include>test-config.properties</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>io.reactiverse</groupId>
+            <artifactId>vertx-maven-plugin</artifactId>
+            <version>${vertx.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>vertx-plugin</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>run</goal><!-- was package -->
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <verticle>${main.verticle}</verticle>
+              <redeploy>false</redeploy>
+              <runArgs>
+                <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
+                <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
+              </runArgs>
+            </configuration>
+          </plugin>
+        </plugins>
       </build>
     </profile>
   </profiles>
-
-  <!-- Enables pushing project documentation up to an S3 bucket -->
-  <distributionManagement>
-    <site>
-      <id>s3.site</id>
-      <!-- TODO: Create a UCLA S3 bucket for this -->
-      <url>s3://projects.freelibrary.info/${project.name}</url>
-    </site>
-  </distributionManagement>
 
   <parent>
     <artifactId>freelib-parent</artifactId>
