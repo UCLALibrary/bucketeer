@@ -151,6 +151,7 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
+        <filtering>true</filtering>
         <excludes>
           <exclude>logback.xml</exclude>
           <exclude>checkstyle.xml</exclude>
@@ -199,7 +200,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
       </plugin>
 
-      <!-- -->
+      <!-- Generate the MessageCodes class from the message codes resource file -->
       <!--<![CDATA[
         To run the generate-codes plugin outside of a full build, run:
           mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
@@ -224,6 +225,7 @@
         </executions>
       </plugin>
 
+      <!-- Copy static pages over to the application's Web root -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
@@ -256,7 +258,7 @@
         <artifactId>maven-pmd-plugin</artifactId>
       </plugin>
 
-      <!-- -->
+      <!-- Generate HTML Javadocs for the project's code -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <dependencies>
@@ -589,7 +591,7 @@
         </executions>
       </plugin>
 
-      <!-- We use the maven-exec-plugin to start the bucketeer jar before the integration tests and stop the jar afterward -->
+      <!-- Start and stop the bucketeer jar before and after the integration tests run -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -629,6 +631,7 @@
     </plugins>
   </build>
 
+<!-- A live testing mode that will spin up the server locally when the following is run: mvn -Plive test -->
   <profiles>
     <profile>
       <id>live</id>
