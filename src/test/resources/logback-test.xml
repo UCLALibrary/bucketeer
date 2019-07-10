@@ -24,9 +24,6 @@
   <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT" />
   </logger>
-  <logger name="edu.ucla.library" level="DEBUG" additivity="false">
-    <appender-ref ref="STDOUT"/>
-  </logger>
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
