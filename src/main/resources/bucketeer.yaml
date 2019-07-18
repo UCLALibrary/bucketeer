@@ -7,23 +7,23 @@ info:
     name: The 3-Clause BSD License
     url: https://opensource.org/licenses/BSD-3-Clause
   contact:
-    name: Kevin S. Clarke
-    email: ksclarke@library.ucla.edu
-    url: https://www.library.ucla.edu/staff/kevin-sean-clarke
+    name: UCLA Library Services Team
+    email: lib_softwaredev-services@library.ucla.edu
 servers:
-  - url: http://bucketeer.library.edu/
+  - url: http://bucketeer.library.ucla.edu/
 paths:
-  /ping:
+  /status:
     get:
-      summary: ping, is this thing on?
-      operationId: getPing
+      summary: Application Status
+      description: Requests an application status check.
+      operationId: getStatus
       responses:
         '200':
           description: OK
   /{imageId}/{filePath}:
     get:
-      summary: loadImage, local TIFF -> JP2 in S3
-      description: Reads a TIFF file from the file system, turns it into a lossy JP2 image, and uploads that image into the configured S3 bucket.
+      summary: New JPEG 2000 Image
+      description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it.
       operationId: loadImage
       responses:
         '200':
@@ -38,7 +38,7 @@ paths:
                     description: Whether the load succeeded
                   message:
                     type: string
-                    description: any related text about the loadImage operation
+                    description: Any related text about the loadImage operation
     parameters:
        - in: path
          name: imageId
@@ -52,4 +52,33 @@ paths:
          schema:
           type: string
          description: The local image path
-
+  /batch/input/csv:
+    post:
+      summary: CSV Batch Conversion
+      description: Loads a bunch of images into Bucketeer's batch ingest workflow so that Cantaloupe can access them.
+      operationId: loadImagesFromCSV
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                slackHandle:
+                  type: string
+                csvFileToUpload:
+                  type: string
+                  format: binary
+                failure:
+                  type: string
+      responses:
+        '200': 
+          description: An HTML page informing the user that their job has been queued
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request (missing Slack handle/CSV file or invalid CSV uploaded)
+        '415':
+          description: Unsupported media type (i.e. not a CSV file)

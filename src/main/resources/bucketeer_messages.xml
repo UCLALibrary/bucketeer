@@ -2,10 +2,7 @@
 
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 
-<!--
-  To process this file outside of a full build, run:
-    mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
--->
+<!-- To process this file outside of a full build, run: mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml -->
 
 <properties>
   <entry key="message-class-name">edu.ucla.library.bucketeer.MessageCodes</entry>
@@ -57,4 +54,33 @@
   <entry key="BUCKETEER-043">Failed to read JPX file: {}</entry>
   <entry key="BUCKETEER-044">Sending '{}' [{}] to S3 bucket: {}</entry>
   <entry key="BUCKETEER-045">AWS S3 access / secret keys: {} / {}</entry>
+  <entry key="BUCKETEER-046">S3 connection pool is full; re-queuing the request: {}</entry>
+  <entry key="BUCKETEER-047">Failed to close the JPX image file after trying to upload it to S3: {}</entry>
+  <entry key="BUCKETEER-048">Resending message to: {}</entry>
+  <entry key="BUCKETEER-049">Form submission is missing an uploaded CSV file.</entry>
+  <entry key="BUCKETEER-050">Form submission is missing a Slack handle.</entry>
+  <entry key="BUCKETEER-051">Slack user '{}' uploaded CSV file '{}' to: {}</entry>
+  <entry key="BUCKETEER-052">CSV contains an entry that is not a work or collection: {}</entry>
+  <entry key="BUCKETEER-053">'{}' claims it's a collection but it contains a parent ARK and/or a file name</entry>
+  <entry key="BUCKETEER-054">'{}' claims it's a work but it doesn't have a parent ARK and/or a file name</entry>
+  <entry key="BUCKETEER-055">Invalid CSV line: {}</entry>
+  <entry key="BUCKETEER-056">Failed to create test file needed for testing: {}</entry>
+  <entry key="BUCKETEER-057">Unable to delete test file used in testing: {}</entry>
+  <entry key="BUCKETEER-058">Found an invalid work: {}</entry>
+  <entry key="BUCKETEER-059">Found an invalid collection: {}</entry>
+  <entry key="BUCKETEER-060">Another job for '{}' is already in process; check the Slack channel</entry>
+  <entry key="BUCKETEER-061">Metadata does not contain an ID: {}</entry>
+  <entry key="BUCKETEER-062">Failed to check keys in shared lambda map [CSV: {}]</entry>
+  <entry key="BUCKETEER-063">Couldn't retrieve shared lambda map [CSV: {}]</entry>
+  <entry key="BUCKETEER-064">CSV accepted for processing. You will be notified in Slack when it's done.</entry>
+  <entry key="BUCKETEER-065">Failed to add the uploaded CSV file to the processing queue: {}</entry>
+  <entry key="BUCKETEER-066">Unable to get the jobs queue counter for CSV file: {}</entry>
+  <entry key="BUCKETEER-067">Unable to set the jobs queue counter for CSV file: {}</entry>
+  <entry key="BUCKETEER-068">Unable to add metadata to the jobs queue for CSV file: {}</entry>
+  <entry key="BUCKETEER-069">Failed simple status test; response code: '{}'</entry>
+  <entry key="BUCKETEER-070">Metadata record '{}' doesn't have a valid workflow state: {}</entry>
+  <entry key="BUCKETEER-071"> Please resubmit the form with all the required values.</entry>
+  <entry key="BUCKETEER-072">Invalid bucketeer workflow state in the uploaded CSV file</entry>
+  <entry key="BUCKETEER-073">Supplied CSV couldn't be found.</entry>
+  <entry key="BUCKETEER-074">Internal server error: </entry>
 </properties>

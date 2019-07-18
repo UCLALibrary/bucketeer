@@ -59,7 +59,7 @@ public class ImageUploadIT {
 
     private static final String SLASH = "/";
 
-    private static final String PING = "/ping";
+    private static final String STATUS_CHECK = "/status";
 
     private static final String UTF8 = "UTF-8";
 
@@ -129,14 +129,14 @@ public class ImageUploadIT {
     @Test
     public final void checkThatServiceIsUp(final TestContext aContext) {
         final Async asyncTask = aContext.async();
-        // first, let's sanity-check our service ping endpoint before we do anything real
-        vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, PING, response -> {
+        // first, let's sanity-check our service status check endpoint before we do anything real
+        vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, STATUS_CHECK, response -> {
             // validate the response
             myStatusCode = response.statusCode();
             aContext.assertEquals(200, myStatusCode);
             response.bodyHandler(body -> {
                 aContext.assertEquals(body.getString(0, body.length()), HELLO);
-                LOGGER.debug("JP2-Bucketeer service confirmed to be available.");
+                LOGGER.debug("Bucketeer service confirmed to be available.");
                 asyncTask.complete();
             });
         });

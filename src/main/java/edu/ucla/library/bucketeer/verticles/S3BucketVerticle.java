@@ -21,6 +21,8 @@ import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.file.OpenOptions;
+import io.vertx.core.http.ConnectionPoolTooBusyException;
+import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -29,6 +31,8 @@ import io.vertx.core.json.JsonObject;
 public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticle.class, MESSAGES);
+
+    private static final int DEFAULT_MAX_WAIT_QUEUE_SIZE = 10;
 
     private S3Client myS3Client;
 
@@ -48,17 +52,28 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
             final String s3AccessKey = config.getString(Config.S3_ACCESS_KEY);
             final String s3SecretKey = config.getString(Config.S3_SECRET_KEY);
             final String s3RegionName = config.getString(Config.S3_REGION);
+            final int maxWaitQueueSize = config.getInteger(Config.MAX_WAIT_QUEUE_SIZE, DEFAULT_MAX_WAIT_QUEUE_SIZE);
             final String s3Region = RegionUtils.getRegion(s3RegionName).getServiceEndpoint("s3");
+            final HttpClientOptions options = new HttpClientOptions();
 
-            myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, s3Region);
+            options.setMaxWaitQueueSize(maxWaitQueueSize).setDefaultHost(s3Region);
+
+            myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, options);
 
             // Trace is only for developer use; don't turn on when running on a server
             LOGGER.trace(MessageCodes.BUCKETEER_045, s3AccessKey, s3SecretKey);
+
             LOGGER.debug(MessageCodes.BUCKETEER_009, s3RegionName);
         }
 
         getJsonConsumer().handler(message -> {
-            final JsonObject storageRequest = message.body().mergeIn(config);
+            final JsonObject storageRequest = message.body();
+
+            // If an S3 bucket isn't being supplied to us, use the one in our application configuration
+            if (!storageRequest.containsKey(Config.S3_BUCKET)) {
+                storageRequest.mergeIn(config);
+            }
+
             final String imageID = storageRequest.getString(Constants.IMAGE_ID);
             final String jpxPath = storageRequest.getString(Constants.FILE_PATH);
             final String s3Bucket = storageRequest.getString(Config.S3_BUCKET);
@@ -71,21 +86,40 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                     LOGGER.debug(MessageCodes.BUCKETEER_044, imageID, jpxPath, s3Bucket);
 
-                    myS3Client.put(s3Bucket, imageID, asyncFile, response -> {
-                        final int statusCode = response.statusCode();
+                    // If our connection pool is full, drop back and try resubmitting the request
+                    try {
+                        myS3Client.put(s3Bucket, imageID, asyncFile, response -> {
+                            final int statusCode = response.statusCode();
 
-                        // If we get a successful upload response code, note this in our results map
-                        if (statusCode == HTTP.OK) {
-                            vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageID, true);
-                            LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
-                            message.reply(Op.SUCCESS);
-                        } else {
-                            LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
-                            message.reply(Op.FAILURE);
-                        }
+                            // If we get a successful upload response code, note this in our results map
+                            if (statusCode == HTTP.OK) {
+                                vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageID, true);
 
-                        asyncFile.close();
-                    });
+                                LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
+                                message.reply(Op.SUCCESS);
+                            } else {
+                                response.bodyHandler(body -> {
+                                    final String xmlMessage = body.getString(0, body.length());
+
+                                    LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
+                                    LOGGER.error(MessageCodes.BUCKETEER_000, xmlMessage);
+
+                                    message.reply(Op.FAILURE);
+                                });
+                            }
+
+                            asyncFile.close();
+                        });
+                    } catch (final ConnectionPoolTooBusyException details) {
+                        asyncFile.close(closure -> {
+                            if (closure.failed()) {
+                                LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, jpxPath);
+                            }
+                        });
+
+                        LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
+                        message.reply(Op.RETRY);
+                    }
                 } else {
                     LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, jpxPath));
                     message.reply(Op.FAILURE);

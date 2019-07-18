@@ -27,6 +27,16 @@ public final class Constants {
     public static final String FILE_PATH = "filePath";
 
     /**
+     * The Slack handle of the person submitting the batch job
+     */
+    public static final String SLACK_HANDLE = "slackHandle";
+
+    /**
+     * The name of the "failures only" processing flag.
+     */
+    public static final String FAILURES_ONLY = "failures";
+
+    /**
      * The IP for an unspecified host.
      */
     public static final String UNSPECIFIED_HOST = "0.0.0.0";
@@ -37,6 +47,21 @@ public final class Constants {
     public static final String CONTENT_TYPE = "content-type";
 
     /**
+     * The content-type value for text.
+     */
+    public static final String TEXT = "text/plain";
+
+    /**
+     * The content-type value for HTML.
+     */
+    public static final String HTML = "text/html";
+
+    /**
+     * The content-type value for JSON.
+     */
+    public static final String JSON = "application/json";
+
+    /**
      * The record of completed S3 uploads.
      */
     public static final String RESULTS_MAP = "s3-uploads";
@@ -45,6 +70,11 @@ public final class Constants {
      * A name for wait counters.
      */
     public static final String WAIT_COUNT = "wait-count";
+
+    /**
+     * The name of the lambda queue.
+     */
+    public static final String LAMBDA_MAP = "lambda-map";
 
     /**
      * Private constructor for Constants class.
