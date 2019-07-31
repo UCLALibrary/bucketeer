@@ -49,7 +49,9 @@
     <vertx.version>3.7.1</vertx.version>
     <slf4j.ext.version>1.7.26</slf4j.ext.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
+    <opencsv.version>4.6</opencsv.version>
     <freelib.utils.version>0.8.10</freelib.utils.version>
+    <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
 
     <!-- Build plug-in versions -->
@@ -60,6 +62,9 @@
     <vertx.super.s3.version>1.0.0</vertx.super.s3.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
 
+    <!-- Whether auto-reloading should be turned on for the live test profile -->
+    <live.test.reloads>false</live.test.reloads>
+
     <!-- Name of the main Vert.x verticle -->
     <main.verticle>edu.ucla.library.bucketeer.verticles.MainVerticle</main.verticle>
 
@@ -69,8 +74,18 @@
     <bucketeer.s3.access_key>YOUR_ACCESS_KEY</bucketeer.s3.access_key>
     <bucketeer.s3.secret_key>YOUR_SECRET_KEY</bucketeer.s3.secret_key>
 
+    <!-- We can use a lambda kakadu converter if we send things to its bucket -->
+    <lambda.s3.bucket>test-bucketeer-tiff</lambda.s3.bucket>
+
+    <!-- Requests have to happen in 15 minutes or be re-queued to get a new S3 signature -->
+    <httpclient.max.queue.size>5</httpclient.max.queue.size>
+
     <!-- Callback that we alert to the success/failure of the process -->
     <bucketeer.http.callback>http://localhost/echo-callback</bucketeer.http.callback>
+    
+    <!-- Where the source images are mounted on the local file system -->
+    <bucketeer.fs.mount></bucketeer.fs.mount>
+    <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
   </properties>
 
   <dependencies>
@@ -106,21 +121,30 @@
       <artifactId>vertx-config</artifactId>
       <version>${vertx.version}</version>
     </dependency>
+    <!-- Logger -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <scope>compile</scope>
     </dependency>
+    <!-- Some basic utilty classes -->
     <dependency>
       <groupId>info.freelibrary</groupId>
       <artifactId>freelib-utils</artifactId>
       <version>${freelib.utils.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>${opencsv.version}</version>
+    </dependency>
+    <!-- Generic AWS S3 library -->
+    <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
       <version>${aws.sdk.version}</version>
     </dependency>
+    <!-- S3 library for the Vert.x toolkit -->
     <dependency>
       <groupId>info.freelibrary</groupId>
       <artifactId>vertx-super-s3</artifactId>
@@ -241,6 +265,18 @@
                 <resource>
                   <directory>${basedir}/src/main/webroot</directory>
                 </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-openapi-yaml</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/webroot/docs</outputDirectory>
+              <resources>
                 <resource>
                   <directory>${basedir}/src/main/resources</directory>
                   <includes>
@@ -498,9 +534,12 @@
                   <exclude>com.google.inject:guice</exclude>
                   <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
                   <exclude>com.networknt:json-schema-validator</exclude>
+                  <exclude>com.opencsv:opencsv</exclude>
                   <exclude>commons-codec:commons-codec</exclude>
+                  <exclude>commons-collections:commons-collections</exclude>
                   <exclude>commons-io:commons-io</exclude>
                   <exclude>commons-logging:commons-logging</exclude>
+                  <exclude>commons-beanutils:commons-beanutils</exclude>
                   <exclude>info.freelibrary:freelib-utils</exclude>
                   <exclude>info.freelibrary:vertx-pairtree</exclude>
                   <exclude>io.netty:netty-buffer</exclude>
@@ -515,6 +554,8 @@
                   <exclude>io.netty:netty-resolver-dns</exclude>
                   <exclude>io.netty:netty-resolver</exclude>
                   <exclude>io.netty:netty-transport</exclude>
+                  <exclude>io.netty:netty-transport-native-epoll</exclude>
+                  <exclude>io.netty:netty-transport-native-unix-common</exclude>
                   <exclude>io.swagger.core.v3:swagger-annotations</exclude>
                   <exclude>io.swagger.core.v3:swagger-core</exclude>
                   <exclude>io.swagger.core.v3:swagger-models</exclude>
@@ -546,7 +587,9 @@
                   <exclude>net.java.dev.jna:jna-platform</exclude>
                   <exclude>net.java.dev.jna:jna</exclude>
                   <exclude>net.sf.jopt-simple:jopt-simple</exclude>
+                  <exclude>org.apache.commons:commons-collections4</exclude>
                   <exclude>org.apache.commons:commons-lang3</exclude>
+                  <exclude>org.apache.commons:commons-text</exclude>
                   <exclude>org.apache.httpcomponents:httpclient</exclude>
                   <exclude>org.apache.httpcomponents:httpcore</exclude>
                   <exclude>org.apache.maven.resolver:maven-resolver-api</exclude>
@@ -631,8 +674,25 @@
     </plugins>
   </build>
 
-<!-- A live testing mode that will spin up the server locally when the following is run: mvn -Plive test -->
+  <!-- A live testing mode that will spin up the server locally when the following is run: mvn -Plive test -->
   <profiles>
+    <profile>
+      <id>linux-os</id>
+      <activation>
+        <os>
+          <family>unix</family>
+          <arch>amd64</arch>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.netty</groupId>
+          <artifactId>netty-transport-native-epoll</artifactId>
+          <version>${netty.epoll.version}</version>
+          <classifier>linux-x86_64</classifier>
+        </dependency>
+      </dependencies>
+    </profile>
     <profile>
       <id>live</id>
       <properties>
@@ -699,7 +759,7 @@
             </executions>
             <configuration>
               <verticle>${main.verticle}</verticle>
-              <redeploy>false</redeploy>
+              <redeploy>${live.test.reloads}</redeploy>
               <runArgs>
                 <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
                 <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>

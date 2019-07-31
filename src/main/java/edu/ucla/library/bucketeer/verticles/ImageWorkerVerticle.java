@@ -53,8 +53,6 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                         MessageCodes.BUCKETEER_030);
 
                 LOGGER.error(details, MessageCodes.BUCKETEER_006, message);
-
-                // Reply to Samvera callback
             }
         });
     }

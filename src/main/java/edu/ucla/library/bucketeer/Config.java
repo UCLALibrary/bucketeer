@@ -22,6 +22,14 @@ public final class Config {
 
     public static final String HTTP_CALLBACK = "bucketeer.http.callback";
 
+    public static final String MAX_WAIT_QUEUE_SIZE = "httpclient.max.queue.size";
+
+    public static final String FILESYSTEM_MOUNT = "bucketeer.fs.mount";
+
+    public static final String FILESYSTEM_PREFIX = "bucketeer.fs.prefix";
+
+    public static final String LAMBDA_S3_BUCKET = "lambda.s3.bucket";
+
     /**
      * Private constructor for the Constants class.
      */

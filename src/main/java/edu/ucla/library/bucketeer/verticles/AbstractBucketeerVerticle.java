@@ -4,6 +4,7 @@ package edu.ucla.library.bucketeer.verticles;
 import info.freelibrary.util.Logger;
 
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -39,14 +40,15 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
 
         vertx.eventBus().send(aVerticleName, aJsonObject, options, response -> {
-            final Logger logger = getLogger();
-
             if (response.failed()) {
                 if (response.cause() != null) {
-                    logger.error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                    getLogger().error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 } else {
-                    logger.error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                    getLogger().error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 }
+            } else if (response.result().body().equals(Op.RETRY)) {
+                getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
+                sendMessage(aJsonObject, aVerticleName, aTimeout);
             }
         });
     }

@@ -17,16 +17,29 @@
 
   <logger name="io.netty" level="ERROR" additivity="false">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </logger>
   <logger name="io.vertx" level="ERROR" additivity="false">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
+  </logger>
+  <!-- We handle this exception so don't need it logged as SEVERE -->
+  <logger name="io.vertx.core.http.ConnectionPoolTooBusyException" level="OFF" additivity="false">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
+  </logger>
+  <logger name="io.swagger" level="WARN" additivity="false">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </logger>
   <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </logger>
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </root>
 
 </configuration>

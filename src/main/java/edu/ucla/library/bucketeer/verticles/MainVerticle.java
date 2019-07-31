@@ -3,6 +3,7 @@ package edu.ucla.library.bucketeer.verticles;
 
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,8 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.handlers.GetPingHandler;
+import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
+import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageFailureHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
 import io.vertx.config.ConfigRetriever;
@@ -23,6 +25,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
@@ -39,13 +42,15 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final int DEFAULT_PORT = 8888;
 
+    private static final String THREAD_NAME = "-thread";
+
     /**
      * Starts a Web server.
      */
     @Override
     public void start(final Future<Void> aFuture) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
-        final HttpServer server = vertx.createHttpServer();
+        final HttpServer server = vertx.createHttpServer(getHttpServerOptions());
 
         // We pull our application's configuration before configuring the server
         configRetriever.getConfig(configuration -> {
@@ -62,27 +67,36 @@ public class MainVerticle extends AbstractVerticle {
                         final int port = config.getInteger(Config.HTTP_PORT, DEFAULT_PORT);
                         final Router router;
 
-                        // Next, we associate handlers with routes from our specification
-                        routerFactory.addHandlerByOperationId(Op.GET_PING, new GetPingHandler());
-                        routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
-                        routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageFailureHandler());
+                        try {
+                            final LoadImageFailureHandler loadImageFailureHandler = new LoadImageFailureHandler();
+                            final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(config);
 
-                        // After that, we can get a router that's been configured by our OpenAPI spec
-                        router = routerFactory.getRouter();
+                            // Next, we associate handlers with routes from our specification
+                            routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
+                            routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
+                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, loadImageFailureHandler);
+                            routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
 
-                        // Serve Bucketeer documentation (must be first route: order index = 0)
-                        router.get("/docs/*").order(0).handler(StaticHandler.create().setWebRoot("webroot"));
+                            // After that, we can get a router that's been configured by our OpenAPI spec
+                            router = routerFactory.getRouter();
 
-                        server.requestHandler(router).listen(port);
+                            // Serve our static pages (docs, CSV submission form, etc.)
+                            router.get("/*").order(0).blockingHandler(StaticHandler.create("webroot"));
 
-                        // Deploy our verticles that convert and upload images to S3
-                        deployVerticles(config, deployment -> {
-                            if (deployment.succeeded()) {
-                                aFuture.complete();
-                            } else {
-                                aFuture.fail(deployment.cause());
-                            }
-                        });
+                            // Start our server
+                            server.requestHandler(router).listen(port);
+
+                            // Deploy our verticles that convert and upload images to S3
+                            deployVerticles(config, deployment -> {
+                                if (deployment.succeeded()) {
+                                    aFuture.complete();
+                                } else {
+                                    aFuture.fail(deployment.cause());
+                                }
+                            });
+                        } catch (final IOException details) {
+                            aFuture.fail(details);
+                        }
                     } else {
                         aFuture.fail(creation.cause());
                     }
@@ -92,31 +106,53 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     /**
+     * We can take advantage of some native functions if we're running on the right kind of machine.
+     *
+     * @return The HTTP server options
+     */
+    private HttpServerOptions getHttpServerOptions() {
+        final HttpServerOptions options = new HttpServerOptions();
+        final String osName = System.getProperty("os.name", "");
+        final String osArch = System.getProperty("os.arch", "");
+
+        // Set Linux options if we're running on a Linux machine
+        if ("unix".equals(osName) && "amd64".equals(osArch)) {
+            options.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
+        }
+
+        return options;
+    }
+
+    /**
      * Returns the other non-main verticles.
      *
      * @param aHandler A handler that wraps the results of our verticle deployments
      */
     @SuppressWarnings("rawtypes")
     private void deployVerticles(final JsonObject aConfig, final Handler<AsyncResult<Void>> aHandler) {
+        final DeploymentOptions uploaderOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
-        final DeploymentOptions verticleOpts = new DeploymentOptions();
         final List<Future> futures = new ArrayList<>();
         final Future<Void> future = Future.future();
 
         // Set configuration values for our verticles to use
-        verticleOpts.setConfig(aConfig);
+        uploaderOpts.setConfig(aConfig);
         workerOpts.setConfig(aConfig);
 
         // Set the deployVerticles handler to handle our verticles deploy future
         future.setHandler(aHandler);
 
-        // Kakadu uses all the available threads so let's let it do its work
         workerOpts.setInstances(1);
         workerOpts.setWorkerPoolSize(1);
-        workerOpts.setWorkerPoolName(ImageWorkerVerticle.class.getSimpleName() + "-thread");
+        workerOpts.setWorkerPoolName(ImageWorkerVerticle.class.getSimpleName() + THREAD_NAME);
 
-        futures.add(deployVerticle(S3BucketVerticle.class.getName(), verticleOpts, Future.future()));
+        // TODO: make these variables configurable
+        uploaderOpts.setInstances(1);
+        uploaderOpts.setWorkerPoolSize(60);
+        uploaderOpts.setWorkerPoolName(S3BucketVerticle.class.getSimpleName() + THREAD_NAME);
+
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
+        futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).setHandler(handler -> {

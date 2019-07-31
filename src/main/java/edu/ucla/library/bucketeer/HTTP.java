@@ -12,6 +12,9 @@ public final class HTTP {
     /** Created response */
     public static final int CREATED = 201;
 
+    /** Too many requests */
+    public static final int TOO_MANY_REQUESTS = 429;
+
     /** Not found response */
     public static final int NOT_FOUND = 404;
 

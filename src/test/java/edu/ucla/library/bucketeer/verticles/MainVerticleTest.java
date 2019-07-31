@@ -9,8 +9,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
+
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -20,6 +24,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class MainVerticleTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticleTest.class, Constants.MESSAGES);
 
     private Vertx myVertx;
 
@@ -33,6 +39,7 @@ public class MainVerticleTest {
         final DeploymentOptions options = new DeploymentOptions();
         final ServerSocket socket = new ServerSocket(0);
         final int port = socket.getLocalPort();
+        final Async asyncTask = aContext.async();
 
         aContext.put(Config.HTTP_PORT, port);
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
@@ -40,7 +47,15 @@ public class MainVerticleTest {
 
         // Initialize the Vert.x environment and start our main verticle
         myVertx = Vertx.vertx();
-        myVertx.deployVerticle(MainVerticle.class.getName(), options, aContext.asyncAssertSuccess());
+
+        // Confirm our verticle has loaded before we attempt to test it
+        myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
+            if (deployment.succeeded()) {
+                asyncTask.complete();
+            } else {
+                aContext.fail();
+            }
+        });
     }
 
     /**
@@ -65,7 +80,7 @@ public class MainVerticleTest {
         final int port = aContext.get(Config.HTTP_PORT);
 
         // Testing the path defined in our OpenAPI YAML file
-        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/ping", response -> {
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/status", response -> {
             final int statusCode = response.statusCode();
 
             if (statusCode == 200) {
@@ -74,7 +89,7 @@ public class MainVerticleTest {
                     async.complete();
                 });
             } else {
-                aContext.fail("Failed status code: " + statusCode);
+                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_069, statusCode));
                 async.complete();
             }
         });
