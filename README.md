@@ -28,7 +28,7 @@ You can run a development instance of Bucketeer by typing the following within t
 
     mvn -Plive test
 
-Once run, the service can be verified/accessed at [http://localhost:8888/ping](http://localhost:8888/ping). The API documentation can be accessed at [http://localhost:8888/docs](http://localhost:8888/docs)
+Once run, the service can be verified/accessed at [http://localhost:8888/status](http://localhost:8888/status). The API documentation can be accessed at [http://localhost:8888/docs](http://localhost:8888/docs)
 
 ## Testing Considerations
 
