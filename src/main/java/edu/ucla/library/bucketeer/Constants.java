@@ -27,6 +27,16 @@ public final class Constants {
     public static final String FILE_PATH = "filePath";
 
     /**
+     * The batch job name (i.e., the name of the file being processed)
+     */
+    public static final String JOB_NAME = "jobName";
+
+    /**
+     * The success status for an individual image in a batch job.
+     */
+    public static final String SUCCESS = "success";
+
+    /**
      * The Slack handle of the person submitting the batch job
      */
     public static final String SLACK_HANDLE = "slackHandle";
@@ -75,6 +85,11 @@ public final class Constants {
      * The name of the lambda queue.
      */
     public static final String LAMBDA_MAP = "lambda-map";
+
+    /**
+     * The name of the mapping of deployed verticles.
+     */
+    public static final String VERTICLE_MAP = "bucketeer.verticles";
 
     /**
      * Private constructor for Constants class.

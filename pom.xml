@@ -82,7 +82,7 @@
 
     <!-- Callback that we alert to the success/failure of the process -->
     <bucketeer.http.callback>http://localhost/echo-callback</bucketeer.http.callback>
-    
+
     <!-- Where the source images are mounted on the local file system -->
     <bucketeer.fs.mount></bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
@@ -166,6 +166,12 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
+      <version>${vertx.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
       <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>

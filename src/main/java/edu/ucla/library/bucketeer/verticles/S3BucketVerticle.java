@@ -3,10 +3,6 @@ package edu.ucla.library.bucketeer.verticles;
 
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
-import java.io.IOException;
-
-import javax.naming.ConfigurationException;
-
 import com.amazonaws.regions.RegionUtils;
 
 import info.freelibrary.util.Logger;
@@ -37,7 +33,9 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
     private S3Client myS3Client;
 
     @Override
-    public void start() throws ConfigurationException, IOException {
+    public void start() throws Exception {
+        super.start();
+
         final JsonObject config = config();
         final Vertx vertx = getVertx();
 

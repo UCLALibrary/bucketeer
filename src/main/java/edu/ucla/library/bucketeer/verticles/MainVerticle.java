@@ -13,6 +13,7 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
 import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageFailureHandler;
@@ -76,6 +77,7 @@ public class MainVerticle extends AbstractVerticle {
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                             routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, loadImageFailureHandler);
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
+                            routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, new BatchJobStatusHandler());
 
                             // After that, we can get a router that's been configured by our OpenAPI spec
                             router = routerFactory.getRouter();

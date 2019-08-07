@@ -97,7 +97,7 @@ public class ImageUploadIT {
     public static void configureS3(final TestContext aContext) {
         final Async asyncTask = aContext.async();
 
-        LOGGER.debug(MessageCodes.BUCKETEER_021, PORT);
+        LOGGER.debug(MessageCodes.BUCKETEER_021, ImageUploadIT.class.getSimpleName(), PORT);
 
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
 
