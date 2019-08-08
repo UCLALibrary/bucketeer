@@ -16,6 +16,8 @@ public final class Op {
 
     public static final String LOAD_IMAGES_FROM_CSV = "loadImagesFromCSV";
 
+    public static final String UPDATE_BATCH_JOB = "updateBatchJob";
+
     //
     // Operation responses
     //

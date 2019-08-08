@@ -3,6 +3,7 @@ package edu.ucla.library.bucketeer.verticles;
 
 import info.freelibrary.util.Logger;
 
+import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.AbstractVerticle;
@@ -10,8 +11,25 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.LocalMap;
 
 public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+
+        // Register our verticle name with its deployment ID.
+        final LocalMap<String, String> verticleMap = vertx.sharedData().getLocalMap(Constants.VERTICLE_MAP);
+        final String verticleName = getClass().getSimpleName();
+
+        // Add a deployment ID to the verticle map
+        if (verticleMap.containsKey(verticleName)) {
+            verticleMap.put(verticleName, verticleMap.get(verticleName) + "|" + deploymentID());
+        } else {
+            verticleMap.put(verticleName, deploymentID());
+        }
+    }
 
     @Override
     public void stop(final Future<Void> aFuture) {

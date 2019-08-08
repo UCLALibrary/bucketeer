@@ -12,6 +12,9 @@ public final class HTTP {
     /** Created response */
     public static final int CREATED = 201;
 
+    /** Success, no content */
+    public static final int NO_CONTENT = 204;
+
     /** Too many requests */
     public static final int TOO_MANY_REQUESTS = 429;
 

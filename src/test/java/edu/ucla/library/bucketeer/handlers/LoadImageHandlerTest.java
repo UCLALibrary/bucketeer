@@ -8,6 +8,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -47,6 +48,9 @@ public class LoadImageHandlerTest {
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
+    @Rule
+    public TestName myTestName = new TestName();
+
     private Vertx myVertx;
 
     private AmazonS3 myAmazonS3;
@@ -64,7 +68,7 @@ public class LoadImageHandlerTest {
         final int port = socket.getLocalPort();
         final Async asyncTask = aContext.async();
 
-        LOGGER.debug(MessageCodes.BUCKETEER_021, port);
+        LOGGER.debug(MessageCodes.BUCKETEER_021, myTestName.getMethodName(), port);
 
         aContext.put(Config.HTTP_PORT, port);
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
@@ -134,6 +138,7 @@ public class LoadImageHandlerTest {
 
         myVertx.createHttpClient().getNow(request, response -> {
             final int statusCode = response.statusCode();
+            final String statusMessage = response.statusMessage();
 
             if (statusCode == HTTP.OK) {
                 response.bodyHandler(body -> {
@@ -165,7 +170,7 @@ public class LoadImageHandlerTest {
                     });
                 });
             } else {
-                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode));
+                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
             }
         });
     }

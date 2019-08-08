@@ -15,15 +15,76 @@ paths:
   /status:
     get:
       summary: Application Status
-      description: Requests an application status check.
+      description: Requests an application status check
       operationId: getStatus
       responses:
         '200':
           description: OK
+  /batch/jobs/{jobName}/{imageId}/{success}:
+    patch:
+      summary: Batch Job Status
+      description: Updates a batch job that's in process
+      operationId: updateBatchJob
+      responses:
+        '204':
+          description: The job status was successfully updated
+        '404':
+          description: The job status was not found
+        '500':
+          description: There was an internal server error
+    parameters:
+       - in: path
+         name: jobName
+         required: true
+         schema:
+           type: string
+         description: The batch job name
+       - in: path
+         name: imageId
+         required: true
+         schema:
+          type: string
+         description: The processed image ID
+       - in: path
+         name: success
+         required: true
+         schema:
+          type: boolean
+         description: Whether the image was successfully processed
+  /batch/input/csv:
+    post:
+      summary: CSV Batch Conversion
+      description: Loads a bunch of images into Bucketeer's batch ingest workflow so that Cantaloupe can access them
+      operationId: loadImagesFromCSV
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                slackHandle:
+                  type: string
+                csvFileToUpload:
+                  type: string
+                  format: binary
+                failure:
+                  type: string
+      responses:
+        '200': 
+          description: An HTML page informing the user that their job has been queued
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Bad request (missing Slack handle/CSV file or invalid CSV uploaded)
+        '415':
+          description: Unsupported media type (i.e. not a CSV file)
   /{imageId}/{filePath}:
     get:
       summary: New JPEG 2000 Image
-      description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it.
+      description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it
       operationId: loadImage
       responses:
         '200':
@@ -52,33 +113,3 @@ paths:
          schema:
           type: string
          description: The local image path
-  /batch/input/csv:
-    post:
-      summary: CSV Batch Conversion
-      description: Loads a bunch of images into Bucketeer's batch ingest workflow so that Cantaloupe can access them.
-      operationId: loadImagesFromCSV
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                slackHandle:
-                  type: string
-                csvFileToUpload:
-                  type: string
-                  format: binary
-                failure:
-                  type: string
-      responses:
-        '200': 
-          description: An HTML page informing the user that their job has been queued
-          content:
-            text/html:
-              schema:
-                type: string
-                format: binary
-        '400':
-          description: Bad request (missing Slack handle/CSV file or invalid CSV uploaded)
-        '415':
-          description: Unsupported media type (i.e. not a CSV file)

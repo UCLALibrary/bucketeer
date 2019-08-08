@@ -1,6 +1,7 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
+import static edu.ucla.library.bucketeer.Metadata.WorkflowState.EMPTY;
 import static edu.ucla.library.bucketeer.Metadata.WorkflowState.FAILED;
 
 import java.io.BufferedReader;
@@ -27,6 +28,7 @@ import edu.ucla.library.bucketeer.CsvParsingException;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
+import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.FilePathPrefixFactory;
 import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
@@ -147,14 +149,14 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                             if (keyCheck.succeeded()) {
                                 // If CSV file is already in the queue, let the user know to check Slack for results
                                 if (keyCheck.result().contains(fileName)) {
-                                    final String dupMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_060, fileName);
+                                    final String duplicate = LOGGER.getMessage(MessageCodes.BUCKETEER_060, fileName);
 
-                                    LOGGER.info(dupMessage);
+                                    LOGGER.info(duplicate);
 
                                     response.setStatusCode(HTTP.TOO_MANY_REQUESTS);
-                                    response.setStatusMessage(dupMessage);
+                                    response.setStatusMessage(duplicate);
                                     response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
-                                    response.end(StringUtils.format(myExceptionPage, dupMessage));
+                                    response.end(StringUtils.format(myExceptionPage, duplicate));
                                 } else {
                                     try {
                                         checkMetadata(metadataList);
@@ -170,11 +172,11 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                                     }
                                 }
                             } else {
-                                replyWithInternalServerError(response, MessageCodes.BUCKETEER_062, fileName);
+                                returnError(response, MessageCodes.BUCKETEER_062, fileName);
                             }
                         });
                     } else {
-                        replyWithInternalServerError(response, MessageCodes.BUCKETEER_063, fileName);
+                        returnError(response, MessageCodes.BUCKETEER_063, fileName);
                     }
                 });
             } catch (final FileNotFoundException details) {
@@ -192,14 +194,14 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         }
     }
 
-    private void replyWithInternalServerError(final HttpServerResponse aResponse, final String aMessage,
-            final String aDetail) {
+    private void returnError(final HttpServerResponse aResponse, final String aMessage, final String aDetail) {
         final String errorName = LOGGER.getMessage(MessageCodes.BUCKETEER_074);
         final String errorMessage = LOGGER.getMessage(aMessage, aDetail);
 
         LOGGER.error(errorMessage);
 
         aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
+        aResponse.setStatusMessage(errorMessage);
         aResponse.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
         aResponse.end(StringUtils.format(myExceptionPage, errorName + errorMessage));
     }
@@ -213,6 +215,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
 
         // Cycle through our metadata, add each to our monitoring queue, then send off
         for (final Metadata metadata : aMetadataList) {
+            final WorkflowState state = metadata.getWorkflowState();
             final String errorMessage;
 
             // Set the file prefix so file paths can be checked against the file system
@@ -240,11 +243,14 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 final File imageFile = metadata.getFile();
                 final String extension = "." + FileUtils.getExt(imageFile.getName());
 
-                s3UploadMessage.put(Constants.IMAGE_ID, metadata.getID() + extension);
-                s3UploadMessage.put(Constants.FILE_PATH, imageFile.getAbsolutePath());
-                s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
+                // For normal runs only process empty states and for failure runs only processes failures
+                if ((!aFailuresRun && state.equals(EMPTY)) || (aFailuresRun && state.equals(FAILED))) {
+                    s3UploadMessage.put(Constants.IMAGE_ID, metadata.getID() + extension);
+                    s3UploadMessage.put(Constants.FILE_PATH, imageFile.getAbsolutePath());
+                    s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
 
-                sendMessage(s3UploadMessage, S3BucketVerticle.class.getName(), Integer.MAX_VALUE);
+                    sendMessage(s3UploadMessage, S3BucketVerticle.class.getName(), Integer.MAX_VALUE);
+                }
             }
         }
     }
@@ -310,15 +316,15 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
 
                                 addMetadataToJobsQueue(aMetadataList, counter, aFailuresRun);
                             } else {
-                                replyWithInternalServerError(aResponse, MessageCodes.BUCKETEER_067, aCsvFileName);
+                                returnError(aResponse, MessageCodes.BUCKETEER_067, aCsvFileName);
                             }
                         });
                     } else {
-                        replyWithInternalServerError(aResponse, MessageCodes.BUCKETEER_066, aCsvFileName);
+                        returnError(aResponse, MessageCodes.BUCKETEER_066, aCsvFileName);
                     }
                 });
             } else {
-                replyWithInternalServerError(aResponse, MessageCodes.BUCKETEER_068, aCsvFileName);
+                returnError(aResponse, MessageCodes.BUCKETEER_068, aCsvFileName);
             }
         });
     }
