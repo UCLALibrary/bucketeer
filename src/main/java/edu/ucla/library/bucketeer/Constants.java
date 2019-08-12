@@ -19,17 +19,17 @@ public final class Constants {
     /**
      * The ID for the image that's going to be processed.
      */
-    public static final String IMAGE_ID = "imageId";
+    public static final String IMAGE_ID = "image-id";
 
     /**
      * The path to the TIFF file that's going to be read.
      */
-    public static final String FILE_PATH = "filePath";
+    public static final String FILE_PATH = "file-path";
 
     /**
      * The batch job name (i.e., the name of the file being processed)
      */
-    public static final String JOB_NAME = "jobName";
+    public static final String JOB_NAME = "job-name";
 
     /**
      * The success status for an individual image in a batch job.
@@ -39,7 +39,7 @@ public final class Constants {
     /**
      * The Slack handle of the person submitting the batch job
      */
-    public static final String SLACK_HANDLE = "slackHandle";
+    public static final String SLACK_HANDLE = "slack-handle";
 
     /**
      * The name of the "failures only" processing flag.
@@ -89,7 +89,7 @@ public final class Constants {
     /**
      * The name of the mapping of deployed verticles.
      */
-    public static final String VERTICLE_MAP = "bucketeer.verticles";
+    public static final String VERTICLE_MAP = "bucketeer-verticles";
 
     /**
      * Private constructor for Constants class.

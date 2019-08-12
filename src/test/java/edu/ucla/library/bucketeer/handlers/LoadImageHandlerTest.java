@@ -153,7 +153,7 @@ public class LoadImageHandlerTest {
 
                     // Check every 5 seconds to see if our process is done
                     myVertx.setPeriodic(5000, timer -> {
-                        if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id + DOT_JPX) != null) {
+                        if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id) != null) {
                             myAmazonS3.deleteObject(s3Bucket, id + DOT_JPX);
                             async.complete();
                         } else {

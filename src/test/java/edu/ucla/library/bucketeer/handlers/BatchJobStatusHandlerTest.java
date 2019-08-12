@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
+import info.freelibrary.util.FileUtils;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
@@ -61,9 +62,11 @@ public class BatchJobStatusHandlerTest {
 
     private static final String TEST_ARK = "ark%3A%2F13030%2Fhb000003n9";
 
-    private static final String JOB_NAME = "live-test.csv";
+    private static final String JOB_FILE_NAME = "live-test.csv";
 
     private static final String JOB_FILE_PATH = "src/test/resources/csv/";
+
+    private static final String JOB_NAME = FileUtils.stripExt(JOB_FILE_NAME);
 
     private static final String TRUE = "true";
 
@@ -208,15 +211,15 @@ public class BatchJobStatusHandlerTest {
     public final void testPatchHandle(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
-        final String csvFile = new File(JOB_FILE_PATH, JOB_NAME).getAbsolutePath();
+        final String csvFile = new File(JOB_FILE_PATH, JOB_FILE_NAME).getAbsolutePath();
         final String patchUri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
         final WebClient webClient = WebClient.create(myVertx);
         final HttpRequest<Buffer> postRequest = webClient.post(port, UNSPECIFIED_HOST, POST_URI);
         final MultipartForm form = MultipartForm.create();
 
-        form.attribute("slackHandle", "ksclarke");
+        form.attribute(Constants.SLACK_HANDLE, "ksclarke");
         form.attribute("failure", "false");
-        form.textFileUpload("csvFileToUpload", JOB_NAME, csvFile, "text/csv");
+        form.textFileUpload("csvFileToUpload", JOB_FILE_NAME, csvFile, "text/csv");
 
         postRequest.sendMultipartForm(form, sendMultipartForm -> {
             if (sendMultipartForm.succeeded()) {

@@ -66,6 +66,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
     public LoadCsvHandler(final JsonObject aConfig) throws IOException {
         final StringBuilder templateBuilder = new StringBuilder();
 
+        // Load a template used for returning the error page
         InputStream templateStream = getClass().getResourceAsStream("/webroot/error.html");
         BufferedReader templateReader = new BufferedReader(new InputStreamReader(templateStream));
         String line;
@@ -77,6 +78,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         templateReader.close();
         myExceptionPage = templateBuilder.toString();
 
+        // Load a template used for returning the success page
         templateBuilder.delete(0, templateBuilder.length());
         templateStream = getClass().getResourceAsStream("/webroot/success.html");
         templateReader = new BufferedReader(new InputStreamReader(templateStream));
@@ -206,8 +208,8 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         aResponse.end(StringUtils.format(myExceptionPage, errorName + errorMessage));
     }
 
-    private void addMetadataToJobsQueue(final List<Metadata> aMetadataList, final Counter aCounter,
-            final boolean aFailuresRun) {
+    private void addMetadataToJobsQueue(final String aJobName, final List<Metadata> aMetadataList,
+            final Counter aCounter, final boolean aFailuresRun) {
         final String fsMount = myConfig.getString(Config.FILESYSTEM_MOUNT);
         final String fsPrefix = myConfig.getString(Config.FILESYSTEM_PREFIX);
         final String s3Bucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
@@ -247,6 +249,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 if ((!aFailuresRun && state.equals(EMPTY)) || (aFailuresRun && state.equals(FAILED))) {
                     s3UploadMessage.put(Constants.IMAGE_ID, metadata.getID() + extension);
                     s3UploadMessage.put(Constants.FILE_PATH, imageFile.getAbsolutePath());
+                    s3UploadMessage.put(Constants.JOB_NAME, aJobName);
                     s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
 
                     sendMessage(s3UploadMessage, S3BucketVerticle.class.getName(), Integer.MAX_VALUE);
@@ -295,13 +298,15 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
     private void processMetadata(final List<Metadata> aMetadataList, final AsyncMap<String, List<Metadata>> aAsyncMap,
             final String aCsvFileName, final boolean aFailuresRun, final HttpServerResponse aResponse,
             final SharedData aSharedData) {
+        final String jobName = FileUtils.stripExt(aCsvFileName);
+
         // Put our metadata into the jobs queue map using the CSV file name as the key
-        aAsyncMap.put(aCsvFileName, aMetadataList, put -> {
+        aAsyncMap.put(jobName, aMetadataList, put -> {
             if (put.succeeded()) {
                 final String statusMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_064);
 
-                // Set a shared counter (named with CSV file name) to the number of records in the metadata list
-                aSharedData.getCounter(aCsvFileName, getCounter -> {
+                // Set a shared counter to the number of records in the metadata list
+                aSharedData.getCounter(jobName, getCounter -> {
                     if (getCounter.succeeded()) {
                         final Counter counter = getCounter.result();
 
@@ -314,18 +319,19 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                                 aResponse.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
                                 aResponse.end(StringUtils.format(mySuccessPage, statusMessage));
 
-                                addMetadataToJobsQueue(aMetadataList, counter, aFailuresRun);
+                                addMetadataToJobsQueue(jobName, aMetadataList, counter, aFailuresRun);
                             } else {
-                                returnError(aResponse, MessageCodes.BUCKETEER_067, aCsvFileName);
+                                returnError(aResponse, MessageCodes.BUCKETEER_067, jobName);
                             }
                         });
                     } else {
-                        returnError(aResponse, MessageCodes.BUCKETEER_066, aCsvFileName);
+                        returnError(aResponse, MessageCodes.BUCKETEER_066, jobName);
                     }
                 });
             } else {
-                returnError(aResponse, MessageCodes.BUCKETEER_068, aCsvFileName);
+                returnError(aResponse, MessageCodes.BUCKETEER_068, jobName);
             }
         });
     }
+
 }
