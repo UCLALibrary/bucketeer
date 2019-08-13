@@ -6,8 +6,6 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 import java.io.File;
 import java.io.IOException;
 
-import javax.naming.ConfigurationException;
-
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -24,7 +22,7 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageWorkerVerticle.class, MESSAGES);
 
     @Override
-    public void start() throws ConfigurationException, IOException {
+    public void start() throws IOException {
         if (LOGGER.isDebugEnabled()) {
             final String className = ImageWorkerVerticle.class.getSimpleName();
             final String threadName = Thread.currentThread().getName();

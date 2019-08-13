@@ -20,7 +20,7 @@ paths:
       responses:
         '200':
           description: OK
-  /batch/jobs/{jobName}/{imageId}/{success}:
+  /batch/jobs/{job-name}/{image-id}/{success}:
     patch:
       summary: Batch Job Status
       description: Updates a batch job that's in process
@@ -34,13 +34,13 @@ paths:
           description: There was an internal server error
     parameters:
        - in: path
-         name: jobName
+         name: job-name
          required: true
          schema:
            type: string
          description: The batch job name
        - in: path
-         name: imageId
+         name: image-id
          required: true
          schema:
           type: string
@@ -62,7 +62,7 @@ paths:
             schema:
               type: object
               properties:
-                slackHandle:
+                slack-handle:
                   type: string
                 csvFileToUpload:
                   type: string
@@ -81,7 +81,7 @@ paths:
           description: Bad request (missing Slack handle/CSV file or invalid CSV uploaded)
         '415':
           description: Unsupported media type (i.e. not a CSV file)
-  /{imageId}/{filePath}:
+  /{image-id}/{file-path}:
     get:
       summary: New JPEG 2000 Image
       description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it
@@ -102,13 +102,13 @@ paths:
                     description: Any related text about the loadImage operation
     parameters:
        - in: path
-         name: imageId
+         name: image-id
          required: true
          schema:
            type: string
          description: The image ID
        - in: path
-         name: filePath
+         name: file-path
          required: true
          schema:
           type: string
