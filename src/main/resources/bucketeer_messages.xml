@@ -93,6 +93,14 @@
   <entry key="BUCKETEER-082">Failed to removed completed batch job from the queue: {}</entry>
   <entry key="BUCKETEER-083">BatchJobStatusHandlerTest should have failed with a GET request</entry>
   <entry key="BUCKETEER-084">FakeS3BucketVerticle received a storage request: {}</entry>
+  <entry key="BUCKETEER-085">Setting up the Slack client</entry>
+  <entry key="BUCKETEER-086">Preparing to send '{}' to Slack channel: {}</entry>
+  <entry key="BUCKETEER_087">Slack message sent, with response of '{}'.</entry>
+  <entry key="BUCKETEER-088">Slack message send failed: {} -&gt; {}</entry>
+  <entry key="BUCKETEER-089">IO Exception: {}</entry>
+  <entry key="BUCKETEER-090">Slack file upload failed: {}</entry>
+  <entry key="BUCKETEER-091">Preparing to upload file with message: '{}' to Slack channel: {}</entry>
+  <entry key="BUCKETEER-092">Error writing to placeholder.json: '{}'.</entry>
   <entry key="BUCKETEER-100">Passed date time isn't valid: {} (Must be: yyyyMMdd'T'HHmmss'Z')</entry>
   <entry key="BUCKETEER-101">Test failed to catch a bad datetime: {}</entry>
   <entry key="BUCKETEER-102">Unexpected status code: {} [{}] {}</entry>

@@ -57,6 +57,8 @@
     <freelib.utils.version>0.8.10</freelib.utils.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
+    <jslack.version>1.7.8</jslack.version>
+    <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
 
     <!-- Build plug-in versions -->
     <clean.plugin.version>3.1.0</clean.plugin.version>
@@ -98,6 +100,26 @@
   </properties>
 
   <dependencies>
+
+    <!--   <!&#45;&#45; Explicitly declaring these fasterxml.jackson dependencies, which are required by other dependencies, to better control the version we use &#45;&#45;> -->
+    <!-- <dependency> -->
+    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
+    <!--    <artifactId>jackson&#45;core</artifactId> -->
+    <!--    <version>${fasterxml.jackson.version}</version> -->
+    <!-- </dependency> -->
+    <!-- <dependency> -->
+    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
+    <!--    <artifactId>jackson&#45;annotations</artifactId> -->
+    <!--    <version>${fasterxml.jackson.version}</version> -->
+    <!-- </dependency> -->
+    <!-- <dependency> -->
+    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
+    <!--    <artifactId>jackson&#45;databind</artifactId> -->
+    <!--    <version>${fasterxml.jackson.version}</version> -->
+    <!-- </dependency> -->
+    <!--  -->
+
+
 
     <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
     <dependency>
@@ -175,6 +197,11 @@
       <groupId>info.freelibrary</groupId>
       <artifactId>vertx-super-s3</artifactId>
       <version>${vertx.super.s3.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.seratch</groupId>
+      <artifactId>jslack</artifactId>
+      <version>${jslack.version}</version>
     </dependency>
 
     <!-- Below dependencies only used for testing -->
@@ -436,6 +463,7 @@
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+            <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>

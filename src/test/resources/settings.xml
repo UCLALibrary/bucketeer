@@ -31,12 +31,24 @@
         <gpg.keyname>${env.BUILD_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.BUILD_PASSPHRASE}</gpg.passphrase>
 
+        <!-- HINT: the oauth token should begin with 'xoxb' -->
+        <!-- HINT: slack.error_channel_id should probably be the same as slack.test_channel_id -->
+        <!-- HINT: slack.test_user_handle should probably be YOUR slack handle -->
         <!--<![CDATA[
         <http.port></http.port>
         <bucketeer.s3.bucket></bucketeer.s3.bucket>
         <bucketeer.s3.access_key></bucketeer.s3.access_key>
         <bucketeer.s3.secret_key></bucketeer.s3.secret_key>
         <bucketeer.s3.region></bucketeer.s3.region>
+        <bucketeer.slack.test_user_handle></bucketeer.slack.test_user_handle>
+        <bucketeer.slack.verification_token></bucketeer.slack.verification_token>
+        <bucketeer.slack.oauth_token></bucketeer.slack.oauth_token>
+        <bucketeer.slack.test_webhook_url></bucketeer.slack.test_webhook_url>
+        <bucketeer.slack.test_channel_id></bucketeer.slack.test_channel_id>
+        <bucketeer.slack.webhook_url></bucketeer.slack.webhook_url>
+        <bucketeer.slack.channel_id></bucketeer.slack.channel_id>
+        <bucketeer.slack.error_webhook_url></bucketeer.slack.error_webhook_url>
+        <bucketeer.slack.error_channel_id></bucketeer.slack.error_channel_id>
         ]]>-->
       </properties>
     </profile>

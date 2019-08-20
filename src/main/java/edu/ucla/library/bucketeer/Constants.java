@@ -87,9 +87,75 @@ public final class Constants {
     public static final String LAMBDA_MAP = "lambda-map";
 
     /**
-     * The name of the mapping of deployed verticles.
+     * The name of the mapping of deployed verticles. HERE I'm worried this is wrong, leaving this mark to remember to
+     * check on it later
      */
-    public static final String VERTICLE_MAP = "bucketeer-verticles";
+    public static final String VERTICLE_MAP = "bucketeer.verticles";
+
+    /**
+     * Text for a slack message we want to sent.
+     */
+    public static final String SLACK_MESSAGE_TEXT = "slack-message-text";
+
+    /**
+     * Batch Metadata, stored as a JSON array
+     */
+    public static final String BATCH_METADATA = "batch-metadata";
+
+    /**
+     * Slack Channel ID to which we want to send messages.
+     */
+    public static final String SLACK_CHANNEL_ID = "bucketeer.slack.channel_id";
+
+    /**
+     * Slack Channel ID to which we want to send test messages.
+     */
+    public static final String SLACK_TEST_CHANNEL_ID = "bucketeer.slack.test_channel_id";
+
+    /**
+     * Slack Channel ID to which we want to send error messages.
+     */
+    public static final String SLACK_ERROR_CHANNEL_ID = "bucketeer.slack.error_channel_id";
+
+    /**
+     * Slack Webhook URL to which we want to send messages.
+     */
+    public static final String SLACK_WEBHOOK_URL = "bucketeer.slack.webhook_url";
+
+    /**
+     * Slack Webhook URL to which we want to send test messages.
+     */
+    public static final String SLACK_TEST_WEBHOOK_URL = "bucketeer.slack.test_webhook_url";
+
+    /**
+     * Slack Webhook URL to which we want to send error messages.
+     */
+    public static final String SLACK_ERROR_WEBHOOK_URL = "bucketeer.slack.error_webhook_url";
+
+    /**
+     * Slack Verification Token (used to confirm messages are coming from Slack).
+     */
+    public static final String SLACK_VERIFICATION_TOKEN = "bucketeer.slack.verification_token";
+
+    /**
+     * Slack OAuth Token (used to authenticate with Slack).
+     */
+    public static final String SLACK_OAUTH_TOKEN = "bucketeer.slack.oauth_token";
+
+    /**
+     * Slack Test User Handle (used in tests messages to send pings).
+     */
+    public static final String SLACK_TEST_USER_HANDLE = "bucketeer.slack.test_user_handle";
+
+    /**
+     * Prefix to use for any error messages sent to Slack (for hours of fun, set this to a <@username>)
+     */
+    public static final String SLACK_ERROR_MESSAGE_PREFIX = "<!channel>";
+
+    /**
+     * just a space string, useful
+     */
+    public static final String SPACE = " ";
 
     /**
      * Private constructor for Constants class.
