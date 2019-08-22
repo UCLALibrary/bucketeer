@@ -218,7 +218,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         // Cycle through our metadata, add each to our monitoring queue, then send off
         for (final Metadata metadata : aMetadataList) {
             final WorkflowState state = metadata.getWorkflowState();
-            final String errorMessage;
+            final String infoMessage;
 
             // Set the file prefix so file paths can be checked against the file system
             metadata.setFilePathPrefix(filePathPrefix);
@@ -228,17 +228,17 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 final String id = metadata.getID();
 
                 if (id == null) {
-                    errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_061, values);
+                    infoMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_061, values);
                 } else if (metadata.isWork()) {
-                    errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_054, id);
+                    infoMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_054, id);
                 } else if (metadata.isCollection()) {
-                    errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_053, id);
+                    infoMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_053, id);
                 } else {
-                    errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_052, values);
+                    infoMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_052, values);
                 }
 
-                // Log the error so we can see these issues in the logs
-                LOGGER.error(errorMessage);
+                // We're not going to treat this as an error, but will log as possibly interesting
+                LOGGER.info(infoMessage);
                 metadata.setWorkflowState(FAILED);
             } else {
                 final JsonObject s3UploadMessage = new JsonObject();
