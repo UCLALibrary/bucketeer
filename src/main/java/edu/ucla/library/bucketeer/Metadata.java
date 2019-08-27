@@ -38,164 +38,164 @@ public class Metadata {
 
     /* Required fields */
 
-    @CsvBindByName(column = "Item ARK", required = true)
+    @CsvBindByName(column = Columns.ITEM_ARK, required = true)
     @JsonProperty
     private String myItemArk;
 
-    @CsvBindByName(column = "Object Type", required = true)
+    @CsvBindByName(column = Columns.OBJECT_TYPE, required = true)
     @JsonProperty
     private String myObjectType;
 
-    @CsvBindByName(column = "Title", required = true)
+    @CsvBindByName(column = Columns.TITLE, required = true)
     @JsonProperty
     private String myTitle;
 
-    @CsvBindByName(column = "File Name") /* Required for Work objects, not Collection(s) */
+    @CsvBindByName(column = Columns.FILE_NAME) /* Required for Work objects, not Collection(s) */
     @JsonProperty
     private String myFileName;
 
-    @CsvBindByName(column = "Parent ARK") /* Required for Work objects, not Collection(s) */
+    @CsvBindByName(column = Columns.PARENT_ARK) /* Required for Work objects, not Collection(s) */
     @JsonProperty
     private String myParentArk;
 
     /* Whether image was previously 'ingested' or just recently 'failed' or 'succeeded' */
 
-    @CsvBindByName(column = "bucketeer_state")
+    @CsvBindByName(column = Columns.BUCKETEER_STATE)
     @JsonProperty
     private String myWorkflowState;
 
     /* Where we put the IIIF URL */
-    @CsvBindByName(column = "access_copy")
+    @CsvBindByName(column = Columns.ACCESS_COPY)
     @JsonProperty
     private String myAccessCopy;
 
     /* Other allowed fields */
 
-    @CsvBindByName(column = "AltIdentifier.local")
+    @CsvBindByName(column = Columns.LOCAL_ID)
     @JsonProperty
     private String myLocalAltID;
 
-    @CsvBindByName(column = "AltTitle.other")
+    @CsvBindByName(column = Columns.ALT_TITLE)
     @JsonProperty
     private String myOtherAltTitle;
 
-    @CsvBindByName(column = "AltTitle.uniform")
+    @CsvBindByName(column = Columns.UNIFORM_TITLE)
     @JsonProperty
     private String myUniformAltTitle;
 
-    @CsvBindByName(column = "Rights.copyrightStatus")
+    @CsvBindByName(column = Columns.COPYRIGHT_STATUS)
     @JsonProperty
     private String myCopyrightStatus;
 
-    @CsvBindByName(column = "Coverage.geographic")
+    @CsvBindByName(column = Columns.GEO_COVERAGE)
     @JsonProperty
     private String myGeoCoverage;
 
-    @CsvBindByName(column = "Date.creation")
+    @CsvBindByName(column = Columns.CREATION_DATE)
     @JsonProperty
     private String myCreationDate;
 
-    @CsvBindByName(column = "Date.normalized")
+    @CsvBindByName(column = Columns.NORMALIZED_DATE)
     @JsonProperty
     private String myNormalizedDate;
 
-    @CsvBindByName(column = "Description.caption")
+    @CsvBindByName(column = Columns.CAPTION)
     @JsonProperty
     private String myCaption;
 
-    @CsvBindByName(column = "Description.fundingNote")
+    @CsvBindByName(column = Columns.FUNDING_NOTE)
     @JsonProperty
     private String myFundingNote;
 
-    @CsvBindByName(column = "Description.latitude")
+    @CsvBindByName(column = Columns.LATITUDE)
     @JsonProperty
     private String myLatitude;
 
-    @CsvBindByName(column = "Description.longitude")
+    @CsvBindByName(column = Columns.LONGITUDE)
     @JsonProperty
     private String myLongitude;
 
-    @CsvBindByName(column = "Description.note")
+    @CsvBindByName(column = Columns.DESCRIPTIVE_NOTE)
     @JsonProperty
     private String myNote;
 
-    @CsvBindByName(column = "Format.dimensions")
+    @CsvBindByName(column = Columns.DIMENSIONS)
     @JsonProperty
     private String myDimensions;
 
-    @CsvBindByName(column = "Format.extent")
+    @CsvBindByName(column = Columns.EXTENT)
     @JsonProperty
     private String myExtent;
 
-    @CsvBindByName(column = "Format.medium")
+    @CsvBindByName(column = Columns.MEDIUM)
     @JsonProperty
     private String myMedium;
 
-    @CsvBindByName(column = "Item Sequence")
+    @CsvBindByName(column = Columns.ITEM_SEQ)
     @JsonProperty
     private String myItemSequence;
 
-    @CsvBindByName(column = "Language")
+    @CsvBindByName(column = Columns.LANGUAGE)
     @JsonProperty
     private String myLanguage;
 
-    @CsvBindByName(column = "Name.architect")
+    @CsvBindByName(column = Columns.ARCHITECT)
     @JsonProperty
     private String myArchitect;
 
-    @CsvBindByName(column = "Name.photographer")
+    @CsvBindByName(column = Columns.PHOTOGRAPHER)
     @JsonProperty
     private String myPhotographer;
 
-    @CsvBindByName(column = "Name.repository")
+    @CsvBindByName(column = Columns.REPOSITORY)
     @JsonProperty
     private String myRepository;
 
-    @CsvBindByName(column = "Name.subject")
+    @CsvBindByName(column = Columns.NAME_SUBJECT)
     @JsonProperty
     private String myNameSubject;
 
-    @CsvBindByName(column = "Project Name")
+    @CsvBindByName(column = Columns.PROJECT_NAME)
     @JsonProperty
     private String myProjectName;
 
-    @CsvBindByName(column = "Place of origin")
+    @CsvBindByName(column = Columns.PLACE_OF_ORIGIN)
     @JsonProperty
     private String myPlaceOfOrigin;
 
-    @CsvBindByName(column = "Publisher.publisherName")
+    @CsvBindByName(column = Columns.PUBLISHER)
     @JsonProperty
     private String myPublisherName;
 
-    @CsvBindByName(column = "Relation.isPartOf")
+    @CsvBindByName(column = Columns.IS_PART_OF)
     @JsonProperty
     private String myIsPartOfRelation;
 
-    @CsvBindByName(column = "Rights.countryCreation")
+    @CsvBindByName(column = Columns.COUNTRY_OF_CREATION)
     @JsonProperty
     private String myCountryOfCreation;
 
-    @CsvBindByName(column = "Rights.rightsHolderContact")
+    @CsvBindByName(column = Columns.RIGHTS_HOLDER)
     @JsonProperty
     private String myRightsHolderContact;
 
-    @CsvBindByName(column = "Subject")
+    @CsvBindByName(column = Columns.SUBJECT)
     @JsonProperty
     private String mySubject;
 
-    @CsvBindByName(column = "Support")
+    @CsvBindByName(column = Columns.SUPPORT)
     @JsonProperty
     private String mySupport;
 
-    @CsvBindByName(column = "Type.genre")
+    @CsvBindByName(column = Columns.GENRE)
     @JsonProperty
     private String myGenre;
 
-    @CsvBindByName(column = "Type.typeOfResource")
+    @CsvBindByName(column = Columns.TYPE)
     @JsonProperty
     private String myTypeOfResource;
 
-    @CsvBindByName(column = "Visibility")
+    @CsvBindByName(column = Columns.VISIBILITY)
     @JsonProperty
     private String myVisibility;
 
@@ -353,7 +353,7 @@ public class Metadata {
     }
 
     /**
-     * A IIIF access copy.
+     * Sets a IIIF access copy.
      *
      * @param aURL A IIIF access URL
      */
@@ -371,6 +371,7 @@ public class Metadata {
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
+        // This order should match the order of the Metadata.Column fields
         final List<String> values = Arrays.asList(myItemArk, myFileName, myObjectType, myParentArk, myCopyrightStatus,
                 myTitle, myLocalAltID, myOtherAltTitle, myUniformAltTitle, myGeoCoverage, myCreationDate,
                 myNormalizedDate, myCaption, myFundingNote, myLatitude, myLongitude, myNote, myDimensions, myExtent,
@@ -384,15 +385,7 @@ public class Metadata {
             builder.append(StringUtils.trimToNull(value) + " [{}], ");
         });
 
-        return StringUtils.format(builder.substring(0, builder.length() - 2), "Item Ark", "File Name", "Object Type",
-                "Parent ARK", "Rights.copyrightStatus", "Title", "AltIdentifier.local", "AltTitle.other",
-                "AltTitle.uniform", "Coverage.geographic", "Date.creation", "Date.normalized", "Description.caption",
-                "Description.fundingNote", "Description.latitude", "Description.longitude", "Description.note",
-                "Format.dimensions", "Format.extent", "Format.medium", "Item Sequence", "Language", "Name.architect",
-                "Name.photographer", "Name.repository", "Name.subject", "Place of origin", "Project Name",
-                "Publisher.publisherName", "Relation.isPartOf", "Rights.countryCreation",
-                "Rights.rightsHolderContact", "Subject", "Support", "Type.genre", "Type.typeOfResource", "Visibility",
-                "bucketeer_state", "access_copy");
+        return StringUtils.format(builder.substring(0, builder.length() - 2), Metadata.Columns.toArray());
     }
 
     @JsonIgnore
@@ -428,6 +421,102 @@ public class Metadata {
         @Override
         public String toString() {
             return name().equals(WorkflowState.EMPTY.name()) ? "" : name().toLowerCase();
+        }
+    }
+
+    public static class Columns {
+
+        public static final String ITEM_ARK = "Item Ark";
+
+        public static final String FILE_NAME = "File Name";
+
+        public static final String OBJECT_TYPE = "Object Type";
+
+        public static final String PARENT_ARK = "Parent ARK";
+
+        public static final String COPYRIGHT_STATUS = "Rights.copyrightStatus";
+
+        public static final String TITLE = "Title";
+
+        public static final String LOCAL_ID = "AltIdentifier.local";
+
+        public static final String ALT_TITLE = "AltTitle.other";
+
+        public static final String UNIFORM_TITLE = "AltTitle.uniform";
+
+        public static final String GEO_COVERAGE = "Coverage.geographic";
+
+        public static final String CREATION_DATE = "Date.creation";
+
+        public static final String NORMALIZED_DATE = "Date.normalized";
+
+        public static final String CAPTION = "Description.caption";
+
+        public static final String FUNDING_NOTE = "Description.fundingNote";
+
+        public static final String LATITUDE = "Description.latitude";
+
+        public static final String LONGITUDE = "Description.longitude";
+
+        public static final String DESCRIPTIVE_NOTE = "Description.note";
+
+        public static final String DIMENSIONS = "Format.dimensions";
+
+        public static final String EXTENT = "Format.extent";
+
+        public static final String MEDIUM = "Format.medium";
+
+        public static final String ITEM_SEQ = "Item Sequence";
+
+        public static final String LANGUAGE = "Language";
+
+        public static final String ARCHITECT = "Name.architect";
+
+        public static final String PHOTOGRAPHER = "Name.photographer";
+
+        public static final String REPOSITORY = "Name.repository";
+
+        public static final String NAME_SUBJECT = "Name.subject";
+
+        public static final String PLACE_OF_ORIGIN = "Place of origin";
+
+        public static final String PROJECT_NAME = "Project Name";
+
+        public static final String PUBLISHER = "Publisher.publisherName";
+
+        public static final String IS_PART_OF = "Relation.isPartOf";
+
+        public static final String COUNTRY_OF_CREATION = "Rights.countryCreation";
+
+        public static final String RIGHTS_HOLDER = "Rights.rightsHolderContact";
+
+        public static final String SUBJECT = "Subject";
+
+        public static final String SUPPORT = "Support";
+
+        public static final String GENRE = "Type.genre";
+
+        public static final String TYPE = "Type.typeOfResource";
+
+        public static final String VISIBILITY = "Visibility";
+
+        public static final String BUCKETEER_STATE = "bucketeer_state";
+
+        public static final String ACCESS_COPY = "access_copy";
+
+        /**
+         * Returns an array of the Metadata field values.
+         *
+         * @return An array of the Metadata field values
+         */
+        public static String[] toArray() {
+            // Return the Metadata column list in the expected order
+            return new String[] { ITEM_ARK, FILE_NAME, OBJECT_TYPE, PARENT_ARK, COPYRIGHT_STATUS, TITLE, LOCAL_ID,
+                ALT_TITLE, UNIFORM_TITLE, GEO_COVERAGE, CREATION_DATE, NORMALIZED_DATE, CAPTION, FUNDING_NOTE,
+                LATITUDE, LONGITUDE, DESCRIPTIVE_NOTE, DIMENSIONS, EXTENT, MEDIUM, ITEM_SEQ, LANGUAGE, ARCHITECT,
+                PHOTOGRAPHER, REPOSITORY, NAME_SUBJECT, PLACE_OF_ORIGIN, PROJECT_NAME, PUBLISHER, IS_PART_OF,
+                COUNTRY_OF_CREATION, RIGHTS_HOLDER, SUBJECT, SUPPORT, GENRE, TYPE, VISIBILITY, BUCKETEER_STATE,
+                ACCESS_COPY };
         }
     }
 }

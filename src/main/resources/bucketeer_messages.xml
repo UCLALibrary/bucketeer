@@ -109,4 +109,6 @@
   <entry key="BUCKETEER-105">Received unexpected x-cache response: {}</entry>
   <entry key="BUCKETEER-106">Unexpected trouble creating a URL from '{}' and '{}'</entry>
   <entry key="BUCKETEER-107">Adding path to cache invalidation batch job: {}</entry>
+  <entry key="BUCKETEER-108">Mapping bean field to CSV value: &quot;{}&quot; = &quot;{}&quot;</entry>
+  <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
 </properties>
