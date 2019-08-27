@@ -93,4 +93,6 @@
   <entry key="BUCKETEER-082">Failed to removed completed batch job from the queue: {}</entry>
   <entry key="BUCKETEER-083">BatchJobStatusHandlerTest should have failed with a GET request</entry>
   <entry key="BUCKETEER-084">FakeS3BucketVerticle received a storage request: {}</entry>
+  <entry key="BUCKETEER-100">Passed date time isn't valid: {} (Must be: yyyyMMdd'T'HHmmss'Z')</entry>
+  <entry key="BUCKETEER-101">Test failed to catch a bad datetime: {}</entry>
 </properties>

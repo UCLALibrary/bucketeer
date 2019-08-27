@@ -134,12 +134,14 @@ public class MainVerticle extends AbstractVerticle {
     private void deployVerticles(final JsonObject aConfig, final Handler<AsyncResult<Void>> aHandler) {
         final DeploymentOptions uploaderOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
+        final DeploymentOptions thumbnailOpts = new DeploymentOptions();
         final List<Future> futures = new ArrayList<>();
         final Future<Void> future = Future.future();
 
         // Set configuration values for our verticles to use
         uploaderOpts.setConfig(aConfig);
         workerOpts.setConfig(aConfig);
+        thumbnailOpts.setConfig(aConfig);
 
         // Set the deployVerticles handler to handle our verticles deploy future
         future.setHandler(aHandler);
@@ -155,6 +157,7 @@ public class MainVerticle extends AbstractVerticle {
 
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
         futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
+        futures.add(deployVerticle(ThumbnailVerticle.class.getName(), thumbnailOpts, Future.future()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).setHandler(handler -> {

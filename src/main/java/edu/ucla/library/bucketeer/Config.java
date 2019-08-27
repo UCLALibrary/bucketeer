@@ -20,7 +20,9 @@ public final class Config {
 
     public static final String S3_BUCKET = "bucketeer.s3.bucket";
 
-    public static final String HTTP_CALLBACK = "bucketeer.http.callback";
+    public static final String IIIF_URL = "bucketeer.iiif.url";
+
+    public static final String THUMBNAIL_SIZE = "bucketeer.thumbnail.size";
 
     public static final String MAX_WAIT_QUEUE_SIZE = "httpclient.max.queue.size";
 
@@ -29,6 +31,8 @@ public final class Config {
     public static final String FILESYSTEM_PREFIX = "bucketeer.fs.prefix";
 
     public static final String LAMBDA_S3_BUCKET = "lambda.s3.bucket";
+
+    public static final String CDN_DISTRO_ID = "cdn.distribution.id";
 
     /**
      * Private constructor for the Constants class.

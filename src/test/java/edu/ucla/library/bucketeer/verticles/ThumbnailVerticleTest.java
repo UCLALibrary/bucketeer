@@ -1,22 +1,11 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
-import static edu.ucla.library.bucketeer.Constants.MESSAGES;
-import static org.junit.Assume.assumeTrue;
-
-import java.util.UUID;
-
 import org.junit.After;
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -27,36 +16,30 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+/**
+ * A test to test thumbnail caching (including cache invalidation).
+ */
 @RunWith(VertxUnitRunner.class)
-public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
+public class ThumbnailVerticleTest extends AbstractBucketeerVerticle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticleTest.class, MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThumbnailVerticleTest.class, Constants.MESSAGES);
 
-    private static final String JPX_PATH = "src/test/resources/images/test.jpx";
+    private static final String VERTICLE_NAME = ThumbnailVerticle.class.getName();
 
-    private static final String VERTICLE_NAME = S3BucketVerticle.class.getName();
+    private static final String IMAGE_ID = "healthcheckimage";
 
-    private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
-
-    private static String s3Bucket = "unconfigured";
-
-    private static AWSCredentials myAWSCredentials;
-
+    /**
+     * The testing context.
+     */
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
-
-    private String myImageKey;
-
-    /** We can't, as of yet, execute these tests without a non-default S3 configuration */
-    private boolean isExecutable;
-
-    private AmazonS3 myAmazonS3;
 
     /**
      * Set up the testing environment.
@@ -64,7 +47,6 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      * @throws Exception If there is trouble starting Vert.x or configuring the tests
      */
-    @SuppressWarnings("deprecation")
     @Before
     public void setUp(final TestContext aContext) throws Exception {
         final Vertx vertx = myRunTestOnContextRule.vertx();
@@ -76,12 +58,9 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
             if (getConfig.succeeded()) {
                 final JsonObject config = getConfig.result();
 
-                myImageKey = UUID.randomUUID().toString() + ".jpx";
-
-                // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
-                if (config.containsKey(Config.S3_ACCESS_KEY) && !config.getString(Config.S3_ACCESS_KEY,
-                        DEFAULT_ACCESS_KEY).equalsIgnoreCase(DEFAULT_ACCESS_KEY)) {
-                    isExecutable = true;
+                // Test if we're running as a single test instead of in the full test suite
+                if (!config.containsKey(Config.IIIF_URL)) {
+                    config.mergeIn(getSingleTestConfig());
                 }
 
                 vertx.deployVerticle(VERTICLE_NAME, options.setConfig(config), deployment -> {
@@ -90,21 +69,10 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                         final String message = details.getMessage();
 
                         LOGGER.error(details, message);
+
                         aContext.fail(message);
                     }
 
-                    if (myAmazonS3 == null) {
-                        final String s3AccessKey = config.getString(Config.S3_ACCESS_KEY);
-                        final String s3SecretKey = config.getString(Config.S3_SECRET_KEY);
-
-                        // get myAWSCredentials ready
-                        myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
-
-                        // instantiate the myAmazonS3 client
-                        myAmazonS3 = new AmazonS3Client(myAWSCredentials);
-                    }
-
-                    s3Bucket = config.getString(Config.S3_BUCKET);
                     asyncTask.complete();
                 });
             } else {
@@ -132,35 +100,23 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 aContext.fail(message);
             }
 
-            // clean up our test files
-            myAmazonS3.deleteObject(s3Bucket, myImageKey);
-
             async.complete();
         });
     }
 
     /**
-     * Tests being able to store to S3. This requires an actual S3 configuration. The test will be skipped if no such
-     * configuration exists.
+     * Tests thumbnail caching.
      *
-     * @param aContext A test context
+     * @param aContext A testing context
+     * @throws Exception If there is trouble successfully completing the test
      */
     @Test
-    public final void testS3Storage(final TestContext aContext) {
-        try {
-            // Skip this test if we don't have a valid S3 configuration
-            assumeTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_012), isExecutable);
-        } catch (final AssumptionViolatedException details) {
-            LOGGER.warn(details.getMessage());
-            throw details;
-        }
-
+    public void testThumbnailCaching(final TestContext aContext) throws Exception {
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
 
-        message.put(Constants.IMAGE_ID, myImageKey);
-        message.put(Constants.FILE_PATH, JPX_PATH);
+        message.put(Constants.IMAGE_ID_ARRAY, new JsonArray().add(IMAGE_ID));
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
@@ -180,6 +136,24 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
     @Override
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    /**
+     * Set config values manually when we're not running the test as a part of the Maven build.
+     *
+     * @return The expected configuration values (needed to run the test) wrapped in a JSON object
+     */
+    private JsonObject getSingleTestConfig() {
+        final JsonObject config = new JsonObject();
+
+        // If you're running as a single test in your IDE, set system properties with these values
+        config.put(Config.IIIF_URL, System.getProperty(Config.IIIF_URL));
+        config.put(Config.CDN_DISTRO_ID, System.getProperty(Config.CDN_DISTRO_ID));
+        config.put(Config.THUMBNAIL_SIZE, System.getProperty(Config.THUMBNAIL_SIZE));
+        config.put(Config.S3_ACCESS_KEY, System.getProperty(Config.S3_ACCESS_KEY));
+        config.put(Config.S3_SECRET_KEY, System.getProperty(Config.S3_SECRET_KEY));
+
+        return config;
     }
 
 }
