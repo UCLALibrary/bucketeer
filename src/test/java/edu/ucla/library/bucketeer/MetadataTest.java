@@ -15,6 +15,9 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
@@ -26,6 +29,8 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import edu.ucla.library.bucketeer.utils.UCLAFilePathPrefix;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class MetadataTest {
 
@@ -34,6 +39,12 @@ public class MetadataTest {
     private static final File CSV_FILE = new File("src/test/resources/csv/ladailynews.csv");
 
     private static final File CSV_FAILURES_FILE = new File("src/test/resources/csv/failed-ingest.csv");
+
+    private static final File LIVE_TEST_JSON = new File("src/test/resources/json/live-test.json");
+
+    private static final File LIVE_TEST_CSV = new File("src/test/resources/csv/live-test.csv");
+
+    private static final File TEST_MESSAGE_JSON = new File("src/test/resources/json/test-message.json");
 
     private static final String UCLA_ROOT = "/mnt/ucla";
 
@@ -78,6 +89,72 @@ public class MetadataTest {
         } finally {
             IOUtils.closeQuietly(csvReader);
         }
+    }
+
+    /**
+     * Tests the JSON serialization of the Metadata object.
+     */
+    @Test
+    public final void testJsonSerialization() throws IOException, JsonProcessingException {
+        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
+        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
+        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final String json = StringUtils.read(LIVE_TEST_JSON);
+        final JsonArray found = new JsonArray(new ObjectMapper().writeValueAsString(metadataList));
+        final JsonArray expected = new JsonArray(json);
+
+        assertEquals(expected, found);
+    }
+
+    /**
+     * Tests the JSON deserialization of the Metadata object.
+     */
+    @Test
+    public final void testJsonDeserialization() throws IOException, JsonProcessingException {
+        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
+        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
+        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final TypeReference<List<Metadata>> listTypeRef = new TypeReference<List<Metadata>>() {};
+        final List<Metadata> list = new ObjectMapper().readValue(LIVE_TEST_JSON, listTypeRef);
+        final StringBuilder expected = new StringBuilder();
+        final StringBuilder found = new StringBuilder();
+
+        // Stringify the list of expected metadata objects
+        for (final Metadata metadata : metadataList) {
+            expected.append(metadata.toString());
+        }
+
+        // Stringify the list of found metadata objects
+        for (final Metadata metadata : list) {
+            found.append(metadata.toString());
+        }
+
+        assertEquals(expected.toString(), found.toString());
+    }
+
+    /**
+     * Tests putting a metadata object in a JSON message.
+     */
+    @Test
+    public final void testPutInMessage() throws IOException {
+        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
+        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
+        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final JsonObject expected = new JsonObject(StringUtils.read(TEST_MESSAGE_JSON));
+        final JsonObject found = new JsonObject();
+        final JsonArray metadataArray = new JsonArray();
+        final ObjectMapper mapper = new ObjectMapper();
+
+        // Convert the metadata list into a JsonArray with metadata objects
+        for (final Metadata metadata : metadataList) {
+            metadataArray.add(new JsonObject(mapper.writeValueAsString(metadata)));
+        }
+
+        found.put("channelText", "my text");
+        found.put("channelId", "my channel");
+        found.put("metadata", metadataArray);
+
+        assertEquals(expected, found);
     }
 
     /**
