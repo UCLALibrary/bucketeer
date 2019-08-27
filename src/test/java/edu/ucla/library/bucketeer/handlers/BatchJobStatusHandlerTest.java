@@ -27,6 +27,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.FakeS3BucketVerticle;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
+import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -109,14 +110,23 @@ public class BatchJobStatusHandlerTest {
                         @SuppressWarnings("rawtypes")
                         final List<Future> futures = new ArrayList<>();
                         final LocalMap<String, String> map = myVertx.sharedData().getLocalMap(Constants.VERTICLE_MAP);
-                        final String deploymentId = map.get(S3BucketVerticle.class.getSimpleName());
+                        final String s3BucketDeploymentId = map.get(S3BucketVerticle.class.getSimpleName());
+                        final String thumbnailDeploymentId = map.get(ThumbnailVerticle.class.getSimpleName());
 
-                        if (deploymentId.contains(DELIMITER)) {
-                            for (final String delimitedId : deploymentId.split(DELIMITER)) {
+                        if (s3BucketDeploymentId.contains(DELIMITER)) {
+                            for (final String delimitedId : s3BucketDeploymentId.split(DELIMITER)) {
                                 futures.add(updateDeployment(delimitedId, Future.future()));
                             }
                         } else {
-                            futures.add(updateDeployment(deploymentId, Future.future()));
+                            futures.add(updateDeployment(s3BucketDeploymentId, Future.future()));
+                        }
+
+                        if (thumbnailDeploymentId.contains(DELIMITER)) {
+                            for (final String delimitedId : thumbnailDeploymentId.split(DELIMITER)) {
+                                futures.add(updateDeployment(delimitedId, Future.future()));
+                            }
+                        } else {
+                            futures.add(updateDeployment(thumbnailDeploymentId, Future.future()));
                         }
 
                         CompositeFuture.all(futures).setHandler(handler -> {
@@ -160,6 +170,7 @@ public class BatchJobStatusHandlerTest {
         final RequestOptions request = new RequestOptions();
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
 
+        LOGGER.info(MessageCodes.BUCKETEER_017, "testGetHandle");
         request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
         myVertx.createHttpClient().getNow(request, response -> {
@@ -178,6 +189,7 @@ public class BatchJobStatusHandlerTest {
      *
      * @param aContext A testing context
      */
+
     @Test
     @SuppressWarnings("deprecation")
     public final void testPatchHandle500(final TestContext aContext) {
@@ -187,6 +199,7 @@ public class BatchJobStatusHandlerTest {
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
         final HttpClient client = myVertx.createHttpClient();
 
+        LOGGER.info(MessageCodes.BUCKETEER_017, "testPatchHandle500");
         options.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
         client.request(HttpMethod.PATCH, options, response -> {
@@ -217,6 +230,7 @@ public class BatchJobStatusHandlerTest {
         final HttpRequest<Buffer> postRequest = webClient.post(port, UNSPECIFIED_HOST, POST_URI);
         final MultipartForm form = MultipartForm.create();
 
+        LOGGER.info(MessageCodes.BUCKETEER_017, "testPatchHandle");
         form.attribute(Constants.SLACK_HANDLE, "ksclarke");
         form.attribute("failure", "false");
         form.textFileUpload("csvFileToUpload", JOB_FILE_NAME, csvFile, "text/csv");

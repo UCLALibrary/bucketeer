@@ -15,6 +15,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Metadata.WorkflowState;
+import edu.ucla.library.bucketeer.Op;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -36,7 +37,7 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
         // imageId get decoded, but we actually want the encoded version of it to compare with the jobs queue
         final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
         final String jobName = request.getParam(Constants.JOB_NAME);
-        final boolean success = Boolean.parseBoolean(request.getParam(Constants.SUCCESS));
+        final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
 
         sharedData.<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
             if (getMap.succeeded()) {
@@ -86,26 +87,35 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                                         decrementJobsCounter(sharedData, map, jobName, response, false);
                                     }
                                 } else {
-                                    returnError(MessageCodes.BUCKETEER_076, jobName, response);
+                                    returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
                                 }
                             });
                         } else {
                             returnError(MessageCodes.BUCKETEER_075, jobName, response);
                         }
                     } else {
-                        returnError(MessageCodes.BUCKETEER_062, jobName, response);
+                        returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response);
                     }
                 });
             } else {
-                returnError(MessageCodes.BUCKETEER_063, jobName, response);
+                returnError(getMap.cause(), MessageCodes.BUCKETEER_063, jobName, response);
             }
         });
     }
 
     private void returnError(final String aMessageCode, final String aDetail, final HttpServerResponse aResponse) {
+        returnError(null, aMessageCode, aDetail, aResponse);
+    }
+
+    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetail,
+            final HttpServerResponse aResponse) {
         final String errorMessage = LOGGER.getMessage(aMessageCode, aDetail);
 
-        LOGGER.error(errorMessage);
+        if (aThrowable != null) {
+            LOGGER.error(aThrowable, errorMessage);
+        } else {
+            LOGGER.error(errorMessage);
+        }
 
         // TODO: Send notice about error to Slack channel too
 
@@ -148,7 +158,7 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                                     aResponse.setStatusCode(HTTP.NO_CONTENT);
                                     aResponse.end();
                                 } else {
-                                    returnError(MessageCodes.BUCKETEER_082, aJobName, aResponse);
+                                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse);
                                 }
                             });
                         } else {
@@ -156,11 +166,11 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                             aResponse.end();
                         }
                     } else {
-                        returnError(MessageCodes.BUCKETEER_080, aJobName, aResponse);
+                        returnError(decrement.cause(), MessageCodes.BUCKETEER_080, aJobName, aResponse);
                     }
                 });
             } else {
-                returnError(MessageCodes.BUCKETEER_066, aJobName, aResponse);
+                returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse);
             }
         });
     }
