@@ -6,6 +6,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencsv.bean.CsvBindByName;
 
 import info.freelibrary.util.Logger;
@@ -23,10 +25,13 @@ import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
  */
 public class Metadata {
 
+    @JsonIgnore
     public static final String WORK_TYPE = "Work";
 
+    @JsonIgnore
     public static final String COLLECTION_TYPE = "Collection";
 
+    @JsonIgnore
     private static final Logger LOGGER = LoggerFactory.getLogger(Metadata.class, Constants.MESSAGES);
 
     private String mySlackHandle;
@@ -34,130 +39,170 @@ public class Metadata {
     /* Required fields */
 
     @CsvBindByName(column = "Item ARK", required = true)
+    @JsonProperty
     private String myItemArk;
 
     @CsvBindByName(column = "Object Type", required = true)
+    @JsonProperty
     private String myObjectType;
 
     @CsvBindByName(column = "Title", required = true)
+    @JsonProperty
     private String myTitle;
 
     @CsvBindByName(column = "File Name") /* Required for Work objects, not Collection(s) */
+    @JsonProperty
     private String myFileName;
 
     @CsvBindByName(column = "Parent ARK") /* Required for Work objects, not Collection(s) */
+    @JsonProperty
     private String myParentArk;
 
     /* Whether image was previously 'ingested' or just recently 'failed' or 'succeeded' */
 
     @CsvBindByName(column = "bucketeer_state")
+    @JsonProperty
     private String myWorkflowState;
 
     /* Where we put the IIIF URL */
     @CsvBindByName(column = "access_copy")
+    @JsonProperty
     private String myAccessCopy;
 
     /* Other allowed fields */
 
     @CsvBindByName(column = "AltIdentifier.local")
+    @JsonProperty
     private String myLocalAltID;
 
     @CsvBindByName(column = "AltTitle.other")
+    @JsonProperty
     private String myOtherAltTitle;
 
     @CsvBindByName(column = "AltTitle.uniform")
+    @JsonProperty
     private String myUniformAltTitle;
 
     @CsvBindByName(column = "Rights.copyrightStatus")
+    @JsonProperty
     private String myCopyrightStatus;
 
     @CsvBindByName(column = "Coverage.geographic")
+    @JsonProperty
     private String myGeoCoverage;
 
     @CsvBindByName(column = "Date.creation")
+    @JsonProperty
     private String myCreationDate;
 
     @CsvBindByName(column = "Date.normalized")
+    @JsonProperty
     private String myNormalizedDate;
 
     @CsvBindByName(column = "Description.caption")
+    @JsonProperty
     private String myCaption;
 
     @CsvBindByName(column = "Description.fundingNote")
+    @JsonProperty
     private String myFundingNote;
 
     @CsvBindByName(column = "Description.latitude")
+    @JsonProperty
     private String myLatitude;
 
     @CsvBindByName(column = "Description.longitude")
+    @JsonProperty
     private String myLongitude;
 
     @CsvBindByName(column = "Description.note")
+    @JsonProperty
     private String myNote;
 
     @CsvBindByName(column = "Format.dimensions")
+    @JsonProperty
     private String myDimensions;
 
     @CsvBindByName(column = "Format.extent")
+    @JsonProperty
     private String myExtent;
 
     @CsvBindByName(column = "Format.medium")
+    @JsonProperty
     private String myMedium;
 
     @CsvBindByName(column = "Item Sequence")
+    @JsonProperty
     private String myItemSequence;
 
     @CsvBindByName(column = "Language")
+    @JsonProperty
     private String myLanguage;
 
     @CsvBindByName(column = "Name.architect")
+    @JsonProperty
     private String myArchitect;
 
     @CsvBindByName(column = "Name.photographer")
+    @JsonProperty
     private String myPhotographer;
 
     @CsvBindByName(column = "Name.repository")
+    @JsonProperty
     private String myRepository;
 
     @CsvBindByName(column = "Name.subject")
+    @JsonProperty
     private String myNameSubject;
 
     @CsvBindByName(column = "Project Name")
+    @JsonProperty
     private String myProjectName;
 
     @CsvBindByName(column = "Place of origin")
+    @JsonProperty
     private String myPlaceOfOrigin;
 
     @CsvBindByName(column = "Publisher.publisherName")
+    @JsonProperty
     private String myPublisherName;
 
     @CsvBindByName(column = "Relation.isPartOf")
+    @JsonProperty
     private String myIsPartOfRelation;
 
     @CsvBindByName(column = "Rights.countryCreation")
+    @JsonProperty
     private String myCountryOfCreation;
 
     @CsvBindByName(column = "Rights.rightsHolderContact")
+    @JsonProperty
     private String myRightsHolderContact;
 
     @CsvBindByName(column = "Subject")
+    @JsonProperty
     private String mySubject;
 
     @CsvBindByName(column = "Support")
+    @JsonProperty
     private String mySupport;
 
     @CsvBindByName(column = "Type.genre")
+    @JsonProperty
     private String myGenre;
 
     @CsvBindByName(column = "Type.typeOfResource")
+    @JsonProperty
     private String myTypeOfResource;
 
     @CsvBindByName(column = "Visibility")
+    @JsonProperty
     private String myVisibility;
 
     /**
      * A prefix to add to the file location that was passed in via the metadata.
      */
+    @JsonIgnore
     private IFilePathPrefix myFilePathPrefix;
 
     /**
@@ -165,6 +210,7 @@ public class Metadata {
      *
      * @return The metadata's ID (ARK)
      */
+    @JsonIgnore
     public String getID() {
         return myItemArk;
     }
@@ -194,6 +240,7 @@ public class Metadata {
      * @return Whether the metadata has been previously ingested or failed or succeeded to be ingested in this pass
      * @throws IllegalArgumentException If the value from the CSV isn't a valid state
      */
+    @JsonIgnore
     public WorkflowState getWorkflowState() throws IllegalArgumentException {
         return StringUtils.trimToNull(myWorkflowState) == null ? WorkflowState.EMPTY : WorkflowState.valueOf(
                 myWorkflowState.toUpperCase());
@@ -204,6 +251,7 @@ public class Metadata {
      *
      * @param aState An ingest workflow state
      */
+    @JsonIgnore
     public void setWorkflowState(final WorkflowState aState) {
         myWorkflowState = aState.toString();
     }
@@ -213,6 +261,7 @@ public class Metadata {
      *
      * @return True if metadata is for a Work object.
      */
+    @JsonIgnore
     public boolean isWork() {
         return WORK_TYPE.equals(myObjectType);
     }
@@ -222,6 +271,7 @@ public class Metadata {
      *
      * @return True if metadata is for a Collection object
      */
+    @JsonIgnore
     public boolean isCollection() {
         return COLLECTION_TYPE.equals(myObjectType);
     }
@@ -231,6 +281,7 @@ public class Metadata {
      *
      * @return True if metadata is for a Work object
      */
+    @JsonIgnore
     public boolean isValid() {
         // Right now we just have works and collections
         return isWork() ? isValidWork() : isValidCollection();
@@ -241,6 +292,7 @@ public class Metadata {
      *
      * @param aFilePathPrefix A file path prefix
      */
+    @JsonIgnore
     public void setFilePathPrefix(final IFilePathPrefix aFilePathPrefix) {
         myFilePathPrefix = aFilePathPrefix;
     }
@@ -250,6 +302,7 @@ public class Metadata {
      *
      * @return The file referenced by the object's metadata
      */
+    @JsonIgnore
     public File getFile() {
         File file = new File(StringUtils.trimTo(myFileName, ""));
 
@@ -265,6 +318,7 @@ public class Metadata {
      *
      * @param aFile A source file
      */
+    @JsonIgnore
     public void setFile(final File aFile) {
         myFileName = aFile.getAbsolutePath();
     }
@@ -274,6 +328,7 @@ public class Metadata {
      *
      * @return True if a file exists; else, false
      */
+    @JsonIgnore
     public boolean hasFile() {
         return getFile().exists();
     }
@@ -283,6 +338,7 @@ public class Metadata {
      *
      * @return True if the workflow state is valid; else, false
      */
+    @JsonIgnore
     public boolean hasValidWorkflowState() {
         boolean result;
 
@@ -297,10 +353,21 @@ public class Metadata {
     }
 
     /**
+     * A IIIF access copy.
+     *
+     * @param aURL A IIIF access URL
+     */
+    @JsonIgnore
+    public void setAccessCopy(final String aURL) {
+        myAccessCopy = aURL;
+    }
+
+    /**
      * Returns a string representation of the object's metadata.
      *
      * @return A string representation of the object's metadata
      */
+    @JsonIgnore
     @Override
     public String toString() {
         final StringBuilder builder = new StringBuilder();
@@ -328,6 +395,7 @@ public class Metadata {
                 "bucketeer_state", "access_copy");
     }
 
+    @JsonIgnore
     private boolean isValidWork() {
         final String fileName = StringUtils.trimToNull(myFileName);
         final String parentArk = StringUtils.trimToNull(myParentArk);
@@ -339,6 +407,7 @@ public class Metadata {
         return isWork() && fileName != null && parentArk != null && hasFile();
     }
 
+    @JsonIgnore
     private boolean isValidCollection() {
         final String fileName = StringUtils.trimToNull(myFileName);
         final String parentArk = StringUtils.trimToNull(myParentArk);
