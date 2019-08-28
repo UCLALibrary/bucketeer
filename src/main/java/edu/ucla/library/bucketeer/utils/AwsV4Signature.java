@@ -18,8 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import info.freelibrary.util.I18nRuntimeException;
 import info.freelibrary.util.StringUtils;
@@ -79,8 +77,6 @@ public class AwsV4Signature {
      */
     public AwsV4Signature(final AwsCredentials aCredentials, final String aDistributionId, final String aInvalidation,
             final String aDateTime) throws JsonProcessingException, I18nRuntimeException {
-        final ObjectMapper mapper = new XmlMapper(); // .enable(SerializationFeature.INDENT_OUTPUT);
-
         myHeaders = new LinkedHashMap<>(3);
 
         // Treat invalid datetimes as programming errors (i.e. assume they are checked prior to this point)

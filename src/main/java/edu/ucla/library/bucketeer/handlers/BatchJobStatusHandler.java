@@ -16,23 +16,33 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import edu.ucla.library.bucketeer.Op;
-import io.vertx.core.Handler;
+import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.shareddata.Counter;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 
-public class BatchJobStatusHandler implements Handler<RoutingContext> {
+public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
+
+    private Vertx myVertx;
 
     @Override
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
-        final SharedData sharedData = aContext.vertx().sharedData();
+        final Vertx vertx = aContext.vertx();
+        final SharedData sharedData = vertx.sharedData();
+
+        if (myVertx == null) {
+            myVertx = vertx;
+        }
 
         // imageId get decoded, but we actually want the encoded version of it to compare with the jobs queue
         final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
@@ -151,7 +161,23 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                             // Remove the batch from our jobs queue
                             aJobsMap.remove(aJobName, removeJob -> {
                                 if (removeJob.succeeded()) {
-                                    final List<Metadata> metadata = removeJob.result();
+                                    final List<Metadata> metadataList = removeJob.result();
+                                    final JsonArray thumbnails = new JsonArray();
+
+                                    // Go through metadata and look for ones that have just succeeded being processed
+                                    for (final Metadata metadata : metadataList) {
+                                        if (WorkflowState.SUCCEEDED.equals(metadata.getWorkflowState())) {
+                                            thumbnails.add(metadata.getID());
+                                        }
+                                    }
+
+                                    // If there are recently succeeded images, send them off for thumbnail generation
+                                    if (thumbnails.size() > 0) {
+                                        final JsonObject thumbnailMessage = new JsonObject();
+
+                                        thumbnailMessage.put(Constants.IMAGE_ID_ARRAY, thumbnails);
+                                        sendMessage(myVertx, thumbnailMessage, ThumbnailVerticle.class.getName());
+                                    }
 
                                     // TODO: Send metadata to Slack (and GitHub, in the future);
 
@@ -173,6 +199,16 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                 returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse);
             }
         });
+    }
+
+    /**
+     * Return the Logger associated with this handler.
+     *
+     * @return The Logger associated with this handler
+     */
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
     }
 
 }

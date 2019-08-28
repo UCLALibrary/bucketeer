@@ -10,6 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import info.freelibrary.util.I18nRuntimeException;
 import info.freelibrary.util.Logger;
@@ -98,14 +99,15 @@ public class AwsV4SignatureTest {
      */
     @Test
     public final void testToString() throws JsonProcessingException {
-        final InvalidationBatch invalidation = new InvalidationBatch("/healthcheckimage.jpx");
+        final InvalidationBatch invalidationBatch = new InvalidationBatch("/healthcheckimage.jpx");
         final AwsCredentials credentials = new AwsCredentials(myAccessKey, mySecretKey);
+        final String invalidation = new XmlMapper().writeValueAsString(invalidationBatch);
         final AwsV4Signature signature = new AwsV4Signature(credentials, myCloudFrontID, invalidation, DATETIME);
         final StringBuilder expected = new StringBuilder("AWS4-HMAC-SHA256 ");
 
         expected.append("Credential=AKIAIKEAAIKOAIKOAIKO/20190822/us-east-1/cloudfront/aws4_request, ");
         expected.append("SignedHeaders=host;x-amz-content-sha256;x-amz-date, ");
-        expected.append("Signature=27764c480988637f36b9a642dcf705510c970ffa926c6d7621a1d9d99bf8a685");
+        expected.append("Signature=9e93bd52fd4fc47a4f2a9cea672075e34dcd0fd3bdb68fe0a145847fbe6b3dde");
 
         assertEquals(expected.toString(), signature.toString());
     }
@@ -117,8 +119,9 @@ public class AwsV4SignatureTest {
      */
     @Test
     public final void testToStringBadDateTime() throws JsonProcessingException {
-        final InvalidationBatch invalidation = new InvalidationBatch("/some-s3-resource");
+        final InvalidationBatch invalidationBatch = new InvalidationBatch("/some-s3-resource");
         final AwsCredentials credentials = new AwsCredentials(myAccessKey, mySecretKey);
+        final String invalidation = new XmlMapper().writeValueAsString(invalidationBatch);
 
         try {
             new AwsV4Signature(credentials, myCloudFrontID, invalidation, BAD_DATETIME);

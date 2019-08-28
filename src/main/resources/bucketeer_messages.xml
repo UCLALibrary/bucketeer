@@ -96,4 +96,9 @@
   <entry key="BUCKETEER-100">Passed date time isn't valid: {} (Must be: yyyyMMdd'T'HHmmss'Z')</entry>
   <entry key="BUCKETEER-101">Test failed to catch a bad datetime: {}</entry>
   <entry key="BUCKETEER-102">Unexpected status code: {} [{}] {}</entry>
+  <entry key="BUCKETEER-103">Sending invalidation batch job to CloudFront: {}</entry>
+  <entry key="BUCKETEER-104">Invalidation batch job in progress: {}</entry>
+  <entry key="BUCKETEER-105">Received unexpected x-cache response: {}</entry>
+  <entry key="BUCKETEER-106">Unexpected trouble creating a URL from '{}' and '{}'</entry>
+  <entry key="BUCKETEER-107">Adding path to cache invalidation batch job: {}</entry>
 </properties>
