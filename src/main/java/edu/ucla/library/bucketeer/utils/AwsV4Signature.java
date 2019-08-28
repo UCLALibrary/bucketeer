@@ -91,8 +91,6 @@ public class AwsV4Signature {
             final MessageDigest digest = MessageDigest.getInstance("SHA-256");
             final String sha256Hex = hashToHex(digest.digest(aInvalidation.getBytes(StandardCharsets.UTF_8)));
 
-            // signer.region(region);
-
             // Three headers to add; if this changes, adjust the LinkedHashMap size above
             signer.header(HOST, CLOUDFRONT_HOST);
             myHeaders.put(HOST, CLOUDFRONT_HOST);
