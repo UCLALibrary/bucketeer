@@ -12,14 +12,14 @@ public final class Constants {
     public static final String MESSAGES = "bucketeer_messages";
 
     /**
-     * Callback URL
-     */
-    public static final String CALLBACK_URL = "callback_url";
-
-    /**
      * The ID for the image that's going to be processed.
      */
     public static final String IMAGE_ID = "image-id";
+
+    /**
+     * An array of all the IDs that have been processed.
+     */
+    public static final String IMAGE_ID_ARRAY = "image-id-array";
 
     /**
      * The path to the TIFF file that's going to be read.
@@ -30,11 +30,6 @@ public final class Constants {
      * The batch job name (i.e., the name of the file being processed)
      */
     public static final String JOB_NAME = "job-name";
-
-    /**
-     * The success status for an individual image in a batch job.
-     */
-    public static final String SUCCESS = "success";
 
     /**
      * The Slack handle of the person submitting the batch job
@@ -70,6 +65,11 @@ public final class Constants {
      * The content-type value for JSON.
      */
     public static final String JSON = "application/json";
+
+    /**
+     * The content-type value for XML.
+     */
+    public static final String XML = "application/xml";
 
     /**
      * The record of completed S3 uploads.

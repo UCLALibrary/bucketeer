@@ -27,6 +27,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.FakeS3BucketVerticle;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
+import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -109,14 +110,23 @@ public class BatchJobStatusHandlerTest {
                         @SuppressWarnings("rawtypes")
                         final List<Future> futures = new ArrayList<>();
                         final LocalMap<String, String> map = myVertx.sharedData().getLocalMap(Constants.VERTICLE_MAP);
-                        final String deploymentId = map.get(S3BucketVerticle.class.getSimpleName());
+                        final String s3BucketDeploymentId = map.get(S3BucketVerticle.class.getSimpleName());
+                        final String thumbnailDeploymentId = map.get(ThumbnailVerticle.class.getSimpleName());
 
-                        if (deploymentId.contains(DELIMITER)) {
-                            for (final String delimitedId : deploymentId.split(DELIMITER)) {
+                        if (s3BucketDeploymentId.contains(DELIMITER)) {
+                            for (final String delimitedId : s3BucketDeploymentId.split(DELIMITER)) {
                                 futures.add(updateDeployment(delimitedId, Future.future()));
                             }
                         } else {
-                            futures.add(updateDeployment(deploymentId, Future.future()));
+                            futures.add(updateDeployment(s3BucketDeploymentId, Future.future()));
+                        }
+
+                        if (thumbnailDeploymentId.contains(DELIMITER)) {
+                            for (final String delimitedId : thumbnailDeploymentId.split(DELIMITER)) {
+                                futures.add(updateDeployment(delimitedId, Future.future()));
+                            }
+                        } else {
+                            futures.add(updateDeployment(thumbnailDeploymentId, Future.future()));
                         }
 
                         CompositeFuture.all(futures).setHandler(handler -> {
@@ -178,6 +188,7 @@ public class BatchJobStatusHandlerTest {
      *
      * @param aContext A testing context
      */
+
     @Test
     @SuppressWarnings("deprecation")
     public final void testPatchHandle500(final TestContext aContext) {

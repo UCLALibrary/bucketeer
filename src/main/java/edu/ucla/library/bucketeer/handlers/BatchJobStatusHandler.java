@@ -15,28 +15,39 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Metadata.WorkflowState;
-import io.vertx.core.Handler;
+import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.shareddata.Counter;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 
-public class BatchJobStatusHandler implements Handler<RoutingContext> {
+public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
+
+    private Vertx myVertx;
 
     @Override
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
-        final SharedData sharedData = aContext.vertx().sharedData();
+        final Vertx vertx = aContext.vertx();
+        final SharedData sharedData = vertx.sharedData();
+
+        if (myVertx == null) {
+            myVertx = vertx;
+        }
 
         // imageId get decoded, but we actually want the encoded version of it to compare with the jobs queue
         final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
         final String jobName = request.getParam(Constants.JOB_NAME);
-        final boolean success = Boolean.parseBoolean(request.getParam(Constants.SUCCESS));
+        final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
 
         sharedData.<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
             if (getMap.succeeded()) {
@@ -86,26 +97,35 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                                         decrementJobsCounter(sharedData, map, jobName, response, false);
                                     }
                                 } else {
-                                    returnError(MessageCodes.BUCKETEER_076, jobName, response);
+                                    returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
                                 }
                             });
                         } else {
                             returnError(MessageCodes.BUCKETEER_075, jobName, response);
                         }
                     } else {
-                        returnError(MessageCodes.BUCKETEER_062, jobName, response);
+                        returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response);
                     }
                 });
             } else {
-                returnError(MessageCodes.BUCKETEER_063, jobName, response);
+                returnError(getMap.cause(), MessageCodes.BUCKETEER_063, jobName, response);
             }
         });
     }
 
     private void returnError(final String aMessageCode, final String aDetail, final HttpServerResponse aResponse) {
+        returnError(null, aMessageCode, aDetail, aResponse);
+    }
+
+    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetail,
+            final HttpServerResponse aResponse) {
         final String errorMessage = LOGGER.getMessage(aMessageCode, aDetail);
 
-        LOGGER.error(errorMessage);
+        if (aThrowable != null) {
+            LOGGER.error(aThrowable, errorMessage);
+        } else {
+            LOGGER.error(errorMessage);
+        }
 
         // TODO: Send notice about error to Slack channel too
 
@@ -141,14 +161,30 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                             // Remove the batch from our jobs queue
                             aJobsMap.remove(aJobName, removeJob -> {
                                 if (removeJob.succeeded()) {
-                                    final List<Metadata> metadata = removeJob.result();
+                                    final List<Metadata> metadataList = removeJob.result();
+                                    final JsonArray thumbnails = new JsonArray();
+
+                                    // Go through metadata and look for ones that have just succeeded being processed
+                                    for (final Metadata metadata : metadataList) {
+                                        if (WorkflowState.SUCCEEDED.equals(metadata.getWorkflowState())) {
+                                            thumbnails.add(metadata.getID());
+                                        }
+                                    }
+
+                                    // If there are recently succeeded images, send them off for thumbnail generation
+                                    if (thumbnails.size() > 0) {
+                                        final JsonObject thumbnailMessage = new JsonObject();
+
+                                        thumbnailMessage.put(Constants.IMAGE_ID_ARRAY, thumbnails);
+                                        sendMessage(myVertx, thumbnailMessage, ThumbnailVerticle.class.getName());
+                                    }
 
                                     // TODO: Send metadata to Slack (and GitHub, in the future);
 
                                     aResponse.setStatusCode(HTTP.NO_CONTENT);
                                     aResponse.end();
                                 } else {
-                                    returnError(MessageCodes.BUCKETEER_082, aJobName, aResponse);
+                                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse);
                                 }
                             });
                         } else {
@@ -156,13 +192,23 @@ public class BatchJobStatusHandler implements Handler<RoutingContext> {
                             aResponse.end();
                         }
                     } else {
-                        returnError(MessageCodes.BUCKETEER_080, aJobName, aResponse);
+                        returnError(decrement.cause(), MessageCodes.BUCKETEER_080, aJobName, aResponse);
                     }
                 });
             } else {
-                returnError(MessageCodes.BUCKETEER_066, aJobName, aResponse);
+                returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse);
             }
         });
+    }
+
+    /**
+     * Return the Logger associated with this handler.
+     *
+     * @return The Logger associated with this handler
+     */
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
     }
 
 }

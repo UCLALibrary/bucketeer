@@ -127,8 +127,6 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
-        LOGGER.debug(MessageCodes.BUCKETEER_017, Thread.currentThread().getStackTrace()[1].getMethodName());
-
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final String encodedImagePath = "/test/src%2Ftest%2Fresources%2Fimages%2Ftest.tif";
@@ -183,8 +181,6 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
-        LOGGER.debug(MessageCodes.BUCKETEER_017, Thread.currentThread().getStackTrace()[1].getMethodName());
-
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 

@@ -1,0 +1,9 @@
+<InvalidationBatch xmlns="http://cloudfront.amazonaws.com/doc/2019-03-26/">
+  <CallerReference>asdf1</CallerReference>
+  <Paths>
+    <Items>
+      <Path>/path/to/1</Path>
+    </Items>
+    <Quantity>1</Quantity>
+  </Paths>
+</InvalidationBatch>
