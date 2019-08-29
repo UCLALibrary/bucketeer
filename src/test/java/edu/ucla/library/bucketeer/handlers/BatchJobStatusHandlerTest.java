@@ -170,7 +170,6 @@ public class BatchJobStatusHandlerTest {
         final RequestOptions request = new RequestOptions();
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
 
-        LOGGER.info(MessageCodes.BUCKETEER_017, "testGetHandle");
         request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
         myVertx.createHttpClient().getNow(request, response -> {
@@ -199,7 +198,6 @@ public class BatchJobStatusHandlerTest {
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
         final HttpClient client = myVertx.createHttpClient();
 
-        LOGGER.info(MessageCodes.BUCKETEER_017, "testPatchHandle500");
         options.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
         client.request(HttpMethod.PATCH, options, response -> {
@@ -230,7 +228,6 @@ public class BatchJobStatusHandlerTest {
         final HttpRequest<Buffer> postRequest = webClient.post(port, UNSPECIFIED_HOST, POST_URI);
         final MultipartForm form = MultipartForm.create();
 
-        LOGGER.info(MessageCodes.BUCKETEER_017, "testPatchHandle");
         form.attribute(Constants.SLACK_HANDLE, "ksclarke");
         form.attribute("failure", "false");
         form.textFileUpload("csvFileToUpload", JOB_FILE_NAME, csvFile, "text/csv");
