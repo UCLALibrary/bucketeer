@@ -90,7 +90,7 @@
     <bucketeer.thumbnail.size>!200,200</bucketeer.thumbnail.size>
 
     <!-- Where the source images are mounted on the local file system -->
-    <bucketeer.fs.mount></bucketeer.fs.mount>
+    <bucketeer.fs.mount>.</bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
 
     <!-- The distribution ID for Cloudfront's thumbnail cache -->
@@ -296,6 +296,7 @@
               <resources>
                 <resource>
                   <directory>${basedir}/src/main/webroot</directory>
+                  <filtering>true</filtering>
                 </resource>
               </resources>
             </configuration>

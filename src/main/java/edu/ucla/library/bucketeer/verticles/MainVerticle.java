@@ -85,6 +85,11 @@ public class MainVerticle extends AbstractVerticle {
                             // Serve our static pages (docs, CSV submission form, etc.)
                             router.get("/*").order(0).blockingHandler(StaticHandler.create("webroot"));
 
+                            // Add an /upload redirect; we may want different options in the future, but not now
+                            router.routeWithRegex("/upload(/?)").order(1).handler(context -> {
+                                context.response().putHeader("location", "/upload/csv").setStatusCode(307).end();
+                            });
+
                             // Start our server
                             server.requestHandler(router).listen(port);
 
