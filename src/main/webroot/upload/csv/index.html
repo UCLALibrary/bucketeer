@@ -22,7 +22,7 @@
       aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <a class="navbar-brand" href="#">Bucketeer</a>
+    <a class="navbar-brand" href="/">Bucketeer</a>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <a class="nav-item nav-link active" href="/upload/csv">CSV Upload</a> <a class="nav-item nav-link active"
@@ -39,7 +39,7 @@
       GitHub repository.
     </p>
     <div class="row csv-upload-form">
-      <div class="col-sm-6 offset-sm-1">
+      <div class="col-sm-3 offset-sm-1">
         <div class="info-form">
           <form class="form-inlin justify-content-center" action="/batch/input/csv" method="post"
             enctype="multipart/form-data">
@@ -58,6 +58,22 @@
             </div>
           </form>
         </div>
+      </div>
+      <div class="col-sm-4 offset-sm-1">
+        <h4>Instructions</h4>
+        <p>
+          To start a batch job, upload a CSV file (like one of those found in the <a
+            href="https://github.com/uclalibrary/eureka">Eureka</a> GitHub repository). If this is the first time that
+          the file has been processed, do <i>not</i> select the
+          <code>Process previous failures only</code>
+          option -- this is only for files that have been previously processed (and that have had failed images).
+        </p>
+        <p>
+          To submit the form, you will also need to input your Slack handle so that Bucketeer can notify you when your
+          batch job is done. To be notified of this, you need to join the
+          <code>#bucketeer-jobs</code>
+          Slack channel. The processed CSV file will also be uploaded to you there.
+        </p>
       </div>
     </div>
   </div>

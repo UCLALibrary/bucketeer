@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<title>Bucketeer: An image conversion microservice</title>
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/bucketeer-custom.css">
+<link rel="stylesheet" href="/css/landing.css">
+
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-md bg-custom-grey navbar-dark bg-dark fixed-top">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+      data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#">Bucketeer</a>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-item nav-link active" href="/upload/csv">CSV Upload</a> <a class="nav-item nav-link active"
+          href="/docs">API Documentation</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <h1>Welcome to the Bucketeer website</h1>
+    <p>Bucketeer is an image conversion microservice. It accepts TIFF images and converts them into JPEG 2000
+      images. When the conversion is done, the resulting JP2 image is put into an S3 bucket where a IIIF server will be
+      able to access it. The IIIF image server serves derivative images created from the source JP2 image to a variety
+      of IIIF compatible image clients.</p>
+    <div class="highlighted">
+      <h3>How do I use Bucketeer?</h3>
+      <div>
+        <p>There are two ways to use the Bucketeer microservice:</p>
+        <dl>
+          <dt>A batch image upload form</dt>
+          <dd>
+            The batch image upload form is a Web form that accepts CSV files with metadata about images, including an
+            image path that's available to the Bucketeer microservice. Examples of these CSV files can be found in the <a
+              href="https://github.com/uclalibrary/eureka">Eureka</a> GitHub repository. More information about this
+            option is available on the <a href="/upload/csv">CSV Upload</a> page.
+          </dd>
+          <dt>A RESTful API</dt>
+          <dd>
+            The RESTful API endpoint is a Web service to which images can be submitted, one at a time. Documentation
+            about the endpoint is available on the <a href="/docs">API Documentation</a> page.
+          </dd>
+        </dl>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <h4>Configuration Values</h4>
+        <p>These values are the ones being used by this particular Bucketeer instance. Other instances will have
+          other values:</p>
+        <dl>
+          <dt>IIIF Server</dt>
+          <dd>${bucketeer.iiif.url}</dd>
+          <dt>S3 Bucket</dt>
+          <dd>${bucketeer.s3.bucket}</dd>
+          <dt>S3 Bucket Region</dt>
+          <dd>${bucketeer.s3.region}</dd>
+          <dt>AWS Lambda S3 Bucket for TIFFs</dt>
+          <dd>${lambda.s3.bucket}</dd>
+          <dt>Local file system mount</dt>
+          <dd>${bucketeer.fs.mount}</dd>
+          <dt>Thumbnail Size / Dimensions</dt>
+          <dd>${bucketeer.thumbnail.size}</dd>
+        </dl>
+      </div>
+      <div class="col-sm-8">
+        <h4>Learn more about Bucketeer</h4>
+        <p>
+          Bucketeer is currently being actively developed. The source code is available for download at: <a
+            href="https://github.com/uclalibrary/bucketeer">https://github.com/uclalibrary/bucketeer</a>. The project
+          also relies on a Docker container build. The code for this is available at: <a
+            href="https://github.com/UCLALibrary/docker-bucketeer">https://github.com/UCLALibrary/docker-bucketeer</a>
+        </p>
+        <p>
+          The Docker image is published at <a href="https://hub.docker.com/r/uclalibrary/bucketeer">https://hub.docker.com/r/uclalibrary/bucketeer</a>.
+          You must have an account on the UCLA DockerHub account to see this repository, though, because it contains the
+          proprietary code for a JPEG 2000 library.
+        </p>
+        <p>
+          The project is periodically built using Travis-CI (a continuous integration service). The status of these
+          builds can be seen on the <a href="https://travis-ci.com/UCLALibrary/bucketeer">Bucketeer page</a> on the
+          Travis website.
+        </p>
+        <p>
+          If you encounter a problem while using Bucketeer, please create a ticket so that we can look into it. If you
+          have access to <a href="https://jira.library.ucla.edu/secure/Dashboard.jspa">UCLA's Jira</a> you can create an
+          ticket there in the
+          <code>IIIF Infrastructure (IIIF)</code>
+          project. If you do not have access to UCLA's Jira, you can create a ticket in the project's GitHub <a
+            href="https://github.com/uclalibrary/bucketeer/issues">issues queue</a>.
+        </p>
+        <p>
+          If you would prefer, you can also <a href="mailto:lib_softwaredev-services@library.ucla.edu">email the
+          Services team</a> directly with any questions or comments about the Bucketeer service.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>
