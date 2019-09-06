@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.config.ConfigRetriever;
@@ -68,10 +69,10 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
                 final JsonObject jsonConfig = config.result();
 
                 // some configs we'll need in a bit
-                mySlackTestUserHandle = jsonConfig.getString(Constants.SLACK_TEST_USER_HANDLE,
+                mySlackTestUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE,
                         SLACK_TEST_USER_HANDLE_DEFAULT);
-                mySlackTestChannelID = jsonConfig.getString(Constants.SLACK_TEST_CHANNEL_ID); // dev-null
-                mySlackErrorChannelID = jsonConfig.getString(Constants.SLACK_ERROR_CHANNEL_ID); // dev-null
+                mySlackTestChannelID = jsonConfig.getString(Config.SLACK_TEST_CHANNEL_ID); // dev-null
+                mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID); // dev-null
 
                 vertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
                     if (deployment.failed()) {
@@ -135,7 +136,7 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
         // from the configuration.
 
         message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Constants.SLACK_CHANNEL_ID, slackChannelId);
+        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
@@ -180,7 +181,7 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
         // from the configuration.
 
         message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Constants.SLACK_CHANNEL_ID, slackChannelId);
+        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
         message.put(Constants.BATCH_METADATA, placeholderJsonArray);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {

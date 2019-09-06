@@ -112,26 +112,6 @@
 
   <dependencies>
 
-    <!--   <!&#45;&#45; Explicitly declaring these fasterxml.jackson dependencies, which are required by other dependencies, to better control the version we use &#45;&#45;> -->
-    <!-- <dependency> -->
-    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
-    <!--    <artifactId>jackson&#45;core</artifactId> -->
-    <!--    <version>${fasterxml.jackson.version}</version> -->
-    <!-- </dependency> -->
-    <!-- <dependency> -->
-    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
-    <!--    <artifactId>jackson&#45;annotations</artifactId> -->
-    <!--    <version>${fasterxml.jackson.version}</version> -->
-    <!-- </dependency> -->
-    <!-- <dependency> -->
-    <!--    <groupId>com.fasterxml.jackson.core</groupId> -->
-    <!--    <artifactId>jackson&#45;databind</artifactId> -->
-    <!--    <version>${fasterxml.jackson.version}</version> -->
-    <!-- </dependency> -->
-    <!--  -->
-
-
-
     <!-- Vert.x is a toolkit for building reactive applications on the JVM -->
     <dependency>
       <groupId>io.vertx</groupId>

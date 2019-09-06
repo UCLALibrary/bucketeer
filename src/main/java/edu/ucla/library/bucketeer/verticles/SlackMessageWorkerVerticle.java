@@ -19,6 +19,7 @@ import com.github.seratch.jslack.api.webhook.WebhookResponse;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
@@ -56,15 +57,15 @@ public class SlackMessageWorkerVerticle extends AbstractBucketeerVerticle {
         getJsonConsumer().handler(message -> {
             final JsonObject json = message.body();
             final String slackMessageText = json.getString(Constants.SLACK_MESSAGE_TEXT);
-            final String slackChannelId = json.getString(Constants.SLACK_CHANNEL_ID);
+            final String slackChannelId = json.getString(Config.SLACK_CHANNEL_ID);
 
             // figure out which webhook to use based on the slackChannelId we have...
             // ... start with a default webhook, which is for the bucketeer-jobs channel
-            String slackWebhookURL = config.getString(Constants.SLACK_WEBHOOK_URL);
+            String slackWebhookURL = config.getString(Config.SLACK_WEBHOOK_URL);
             // ... if we want to send a message to the dev-null channel, use the webhook for
             // that
 
-            final String botToken = config.getString(Constants.SLACK_OAUTH_TOKEN);
+            final String botToken = config.getString(Config.SLACK_OAUTH_TOKEN);
             final List<String> channels = new ArrayList<>();
             channels.add(slackChannelId);
 
@@ -72,9 +73,9 @@ public class SlackMessageWorkerVerticle extends AbstractBucketeerVerticle {
             // use the error webhook URL
             // TODO: refactor this to use a lookup of some sort, because this is a bit sloppy
             if ("dev-null".contentEquals(slackChannelId)) {
-                slackWebhookURL = config.getString(Constants.SLACK_TEST_WEBHOOK_URL);
+                slackWebhookURL = config.getString(Config.SLACK_TEST_WEBHOOK_URL);
             } else {
-                slackWebhookURL = config.getString(Constants.SLACK_ERROR_WEBHOOK_URL);
+                slackWebhookURL = config.getString(Config.SLACK_ERROR_WEBHOOK_URL);
             }
 
             // optionally handle metadata if it's included in our message
