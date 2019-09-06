@@ -39,7 +39,7 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
 
     private static final String SLACK_TEST_CHANNEL_ID_DEFAULT = "dev-null";
 
-    private static final String SLACK_ERROR_CHANNEL_ID_DEFAULT = "dev-null";
+    private static final String SLACK_ERROR_CHANNEL_ID_DEFAULT = SLACK_TEST_CHANNEL_ID_DEFAULT;
 
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
