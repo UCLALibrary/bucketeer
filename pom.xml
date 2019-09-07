@@ -57,6 +57,8 @@
     <freelib.utils.version>0.8.10</freelib.utils.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
+    <jslack.version>1.7.8</jslack.version>
+    <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
 
     <!-- Build plug-in versions -->
     <clean.plugin.version>3.1.0</clean.plugin.version>
@@ -76,6 +78,17 @@
     <bucketeer.s3.bucket>bucketeer-test-data</bucketeer.s3.bucket>
     <bucketeer.s3.access_key>YOUR_ACCESS_KEY</bucketeer.s3.access_key>
     <bucketeer.s3.secret_key>YOUR_SECRET_KEY</bucketeer.s3.secret_key>
+    
+    <!-- Slack configuration properties -->
+    <bucketeer.slack.test_user_handle>YOUR_SLACK_TEST_USER_HANDLE</bucketeer.slack.test_user_handle>
+    <bucketeer.slack.verification_token>YOUR_SLACK_VERIFICATION_TOKEN</bucketeer.slack.verification_token>
+    <bucketeer.slack.oauth_token>YOUR_SLACK_OAUTH_TOKEN</bucketeer.slack.oauth_token>
+    <bucketeer.slack.test_webhook_url>YOUR_SLACK_TEST_WEBHOOK_URL</bucketeer.slack.test_webhook_url>
+    <bucketeer.slack.test_channel_id>YOUR_SLACK_TEST_CHANNEL_ID</bucketeer.slack.test_channel_id>
+    <bucketeer.slack.webhook_url>YOUR_SLACK_WEBHOOK_URL</bucketeer.slack.webhook_url>
+    <bucketeer.slack.channel_id>YOUR_SLACK_CHANNEL_ID</bucketeer.slack.channel_id>
+    <bucketeer.slack.error_webhook_url>YOUR_SLACK_ERROR_WEBHOOK_URL</bucketeer.slack.error_webhook_url>
+    <bucketeer.slack.error_channel_id>YOUR_SLACK_ERROR_CHANNEL_ID</bucketeer.slack.error_channel_id>
 
     <!-- We can use a lambda kakadu converter if we send things to its bucket -->
     <lambda.s3.bucket>test-bucketeer-tiff</lambda.s3.bucket>
@@ -175,6 +188,11 @@
       <groupId>info.freelibrary</groupId>
       <artifactId>vertx-super-s3</artifactId>
       <version>${vertx.super.s3.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.seratch</groupId>
+      <artifactId>jslack</artifactId>
+      <version>${jslack.version}</version>
     </dependency>
 
     <!-- Below dependencies only used for testing -->
@@ -436,6 +454,7 @@
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+            <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
@@ -545,11 +564,18 @@
                   <exclude>com.github.fge:uri-template</exclude>
                   <exclude>com.github.java-json-tools:json-schema-core</exclude>
                   <exclude>com.github.java-json-tools:json-schema-validator</exclude>
+                  <exclude>com.github.seratch:jslack</exclude>
+                  <exclude>com.github.seratch:jslack-api-client</exclude>
+                  <exclude>com.github.seratch:jslack-app-backend</exclude>
+                  <exclude>com.github.seratch:jslack-api-model</exclude>
                   <exclude>com.google.guava:guava</exclude>
                   <exclude>com.google.inject:guice</exclude>
                   <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
+                  <exclude>com.google.code.gson:gson</exclude>
                   <exclude>com.networknt:json-schema-validator</exclude>
                   <exclude>com.opencsv:opencsv</exclude>
+                  <exclude>com.squareup.okhttp3:okhttp</exclude>
+                  <exclude>com.squareup.okio:okio</exclude>
                   <exclude>commons-codec:commons-codec</exclude>
                   <exclude>commons-collections:commons-collections</exclude>
                   <exclude>commons-io:commons-io</exclude>

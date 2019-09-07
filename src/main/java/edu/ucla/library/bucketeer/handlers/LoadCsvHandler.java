@@ -138,6 +138,10 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
                 final SharedData sharedData;
 
+                for (final Metadata metadata : metadataList) {
+                    metadata.setSlackHandle(slackHandle);
+                }
+
                 myVertx = aContext.vertx();
                 sharedData = myVertx.sharedData();
 

@@ -89,7 +89,27 @@ public final class Constants {
     /**
      * The name of the mapping of deployed verticles.
      */
-    public static final String VERTICLE_MAP = "bucketeer-verticles";
+    public static final String VERTICLE_MAP = "bucketeer.verticles";
+
+    /**
+     * Text for a slack message we want to sent.
+     */
+    public static final String SLACK_MESSAGE_TEXT = "slack-message-text";
+
+    /**
+     * Batch Metadata, stored as a JSON array
+     */
+    public static final String BATCH_METADATA = "batch-metadata";
+
+    /**
+     * Prefix to use for any error messages sent to Slack (for hours of fun, set this to a <@username>)
+     */
+    public static final String SLACK_ERROR_MESSAGE_PREFIX = "<!channel>";
+
+    /**
+     * just a space string, useful
+     */
+    public static final String SPACE = " ";
 
     /**
      * Private constructor for Constants class.

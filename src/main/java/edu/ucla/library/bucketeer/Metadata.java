@@ -29,6 +29,8 @@ public class Metadata {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Metadata.class, Constants.MESSAGES);
 
+    private String mySlackHandle;
+
     /* Required fields */
 
     @CsvBindByName(column = "Item ARK", required = true)
@@ -165,6 +167,25 @@ public class Metadata {
      */
     public String getID() {
         return myItemArk;
+    }
+
+    /**
+     * Gets the slackHandle
+     *
+     * @return the slackHandle
+     */
+    public String getSlackHandle() {
+        return mySlackHandle;
+    }
+
+    /**
+     * Sets the slackHandle
+     *
+     * @return the slackHandle
+     */
+    public Metadata setSlackHandle(final String aSlackHandle) {
+        mySlackHandle = aSlackHandle;
+        return this;
     }
 
     /**

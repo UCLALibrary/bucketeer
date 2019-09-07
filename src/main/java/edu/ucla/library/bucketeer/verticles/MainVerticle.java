@@ -71,13 +71,14 @@ public class MainVerticle extends AbstractVerticle {
                         try {
                             final LoadImageFailureHandler loadImageFailureHandler = new LoadImageFailureHandler();
                             final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(config);
+                            final BatchJobStatusHandler batchJobStatusHandler = new BatchJobStatusHandler(config);
 
                             // Next, we associate handlers with routes from our specification
                             routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                             routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, loadImageFailureHandler);
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
-                            routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, new BatchJobStatusHandler());
+                            routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, batchJobStatusHandler);
 
                             // After that, we can get a router that's been configured by our OpenAPI spec
                             router = routerFactory.getRouter();
@@ -140,6 +141,7 @@ public class MainVerticle extends AbstractVerticle {
         final DeploymentOptions uploaderOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions thumbnailOpts = new DeploymentOptions();
+        final DeploymentOptions slackOpts = new DeploymentOptions();
         final List<Future> futures = new ArrayList<>();
         final Future<Void> future = Future.future();
 
@@ -147,6 +149,7 @@ public class MainVerticle extends AbstractVerticle {
         uploaderOpts.setConfig(aConfig);
         workerOpts.setConfig(aConfig);
         thumbnailOpts.setConfig(aConfig);
+        slackOpts.setConfig(aConfig);
 
         // Set the deployVerticles handler to handle our verticles deploy future
         future.setHandler(aHandler);
@@ -163,6 +166,7 @@ public class MainVerticle extends AbstractVerticle {
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
         futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
         futures.add(deployVerticle(ThumbnailVerticle.class.getName(), thumbnailOpts, Future.future()));
+        futures.add(deployVerticle(SlackMessageWorkerVerticle.class.getName(), slackOpts, Future.future()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).setHandler(handler -> {
