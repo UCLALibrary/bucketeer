@@ -166,7 +166,7 @@ public class MainVerticle extends AbstractVerticle {
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
         futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
         futures.add(deployVerticle(ThumbnailVerticle.class.getName(), thumbnailOpts, Future.future()));
-        futures.add(deployVerticle(SlackMessageWorkerVerticle.class.getName(), slackOpts, Future.future()));
+        futures.add(deployVerticle(SlackMessageVerticle.class.getName(), slackOpts, Future.future()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).setHandler(handler -> {

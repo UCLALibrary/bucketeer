@@ -30,26 +30,18 @@ import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
+public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageWorkerVerticleTest.class, MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageVerticleTest.class, MESSAGES);
 
-    private static final String VERTICLE_NAME = SlackMessageWorkerVerticle.class.getName();
-
-    private static final String SLACK_TEST_USER_HANDLE_DEFAULT = "hpottinger";
-
-    private static final String SLACK_TEST_CHANNEL_ID_DEFAULT = "dev-null";
-
-    private static final String SLACK_ERROR_CHANNEL_ID_DEFAULT = SLACK_TEST_CHANNEL_ID_DEFAULT;
+    private static final String VERTICLE_NAME = SlackMessageVerticle.class.getName();
 
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
-    private String mySlackTestUserHandle;
+    private String mySlackUserHandle;
 
-    private String mySlackTestChannelID;
-
-    private String mySlackErrorChannelID;
+    private String mySlackChannelID;
 
     /**
      * The tests' set up.
@@ -68,11 +60,8 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
 
-                // some configs we'll need in a bit
-                mySlackTestUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE,
-                        SLACK_TEST_USER_HANDLE_DEFAULT);
-                mySlackTestChannelID = jsonConfig.getString(Config.SLACK_TEST_CHANNEL_ID); // dev-null
-                mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID); // dev-null
+                mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE);
+                mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
 
                 vertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
                     if (deployment.failed()) {
@@ -81,13 +70,12 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
 
                         LOGGER.error(details, message);
                         aContext.fail(message);
+                    } else {
+                        asyncTask.complete();
                     }
-
-                    asyncTask.complete();
                 });
             } else {
                 aContext.fail(config.cause());
-                asyncTask.complete();
             }
         });
     }
@@ -108,35 +96,26 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
 
                 LOGGER.error(message);
                 aContext.fail(message);
+            } else {
+                async.complete();
             }
-
-            async.complete();
         });
     }
 
     /**
-     * Tests being able to send Slack messages.
+     * Tests being able to send a Slack text message.
      *
      * @param aContext A test context
      */
     @Test
     public final void testSlackSendMessage(final TestContext aContext) {
-
+        final String slackMessageText = "whirr, click, buzz... " + UUID.randomUUID().toString();
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
 
-        final String slackMessageText = "whirr, click, buzz... " + UUID.randomUUID().toString();
-
-        final String slackChannelId = mySlackTestChannelID;
-
-        // send these 2 vars: slackMessageText, slackChannelId,
-        // NOTE: the WebhookURL will be inferred from the slackChannelId
-        // NOTE: we do not need to send any tokens, the verticle gets them
-        // from the configuration.
-
         message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
+        message.put(Config.SLACK_CHANNEL_ID, mySlackChannelID);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
@@ -147,9 +126,9 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
                 }
 
                 aContext.fail();
+            } else {
+                asyncTask.complete();
             }
-
-            asyncTask.complete();
         });
     }
 
@@ -160,28 +139,19 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
      */
     @Test
     public final void testSlackFileUpload(final TestContext aContext) {
-
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
 
-        final String slackMessageText = "<@" + mySlackTestUserHandle + "> here's a file... " + UUID.randomUUID()
+        final String slackMessageText = "<@" + mySlackUserHandle + "> here's a file... " + UUID.randomUUID()
                 .toString();
 
-        final String slackChannelId = mySlackTestChannelID;
-
-        // TODO: replace this temporary placeholder with actual data
         final String placeholderString = "placeholder, data, for freshness, do, not, eat";
         final List<String> placeholderList = Arrays.asList(placeholderString.split("\\s*,\\s*"));
         final JsonArray placeholderJsonArray = new JsonArray(placeholderList);
 
-        // send these 3 vars: slackMessageText, slackChannelId, BatchMetadata
-        // NOTE: the WebhookURL will be inferred from the slackChannelId
-        // NOTE: we do not need to send slackVerificationToken, the verticle gets that
-        // from the configuration.
-
         message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
+        message.put(Config.SLACK_CHANNEL_ID, mySlackChannelID);
         message.put(Constants.BATCH_METADATA, placeholderJsonArray);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
@@ -193,9 +163,9 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
                 }
 
                 aContext.fail();
+            } else {
+                asyncTask.complete();
             }
-
-            asyncTask.complete();
         });
     }
 

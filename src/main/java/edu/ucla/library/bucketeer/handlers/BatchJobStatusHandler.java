@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -18,10 +21,9 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.verticles.SlackMessageWorkerVerticle;
+import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
 import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -35,8 +37,6 @@ import io.vertx.ext.web.RoutingContext;
 public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
-
-    private static final String SLACK_MESSAGE_WORKER_VERTICLE = SlackMessageWorkerVerticle.class.getName();
 
     private final JsonObject myConfig;
 
@@ -61,10 +61,6 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         if (myVertx == null) {
             myVertx = vertx;
         }
-
-        // grab channel IDs from the config
-        final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
-        final String slackErrorChannelID = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
 
         // imageId get decoded, but we actually want the encoded version of it to compare with the jobs queue
         final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
@@ -114,146 +110,23 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                                     // Have we finished processing all the images in this job?
                                     if (finished) {
-                                        decrementJobsCounter(sharedData, map, jobName, response, true,
-                                                slackErrorChannelID, slackChannelID);
+                                        decrementJobsCounter(sharedData, map, jobName, response, true);
                                     } else {
-                                        decrementJobsCounter(sharedData, map, jobName, response, false,
-                                                slackErrorChannelID, slackChannelID);
+                                        decrementJobsCounter(sharedData, map, jobName, response, false);
                                     }
                                 } else {
-                                    returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response,
-                                            slackErrorChannelID);
+                                    returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
                                 }
                             });
                         } else {
-                            returnError(MessageCodes.BUCKETEER_075, jobName, response, slackErrorChannelID);
+                            returnError(MessageCodes.BUCKETEER_075, jobName, response);
                         }
                     } else {
-                        returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response,
-                                slackErrorChannelID);
+                        returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response);
                     }
                 });
             } else {
-                returnError(getMap.cause(), MessageCodes.BUCKETEER_063, jobName, response, slackErrorChannelID);
-            }
-        });
-    }
-
-    private void returnError(final String aMessageCode, final String aDetail, final HttpServerResponse aResponse,
-            final String aSlackErrorChannelID) {
-        returnError(null, aMessageCode, aDetail, aResponse, aSlackErrorChannelID);
-    }
-
-    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetail,
-            final HttpServerResponse aResponse, final String aSlackErrorChannelID) {
-        final String errorMessage = LOGGER.getMessage(aMessageCode, aDetail);
-
-        if (aThrowable != null) {
-            LOGGER.error(aThrowable, errorMessage);
-        } else {
-            LOGGER.error(errorMessage);
-        }
-
-        // Send notice about error to Slack channel too
-        sendSlackMessage(Constants.SLACK_ERROR_MESSAGE_PREFIX + Constants.SPACE + errorMessage, aSlackErrorChannelID);
-
-        aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
-        aResponse.setStatusMessage(errorMessage);
-        aResponse.end();
-    }
-
-    /**
-     * Send a message to the specified Slack channel, optionally include an attachment (not yet done)
-     *
-     * @param aMessageText Text of the message we want to send
-     * @param aChannelId ID of the channel to which we want to send this message
-     */
-    private void sendSlackMessage(final String aMessageText, final String aChannelId) {
-        final EventBus eventBus = myVertx.eventBus();
-        final JsonObject message = new JsonObject();
-        final DeliveryOptions options = new DeliveryOptions();
-
-        // build our message object
-        message.put(Constants.SLACK_MESSAGE_TEXT, aMessageText);
-        message.put(Config.SLACK_CHANNEL_ID, aChannelId);
-
-        eventBus.send(SLACK_MESSAGE_WORKER_VERTICLE, message, options);
-    }
-
-    /**
-     * Decrement the job counter and do a final check if it's the last job in a batch run.
-     *
-     * @param aSharedData Data shared across different handler instances
-     * @param aJobName The name of the batch job that's currently running
-     * @param aResponse An HTTP response
-     * @param aCompletedRun Whether or not the batch job has completed
-     */
-    private void decrementJobsCounter(final SharedData aSharedData, final AsyncMap<String, List<Metadata>> aJobsMap,
-            final String aJobName, final HttpServerResponse aResponse, final boolean aCompletedRun,
-            final String aSlackErrorChannelID, final String aSlackChannelID) {
-        aSharedData.getCounter(aJobName, getCounter -> {
-            if (getCounter.succeeded()) {
-                final Counter counter = getCounter.result();
-
-                counter.decrementAndGet(decrement -> {
-                    if (decrement.succeeded()) {
-                        // Double check our belief that this is the last job in the batch run
-                        if (aCompletedRun && !decrement.result().equals(0L)) {
-                            LOGGER.error(MessageCodes.BUCKETEER_079);
-
-                            // And post to Slack about it so we can investigate
-                            sendSlackMessage(Constants.SLACK_ERROR_MESSAGE_PREFIX + Constants.SPACE +
-                                    MessageCodes.BUCKETEER_079, aSlackErrorChannelID);
-                        } else if (aCompletedRun) {
-                            LOGGER.info(MessageCodes.BUCKETEER_081, aJobName);
-
-                            // Remove the batch from our jobs queue
-                            aJobsMap.remove(aJobName, removeJob -> {
-                                if (removeJob.succeeded()) {
-                                    final List<Metadata> metadataList = removeJob.result();
-                                    final JsonArray thumbnails = new JsonArray();
-
-                                    // Go through metadata and look for ones that have just succeeded being processed
-                                    for (final Metadata metadata : metadataList) {
-                                        if (WorkflowState.SUCCEEDED.equals(metadata.getWorkflowState())) {
-                                            thumbnails.add(metadata.getID());
-                                        }
-                                    }
-
-                                    // If there are recently succeeded images, send them off for thumbnail generation
-                                    if (thumbnails.size() > 0) {
-                                        final JsonObject thumbnailMessage = new JsonObject();
-
-                                        thumbnailMessage.put(Constants.IMAGE_ID_ARRAY, thumbnails);
-                                        sendMessage(myVertx, thumbnailMessage, ThumbnailVerticle.class.getName());
-                                    }
-                                    final List<Metadata> metadata = removeJob.result();
-                                    final String slackHandle = metadata.get(0).getSlackHandle();
-                                    sendSlackMessage("Hi, <@" + slackHandle +
-                                            "> your job is done, and your CSV output file will be attached in a " +
-                                            "following message... one moment, please...", aSlackChannelID);
-
-                                    // TODO: Send metadata to Slack (and GitHub, in the future)
-
-                                    aResponse.setStatusCode(HTTP.NO_CONTENT);
-                                    aResponse.end();
-                                } else {
-                                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse,
-                                            aSlackErrorChannelID);
-                                }
-                            });
-                        } else {
-                            aResponse.setStatusCode(HTTP.NO_CONTENT);
-                            aResponse.end();
-                        }
-                    } else {
-                        returnError(decrement.cause(), MessageCodes.BUCKETEER_080, aJobName, aResponse,
-                                aSlackErrorChannelID);
-                    }
-                });
-            } else {
-                returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse,
-                        aSlackErrorChannelID);
+                returnError(getMap.cause(), MessageCodes.BUCKETEER_063, jobName, response);
             }
         });
     }
@@ -266,6 +139,174 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     @Override
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    /**
+     * Return an error message to the browser.
+     *
+     * @param aMessageCode A MessageCode string
+     * @param aDetail Details about the exception
+     * @param aResponse An HTTP server response
+     */
+    private void returnError(final String aMessageCode, final String aDetail, final HttpServerResponse aResponse) {
+        returnError(null, aMessageCode, aDetail, aResponse);
+    }
+
+    /**
+     * Return an error message to the browser.
+     *
+     * @param aThrowable An exception with a stack trace
+     * @param aMessageCode A MessageCode string
+     * @param aDetail Details about the exception
+     * @param aResponse An HTTP server response
+     */
+    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetail,
+            final HttpServerResponse aResponse) {
+        final String errorChannel = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+        final String errorMessage = LOGGER.getMessage(aMessageCode, aDetail);
+
+        if (aThrowable != null) {
+            LOGGER.error(aThrowable, errorMessage);
+        } else {
+            LOGGER.error(errorMessage);
+        }
+
+        // Send notice about error to Slack channel too
+        sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage), errorChannel);
+
+        aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
+        aResponse.setStatusMessage(errorMessage);
+        aResponse.end();
+    }
+
+    /**
+     * Send a message to the specified Slack channel.
+     *
+     * @param aMessageText Text of the message we want to send
+     * @param aChannelId ID of the channel to which we want to send this message
+     */
+    private void sendSlackMessage(final String aMessageText, final String aChannelId) {
+        sendSlackMessage(aMessageText, aChannelId, null);
+    }
+
+    /**
+     * Send a message to the specified Slack channel with a list of metadata records.
+     *
+     * @param aMessageText Text of the message we want to send
+     * @param aChannelId ID of the channel to which we want to send this message
+     */
+    private void sendSlackMessage(final String aMessageText, final String aChannelId,
+            final List<Metadata> aMetadataList) {
+        final EventBus eventBus = myVertx.eventBus();
+        final JsonObject message = new JsonObject();
+
+        // Build our message object
+        message.put(Constants.SLACK_MESSAGE_TEXT, aMessageText);
+        message.put(Config.SLACK_CHANNEL_ID, aChannelId);
+
+        try {
+            final JsonArray metadataJson = new JsonArray(new ObjectMapper().writeValueAsString(aMetadataList));
+
+            message.put(Constants.BATCH_METADATA, metadataJson);
+            eventBus.send(SlackMessageVerticle.class.getName(), message);
+        } catch (final JsonProcessingException details) {
+            final String errorChannel = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+            final String errorMessage = details.getMessage();
+
+            LOGGER.error(details, errorMessage);
+            sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage), errorChannel);
+        }
+    }
+
+    /**
+     * Decrement the job counter and do a final check if it's the last job in a batch run.
+     *
+     * @param aSharedData Data shared across different handler instances
+     * @param aJobName The name of the batch job that's currently running
+     * @param aResponse An HTTP response
+     * @param aCompletedRun Whether or not the batch job has completed
+     */
+    private void decrementJobsCounter(final SharedData aSharedData, final AsyncMap<String, List<Metadata>> aJobsMap,
+            final String aJobName, final HttpServerResponse aResponse, final boolean aCompletedRun) {
+        final String slackErrorChannelID = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+
+        aSharedData.getCounter(aJobName, getCounter -> {
+            if (getCounter.succeeded()) {
+                final Counter counter = getCounter.result();
+
+                counter.decrementAndGet(decrement -> {
+                    if (decrement.succeeded()) {
+                        // Double check our belief that this is the last job in the batch run
+                        if (aCompletedRun && !decrement.result().equals(0L)) {
+                            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_079);
+                            final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage);
+
+                            LOGGER.error(errorMessage);
+
+                            // And post to Slack about it so we can investigate
+                            sendSlackMessage(slackMessage, slackErrorChannelID);
+                        } else if (aCompletedRun) {
+                            LOGGER.info(MessageCodes.BUCKETEER_081, aJobName);
+
+                            // Remove the batch from our jobs queue
+                            aJobsMap.remove(aJobName, removeJob -> {
+                                if (removeJob.succeeded()) {
+                                    finalizeJob(removeJob.result());
+                                    returnSuccess(aResponse);
+                                } else {
+                                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse);
+                                }
+                            });
+                        } else {
+                            returnSuccess(aResponse);
+                        }
+                    } else {
+                        returnError(decrement.cause(), MessageCodes.BUCKETEER_080, aJobName, aResponse);
+                    }
+                });
+            } else {
+                returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse);
+            }
+        });
+    }
+
+    /**
+     * Wrap up notification services once the batch job has completed.
+     *
+     * @param aMetadataList A list of metadata objects
+     */
+    private void finalizeJob(final List<Metadata> aMetadataList) {
+        final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
+        final String slackHandle = aMetadataList.get(0).getSlackHandle();
+        final JsonArray thumbnails = new JsonArray();
+
+        // Go through metadata and look for ones that have just succeeded being processed
+        for (final Metadata metadata : aMetadataList) {
+            if (WorkflowState.SUCCEEDED.equals(metadata.getWorkflowState())) {
+                thumbnails.add(metadata.getID());
+            }
+        }
+
+        // If there are recently succeeded images, send them off for thumbnail generation
+        if (thumbnails.size() > 0) {
+            final JsonObject thumbnailMessage = new JsonObject();
+
+            thumbnailMessage.put(Constants.IMAGE_ID_ARRAY, thumbnails);
+            sendMessage(myVertx, thumbnailMessage, ThumbnailVerticle.class.getName());
+        }
+
+        // Once that's completed, we can let the user know their job is ready
+        sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle), slackChannelID, aMetadataList);
+    }
+
+    /**
+     * Return a successful response to the browser.
+     *
+     * @param aResponse A HTTP server response
+     */
+    private void returnSuccess(final HttpServerResponse aResponse) {
+        aResponse.setStatusCode(HTTP.NO_CONTENT);
+        aResponse.end();
     }
 
 }

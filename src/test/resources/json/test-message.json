@@ -40,7 +40,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb009n998t",
     "myObjectType" : "Work",
@@ -80,7 +81,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb038nb0bm",
     "myObjectType" : "Work",
@@ -120,7 +122,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb0489n655",
     "myObjectType" : "Work",
@@ -160,7 +163,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb058002j1",
     "myObjectType" : "Work",
@@ -200,7 +204,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb058002kj",
     "myObjectType" : "Work",
@@ -240,7 +245,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb0779n6bd",
     "myObjectType" : "Work",
@@ -280,7 +286,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb0779n6cx",
     "myObjectType" : "Work",
@@ -320,7 +327,8 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   }, {
     "myItemArk" : "ark%3A%2F13030%2Fhb08700381",
     "myObjectType" : "Work",
@@ -360,6 +368,7 @@
     "mySupport" : null,
     "myGenre" : "news photographs",
     "myTypeOfResource" : "still image",
-    "myVisibility" : null
+    "myVisibility" : null,
+    "slackHandle" : null
   } ]
 }

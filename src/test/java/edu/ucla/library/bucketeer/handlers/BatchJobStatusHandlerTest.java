@@ -58,7 +58,7 @@ public class BatchJobStatusHandlerTest {
 
     private static final String POST_URI = "/batch/input/csv";
 
-    // jobName, imageId, success
+    // Parameters for the URI: jobName, imageId, success
     private static final String PATCH_BATCH_URI = "/batch/jobs/{}/{}/{}";
 
     private static final String TEST_ARK = "ark%3A%2F13030%2Fhb000003n9";
@@ -93,24 +93,18 @@ public class BatchJobStatusHandlerTest {
         final ServerSocket socket = new ServerSocket(0);
         final int port = socket.getLocalPort();
         final Async asyncTask = aContext.async();
-        final String test_channel_id = "dev-null";
 
         LOGGER.debug(MessageCodes.BUCKETEER_021, myTestName.getMethodName(), port);
 
         aContext.put(Config.HTTP_PORT, port);
-        final JsonObject myConfig = new JsonObject().put(Config.HTTP_PORT, port);
-        // put our Slack Error Channel ID in the config, so that we send any errors to the
-        // correct channel
-        myConfig.put(Config.SLACK_ERROR_CHANNEL_ID, test_channel_id);
-        options.setConfig(myConfig);
+        options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
         socket.close();
 
         myVertx = myRunTestOnContextRule.vertx();
 
-        // grab some configs
+        // Grab some configs
         ConfigRetriever.create(myVertx).getConfig(config -> {
             if (config.succeeded()) {
-                // HERE
                 myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
                     if (deployment.succeeded()) {
                         @SuppressWarnings("rawtypes")

@@ -95,7 +95,7 @@
   <entry key="BUCKETEER-084">FakeS3BucketVerticle received a storage request: {}</entry>
   <entry key="BUCKETEER-085">Setting up the Slack client</entry>
   <entry key="BUCKETEER-086">Preparing to send '{}' to Slack channel: {}</entry>
-  <entry key="BUCKETEER_087">Slack message sent, with response of '{}'.</entry>
+  <entry key="BUCKETEER_087">Slack message sent to '{}' with response of '{}'</entry>
   <entry key="BUCKETEER-088">Slack message send failed: {} -&gt; {}</entry>
   <entry key="BUCKETEER-089">IO Exception: {}</entry>
   <entry key="BUCKETEER-090">Slack file upload failed: {}</entry>
@@ -111,4 +111,7 @@
   <entry key="BUCKETEER-107">Adding path to cache invalidation batch job: {}</entry>
   <entry key="BUCKETEER-108">Mapping bean field to CSV value: &quot;{}&quot; = &quot;{}&quot;</entry>
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
+  <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
+  <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached:</entry>
+  <entry key="BUCKETEER-112">Slack channel configured: {} [{}]</entry>
 </properties>
