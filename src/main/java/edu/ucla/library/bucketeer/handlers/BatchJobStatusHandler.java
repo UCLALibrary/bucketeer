@@ -24,14 +24,12 @@ import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
 import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.shareddata.Counter;
-import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 
 public class BatchJobStatusHandler extends AbstractBucketeerHandler {
@@ -55,19 +53,13 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
-        final Vertx vertx = aContext.vertx();
-        final SharedData sharedData = vertx.sharedData();
+        final String jobName = request.getParam(Constants.JOB_NAME);
 
         if (myVertx == null) {
-            myVertx = vertx;
+            myVertx = aContext.vertx();
         }
 
-        // imageId get decoded, but we actually want the encoded version of it to compare with the jobs queue
-        final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
-        final String jobName = request.getParam(Constants.JOB_NAME);
-        final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-
-        sharedData.<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
+        myVertx.sharedData().<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
             if (getMap.succeeded()) {
                 final AsyncMap<String, List<Metadata>> map = getMap.result();
 
@@ -78,42 +70,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                         if (jobs.contains(jobName)) {
                             map.get(jobName, getJob -> {
                                 if (getJob.succeeded()) {
-                                    final List<Metadata> metadataList = getJob.result();
-                                    final ListIterator<Metadata> iterator = metadataList.listIterator();
-
-                                    boolean finished = true;
-                                    boolean found = false;
-
-                                    while (iterator.hasNext()) {
-                                        final Metadata metadata = iterator.next();
-                                        final String id = metadata.getID();
-
-                                        if (imageId.equals(id)) {
-                                            if (!success) {
-                                                metadata.setWorkflowState(WorkflowState.FAILED);
-                                            } else {
-                                                metadata.setWorkflowState(WorkflowState.SUCCEEDED);
-                                            }
-
-                                            found = true;
-                                        }
-
-                                        if (WorkflowState.EMPTY.equals(metadata.getWorkflowState())) {
-                                            finished = false;
-                                        }
-                                    }
-
-                                    // Could be some random submission, but it's worth flagging as suspicious
-                                    if (!found) {
-                                        LOGGER.warn(MessageCodes.BUCKETEER_077, jobName, imageId);
-                                    }
-
-                                    // Have we finished processing all the images in this job?
-                                    if (finished) {
-                                        decrementJobsCounter(sharedData, map, jobName, response, true);
-                                    } else {
-                                        decrementJobsCounter(sharedData, map, jobName, response, false);
-                                    }
+                                    checkJobStatus(map, getJob.result(), aContext);
                                 } else {
                                     returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
                                 }
@@ -139,6 +96,50 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     @Override
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    private void checkJobStatus(final AsyncMap<String, List<Metadata>> aMap, final List<Metadata> aMetadataList,
+            final RoutingContext aContext) {
+        final HttpServerResponse response = aContext.response();
+        final HttpServerRequest request = aContext.request();
+        final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
+        final String jobName = request.getParam(Constants.JOB_NAME);
+        final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
+        final ListIterator<Metadata> iterator = aMetadataList.listIterator();
+
+        boolean finished = true;
+        boolean found = false;
+
+        while (iterator.hasNext()) {
+            final Metadata metadata = iterator.next();
+            final String id = metadata.getID();
+
+            if (imageId.equals(id)) {
+                if (!success) {
+                    metadata.setWorkflowState(WorkflowState.FAILED);
+                } else {
+                    metadata.setWorkflowState(WorkflowState.SUCCEEDED);
+                }
+
+                found = true;
+            }
+
+            if (WorkflowState.EMPTY.equals(metadata.getWorkflowState())) {
+                finished = false;
+            }
+        }
+
+        // Could be some random submission, but it's worth flagging as suspicious
+        if (!found) {
+            LOGGER.warn(MessageCodes.BUCKETEER_077, jobName, imageId);
+        }
+
+        // Have we finished processing all the images in this job?
+        if (finished) {
+            decrementJobsCounter(aMap, jobName, response, true);
+        } else {
+            decrementJobsCounter(aMap, jobName, response, false);
+        }
     }
 
     /**
@@ -186,7 +187,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aChannelId ID of the channel to which we want to send this message
      */
     private void sendSlackMessage(final String aMessageText, final String aChannelId) {
-        sendSlackMessage(aMessageText, aChannelId, null);
+        sendSlackMessage(aMessageText, aChannelId, null, null);
     }
 
     /**
@@ -195,26 +196,29 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aMessageText Text of the message we want to send
      * @param aChannelId ID of the channel to which we want to send this message
      */
-    private void sendSlackMessage(final String aMessageText, final String aChannelId,
+    private void sendSlackMessage(final String aMessageText, final String aChannelId, final String aJobName,
             final List<Metadata> aMetadataList) {
-        final EventBus eventBus = myVertx.eventBus();
         final JsonObject message = new JsonObject();
 
         // Build our message object
         message.put(Constants.SLACK_MESSAGE_TEXT, aMessageText);
         message.put(Config.SLACK_CHANNEL_ID, aChannelId);
 
-        try {
-            final JsonArray metadataJson = new JsonArray(new ObjectMapper().writeValueAsString(aMetadataList));
+        if (aMetadataList != null && aJobName != null) {
+            message.put(Constants.JOB_NAME, aJobName);
 
-            message.put(Constants.BATCH_METADATA, metadataJson);
-            eventBus.send(SlackMessageVerticle.class.getName(), message);
-        } catch (final JsonProcessingException details) {
-            final String errorChannel = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
-            final String errorMessage = details.getMessage();
+            try {
+                final JsonArray metadataJson = new JsonArray(new ObjectMapper().writeValueAsString(aMetadataList));
 
-            LOGGER.error(details, errorMessage);
-            sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage), errorChannel);
+                message.put(Constants.BATCH_METADATA, metadataJson);
+                myVertx.eventBus().send(SlackMessageVerticle.class.getName(), message);
+            } catch (final JsonProcessingException details) {
+                final String errorChannel = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+                final String errorMessage = details.getMessage();
+
+                LOGGER.error(details, errorMessage);
+                sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage), errorChannel);
+            }
         }
     }
 
@@ -226,11 +230,11 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aResponse An HTTP response
      * @param aCompletedRun Whether or not the batch job has completed
      */
-    private void decrementJobsCounter(final SharedData aSharedData, final AsyncMap<String, List<Metadata>> aJobsMap,
-            final String aJobName, final HttpServerResponse aResponse, final boolean aCompletedRun) {
+    private void decrementJobsCounter(final AsyncMap<String, List<Metadata>> aJobsMap, final String aJobName,
+            final HttpServerResponse aResponse, final boolean aCompletedRun) {
         final String slackErrorChannelID = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
 
-        aSharedData.getCounter(aJobName, getCounter -> {
+        myVertx.sharedData().getCounter(aJobName, getCounter -> {
             if (getCounter.succeeded()) {
                 final Counter counter = getCounter.result();
 
@@ -251,7 +255,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             // Remove the batch from our jobs queue
                             aJobsMap.remove(aJobName, removeJob -> {
                                 if (removeJob.succeeded()) {
-                                    finalizeJob(removeJob.result());
+                                    finalizeJob(aJobName, removeJob.result());
                                     returnSuccess(aResponse);
                                 } else {
                                     returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse);
@@ -275,9 +279,10 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      *
      * @param aMetadataList A list of metadata objects
      */
-    private void finalizeJob(final List<Metadata> aMetadataList) {
+    private void finalizeJob(final String aJobName, final List<Metadata> aMetadataList) {
         final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
         final String slackHandle = aMetadataList.get(0).getSlackHandle();
+        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle);
         final JsonArray thumbnails = new JsonArray();
 
         // Go through metadata and look for ones that have just succeeded being processed
@@ -296,7 +301,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         }
 
         // Once that's completed, we can let the user know their job is ready
-        sendSlackMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle), slackChannelID, aMetadataList);
+        sendSlackMessage(slackMessage, slackChannelID, aJobName, aMetadataList);
     }
 
     /**
