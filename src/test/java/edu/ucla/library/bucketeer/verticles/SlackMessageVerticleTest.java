@@ -6,6 +6,7 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.Iterator;
 import java.util.List;
 
 import org.junit.After;
@@ -25,6 +26,7 @@ import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
+import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -53,6 +55,8 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
     private String mySlackChannelID;
 
+    private String myIIIFBaseURL;
+
     private Vertx myVertx;
 
     /**
@@ -75,6 +79,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                 mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE);
                 mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
                 mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+                myIIIFBaseURL = jsonConfig.getString(Config.IIIF_URL);
 
                 myVertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
                     if (deployment.failed()) {
@@ -152,9 +157,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
     @Test
     public final void testSlackFileUpload(final TestContext aContext) throws FileNotFoundException,
             JsonProcessingException {
-        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
-        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
-        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final List<Metadata> metadataList = getMetadataList();
         final JsonArray jsonArray = new JsonArray(new ObjectMapper().writeValueAsString(metadataList));
         final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle);
         final Vertx vertx = myRunTestOnContextRule.vertx();
@@ -186,4 +189,20 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
         return LOGGER;
     }
 
+    private List<Metadata> getMetadataList() throws FileNotFoundException {
+        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
+        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
+        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final Iterator<Metadata> iterator = metadataList.iterator();
+
+        // Fake metadata processing
+        while (iterator.hasNext()) {
+            final Metadata metadata = iterator.next();
+
+            metadata.setWorkflowState(WorkflowState.SUCCEEDED);
+            metadata.setAccessCopy(myIIIFBaseURL + metadata.getID());
+        }
+
+        return metadataList;
+    }
 }

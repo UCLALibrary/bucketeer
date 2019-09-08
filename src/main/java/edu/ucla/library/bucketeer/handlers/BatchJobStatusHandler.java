@@ -36,6 +36,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
 
+    private static final String SLASH = "/";
+
     private final JsonObject myConfig;
 
     private Vertx myVertx;
@@ -114,16 +116,26 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
             final Metadata metadata = iterator.next();
             final String id = metadata.getID();
 
+            // Check to see if this is the item we're getting a status report for
             if (imageId.equals(id)) {
                 if (!success) {
                     metadata.setWorkflowState(WorkflowState.FAILED);
                 } else {
+                    String iiif = myConfig.getString(Config.IIIF_URL);
+
+                    // Just confirm the config value ends with a slash
+                    if (!iiif.endsWith(SLASH)) {
+                        iiif += SLASH;
+                    }
+
                     metadata.setWorkflowState(WorkflowState.SUCCEEDED);
+                    metadata.setAccessCopy(iiif + id);
                 }
 
                 found = true;
             }
 
+            // If any workflow object still has an empty state, the job isn't done
             if (WorkflowState.EMPTY.equals(metadata.getWorkflowState())) {
                 finished = false;
             }
