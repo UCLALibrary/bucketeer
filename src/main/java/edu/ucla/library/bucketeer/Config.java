@@ -32,19 +32,11 @@ public final class Config {
 
     public static final String LAMBDA_S3_BUCKET = "lambda.s3.bucket";
 
-    public static final String SLACK_VERIFICATION_TOKEN = "bucketeer.slack.verification_token";
-
+    // The Slack channel for notifications
     public static final String SLACK_CHANNEL_ID = "bucketeer.slack.channel_id";
 
-    public static final String SLACK_WEBHOOK_URL = "bucketeer.slack.webhook_url";
-
-    public static final String SLACK_TEST_CHANNEL_ID = "bucketeer.slack.test_channel_id";
-
-    public static final String SLACK_TEST_WEBHOOK_URL = "bucketeer.slack.test_webhook_url";
-
+    // The Slack channel for errors
     public static final String SLACK_ERROR_CHANNEL_ID = "bucketeer.slack.error_channel_id";
-
-    public static final String SLACK_ERROR_WEBHOOK_URL = "bucketeer.slack.error_webhook_url";
 
     public static final String SLACK_OAUTH_TOKEN = "bucketeer.slack.oauth_token";
 

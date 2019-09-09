@@ -81,13 +81,8 @@
     
     <!-- Slack configuration properties -->
     <bucketeer.slack.test_user_handle>YOUR_SLACK_TEST_USER_HANDLE</bucketeer.slack.test_user_handle>
-    <bucketeer.slack.verification_token>YOUR_SLACK_VERIFICATION_TOKEN</bucketeer.slack.verification_token>
     <bucketeer.slack.oauth_token>YOUR_SLACK_OAUTH_TOKEN</bucketeer.slack.oauth_token>
-    <bucketeer.slack.test_webhook_url>YOUR_SLACK_TEST_WEBHOOK_URL</bucketeer.slack.test_webhook_url>
-    <bucketeer.slack.test_channel_id>YOUR_SLACK_TEST_CHANNEL_ID</bucketeer.slack.test_channel_id>
-    <bucketeer.slack.webhook_url>YOUR_SLACK_WEBHOOK_URL</bucketeer.slack.webhook_url>
     <bucketeer.slack.channel_id>YOUR_SLACK_CHANNEL_ID</bucketeer.slack.channel_id>
-    <bucketeer.slack.error_webhook_url>YOUR_SLACK_ERROR_WEBHOOK_URL</bucketeer.slack.error_webhook_url>
     <bucketeer.slack.error_channel_id>YOUR_SLACK_ERROR_CHANNEL_ID</bucketeer.slack.error_channel_id>
 
     <!-- We can use a lambda kakadu converter if we send things to its bucket -->

@@ -21,13 +21,8 @@ jobs:
             -Dcdn.distribution.id="${CLOUDFRONT_DISTRO_ID}" \
             -Dbucketeer.iiif.url="${BUCKETEER_IIIF_URL}" \
             -Dbucketeer.slack.test_user_handle="${SLACK_TEST_USER_HANDLE}" \
-            -Dbucketeer.slack.verification_token="${SLACK_VERIFICATION_TOKEN}" \
             -Dbucketeer.slack.oauth_token="${SLACK_OAUTH_TOKEN}" \
-            -Dbucketeer.slack.test_webhook_url="${SLACK_TEST_WEBHOOK_URL}" \
-            -Dbucketeer.slack.test_channel_id="${SLACK_TEST_CHANNEL_ID}" \
-            -Dbucketeer.slack.webhook_url="${SLACK_WEBHOOK_URL}" \
             -Dbucketeer.slack.channel_id="${SLACK_CHANNEL_ID}" \
-            -Dbucketeer.slack.error_webhook_url="${SLACK_ERROR_WEBHOOK_URL}" \
             -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}"
 
     - stage: Trigger Latest Build

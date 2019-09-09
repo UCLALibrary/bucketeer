@@ -3,9 +3,11 @@ package edu.ucla.library.bucketeer.verticles;
 
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
-import java.util.Arrays;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,12 +15,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.bean.CsvToBeanBuilder;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.Metadata;
+import edu.ucla.library.bucketeer.Metadata.WorkflowState;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -30,26 +38,26 @@ import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
+public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageWorkerVerticleTest.class, MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageVerticleTest.class, MESSAGES);
 
-    private static final String VERTICLE_NAME = SlackMessageWorkerVerticle.class.getName();
+    private static final String VERTICLE_NAME = SlackMessageVerticle.class.getName();
 
-    private static final String SLACK_TEST_USER_HANDLE_DEFAULT = "hpottinger";
-
-    private static final String SLACK_TEST_CHANNEL_ID_DEFAULT = "dev-null";
-
-    private static final String SLACK_ERROR_CHANNEL_ID_DEFAULT = SLACK_TEST_CHANNEL_ID_DEFAULT;
+    private static final File LIVE_TEST_CSV = new File("src/test/resources/csv/live-test.csv");
 
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
-    private String mySlackTestUserHandle;
-
-    private String mySlackTestChannelID;
+    private String mySlackUserHandle;
 
     private String mySlackErrorChannelID;
+
+    private String mySlackChannelID;
+
+    private String myIIIFBaseURL;
+
+    private Vertx myVertx;
 
     /**
      * The tests' set up.
@@ -59,35 +67,33 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
      */
     @Before
     public void setUp(final TestContext aContext) throws Exception {
-        final Vertx vertx = myRunTestOnContextRule.vertx();
-        final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
         final DeploymentOptions options = new DeploymentOptions();
         final Async asyncTask = aContext.async();
 
-        configRetriever.getConfig(config -> {
+        myVertx = myRunTestOnContextRule.vertx();
+
+        ConfigRetriever.create(myVertx).getConfig(config -> {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
 
-                // some configs we'll need in a bit
-                mySlackTestUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE,
-                        SLACK_TEST_USER_HANDLE_DEFAULT);
-                mySlackTestChannelID = jsonConfig.getString(Config.SLACK_TEST_CHANNEL_ID); // dev-null
-                mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID); // dev-null
+                mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE);
+                mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
+                mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
+                myIIIFBaseURL = jsonConfig.getString(Config.IIIF_URL);
 
-                vertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
+                myVertx.deployVerticle(VERTICLE_NAME, options.setConfig(jsonConfig), deployment -> {
                     if (deployment.failed()) {
                         final Throwable details = deployment.cause();
                         final String message = details.getMessage();
 
                         LOGGER.error(details, message);
                         aContext.fail(message);
+                    } else {
+                        asyncTask.complete();
                     }
-
-                    asyncTask.complete();
                 });
             } else {
                 aContext.fail(config.cause());
-                asyncTask.complete();
             }
         });
     }
@@ -102,43 +108,33 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
     public void tearDown(final TestContext aContext) throws Exception {
         final Async async = aContext.async();
 
-        myRunTestOnContextRule.vertx().close(result -> {
+        myVertx.close(result -> {
             if (!result.succeeded()) {
                 final String message = LOGGER.getMessage(MessageCodes.BUCKETEER_015);
 
                 LOGGER.error(message);
                 aContext.fail(message);
+            } else {
+                async.complete();
             }
-
-            async.complete();
         });
     }
 
     /**
-     * Tests being able to send Slack messages.
+     * Tests being able to send a Slack text message.
      *
      * @param aContext A test context
      */
     @Test
     public final void testSlackSendMessage(final TestContext aContext) {
-
-        final Vertx vertx = myRunTestOnContextRule.vertx();
+        final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, "Ignore: This is just a test");
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
 
-        final String slackMessageText = "whirr, click, buzz... " + UUID.randomUUID().toString();
+        message.put(Constants.SLACK_MESSAGE_TEXT, errorMessage);
+        message.put(Config.SLACK_CHANNEL_ID, mySlackErrorChannelID);
 
-        final String slackChannelId = mySlackTestChannelID;
-
-        // send these 2 vars: slackMessageText, slackChannelId,
-        // NOTE: the WebhookURL will be inferred from the slackChannelId
-        // NOTE: we do not need to send any tokens, the verticle gets them
-        // from the configuration.
-
-        message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
-
-        vertx.eventBus().send(VERTICLE_NAME, message, send -> {
+        myVertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
                 final Throwable details = send.cause();
 
@@ -147,9 +143,9 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
                 }
 
                 aContext.fail();
+            } else {
+                asyncTask.complete();
             }
-
-            asyncTask.complete();
         });
     }
 
@@ -159,30 +155,19 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      */
     @Test
-    public final void testSlackFileUpload(final TestContext aContext) {
-
+    public final void testSlackFileUpload(final TestContext aContext) throws FileNotFoundException,
+            JsonProcessingException {
+        final List<Metadata> metadataList = getMetadataList();
+        final JsonArray jsonArray = new JsonArray(new ObjectMapper().writeValueAsString(metadataList));
+        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle);
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
 
-        final String slackMessageText = "<@" + mySlackTestUserHandle + "> here's a file... " + UUID.randomUUID()
-                .toString();
-
-        final String slackChannelId = mySlackTestChannelID;
-
-        // TODO: replace this temporary placeholder with actual data
-        final String placeholderString = "placeholder, data, for freshness, do, not, eat";
-        final List<String> placeholderList = Arrays.asList(placeholderString.split("\\s*,\\s*"));
-        final JsonArray placeholderJsonArray = new JsonArray(placeholderList);
-
-        // send these 3 vars: slackMessageText, slackChannelId, BatchMetadata
-        // NOTE: the WebhookURL will be inferred from the slackChannelId
-        // NOTE: we do not need to send slackVerificationToken, the verticle gets that
-        // from the configuration.
-
-        message.put(Constants.SLACK_MESSAGE_TEXT, slackMessageText);
-        message.put(Config.SLACK_CHANNEL_ID, slackChannelId);
-        message.put(Constants.BATCH_METADATA, placeholderJsonArray);
+        message.put(Constants.SLACK_MESSAGE_TEXT, slackMessage);
+        message.put(Config.SLACK_CHANNEL_ID, mySlackChannelID);
+        message.put(Constants.JOB_NAME, "test-file");
+        message.put(Constants.BATCH_METADATA, jsonArray);
 
         vertx.eventBus().send(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
@@ -193,9 +178,9 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
                 }
 
                 aContext.fail();
+            } else {
+                asyncTask.complete();
             }
-
-            asyncTask.complete();
         });
     }
 
@@ -204,4 +189,20 @@ public class SlackMessageWorkerVerticleTest extends AbstractBucketeerVerticle {
         return LOGGER;
     }
 
+    private List<Metadata> getMetadataList() throws FileNotFoundException {
+        final FileReader csvReader = new FileReader(LIVE_TEST_CSV);
+        final CsvToBeanBuilder<Metadata> builder = new CsvToBeanBuilder<Metadata>(csvReader);
+        final List<Metadata> metadataList = builder.withType(Metadata.class).build().parse();
+        final Iterator<Metadata> iterator = metadataList.iterator();
+
+        // Fake metadata processing
+        while (iterator.hasNext()) {
+            final Metadata metadata = iterator.next();
+
+            metadata.setWorkflowState(WorkflowState.SUCCEEDED);
+            metadata.setAccessCopy(myIIIFBaseURL + metadata.getID());
+        }
+
+        return metadataList;
+    }
 }
