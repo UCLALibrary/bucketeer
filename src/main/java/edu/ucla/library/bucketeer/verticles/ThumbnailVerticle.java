@@ -92,11 +92,12 @@ public class ThumbnailVerticle extends AbstractBucketeerVerticle {
             final JsonArray thumbnailIDs = message.body().getJsonArray(Constants.IMAGE_ID_ARRAY);
             final String iiifURL = config.getString(Config.IIIF_URL);
 
-            thumbnailIDs.forEach(id -> {
+            for (int index = 0; index < thumbnailIDs.size(); index++) {
+                final String id = thumbnailIDs.getString(index);
                 final String iiifPath = StringUtils.format(INVALIDATION_TEMPLATE, id, tnSize);
 
                 futures.add(generateThumbnail(client, iiifURL, iiifPath, Future.future()));
-            });
+            }
 
             // We require at least one
             CompositeFuture.all(futures).setHandler(handler -> {
