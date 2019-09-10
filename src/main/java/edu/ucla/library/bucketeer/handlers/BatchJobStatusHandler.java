@@ -254,7 +254,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     if (decrement.succeeded()) {
                         // Double check our belief that this is the last job in the batch run
                         if (aCompletedRun && !decrement.result().equals(0L)) {
-                            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_079);
+                            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_079, aJobName);
                             final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage);
 
                             LOGGER.error(errorMessage);
