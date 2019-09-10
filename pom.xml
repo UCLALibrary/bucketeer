@@ -74,7 +74,7 @@
     <main.verticle>edu.ucla.library.bucketeer.verticles.MainVerticle</main.verticle>
 
     <!-- AWS configuration properties -->
-    <bucketeer.s3.region>us-west-2</bucketeer.s3.region>
+    <bucketeer.s3.region>us-east-1</bucketeer.s3.region>
     <bucketeer.s3.bucket>bucketeer-test-data</bucketeer.s3.bucket>
     <bucketeer.s3.access_key>YOUR_ACCESS_KEY</bucketeer.s3.access_key>
     <bucketeer.s3.secret_key>YOUR_SECRET_KEY</bucketeer.s3.secret_key>
