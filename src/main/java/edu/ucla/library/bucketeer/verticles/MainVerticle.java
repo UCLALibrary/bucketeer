@@ -14,9 +14,9 @@ import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler;
+import edu.ucla.library.bucketeer.handlers.FailureHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
 import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
-import edu.ucla.library.bucketeer.handlers.LoadImageFailureHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
@@ -69,15 +69,16 @@ public class MainVerticle extends AbstractVerticle {
                         final Router router;
 
                         try {
-                            final LoadImageFailureHandler loadImageFailureHandler = new LoadImageFailureHandler();
+                            final FailureHandler failureHandler = new FailureHandler();
                             final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(config);
                             final BatchJobStatusHandler batchJobStatusHandler = new BatchJobStatusHandler(config);
 
                             // Next, we associate handlers with routes from our specification
                             routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
-                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, loadImageFailureHandler);
+                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, failureHandler);
                             routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
+                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, failureHandler);
                             routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, batchJobStatusHandler);
 
                             // After that, we can get a router that's been configured by our OpenAPI spec
