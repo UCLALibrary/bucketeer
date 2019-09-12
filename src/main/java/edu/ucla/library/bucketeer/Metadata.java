@@ -64,6 +64,11 @@ public class Metadata {
     @JsonProperty
     private String myWorkflowState;
 
+    /** Where the downstream system keeps track of its state */
+    @CsvBindByName(column = Columns.SAMVERA_STATE)
+    @JsonProperty
+    private String mySamveraState;
+
     /* Where we put the IIIF URL */
     @CsvBindByName(column = Columns.ACCESS_COPY)
     @JsonProperty
@@ -378,7 +383,7 @@ public class Metadata {
                 myMedium, myItemSequence, myLanguage, myArchitect, myPhotographer, myRepository, myNameSubject,
                 myProjectName, myPlaceOfOrigin, myPublisherName, myIsPartOfRelation, myCountryOfCreation,
                 myRightsHolderContact, mySubject, mySupport, myGenre, myTypeOfResource, myVisibility, myWorkflowState,
-                myAccessCopy);
+                myAccessCopy, mySamveraState);
 
         // Prepare our values for formatting into a single toString representation of the object
         values.stream().forEach(value -> {
@@ -504,6 +509,8 @@ public class Metadata {
 
         public static final String ACCESS_COPY = "access_copy";
 
+        public static final String SAMVERA_STATE = "Import Status";
+
         /**
          * Returns an array of the Metadata field values.
          *
@@ -516,7 +523,7 @@ public class Metadata {
                 LATITUDE, LONGITUDE, DESCRIPTIVE_NOTE, DIMENSIONS, EXTENT, MEDIUM, ITEM_SEQ, LANGUAGE, ARCHITECT,
                 PHOTOGRAPHER, REPOSITORY, NAME_SUBJECT, PLACE_OF_ORIGIN, PROJECT_NAME, PUBLISHER, IS_PART_OF,
                 COUNTRY_OF_CREATION, RIGHTS_HOLDER, SUBJECT, SUPPORT, GENRE, TYPE, VISIBILITY, BUCKETEER_STATE,
-                ACCESS_COPY };
+                ACCESS_COPY, SAMVERA_STATE };
         }
     }
 }
