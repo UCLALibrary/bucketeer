@@ -45,6 +45,10 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final String THREAD_NAME = "-thread";
 
+    private static final int DEFAULT_S3_UPLOADER_INSTANCES = 1;
+
+    private static final int DEFAULT_S3_UPLOADER_THREADS = 20;
+
     /**
      * Starts a Web server.
      */
@@ -139,6 +143,8 @@ public class MainVerticle extends AbstractVerticle {
      */
     @SuppressWarnings("rawtypes")
     private void deployVerticles(final JsonObject aConfig, final Handler<AsyncResult<Void>> aHandler) {
+        final int uploaderInstances = aConfig.getInteger(Config.S3_UPLOADER_INSTANCES, DEFAULT_S3_UPLOADER_INSTANCES);
+        final int uploaderThreads = aConfig.getInteger(Config.S3_UPLOADER_THREADS, DEFAULT_S3_UPLOADER_THREADS);
         final DeploymentOptions uploaderOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions thumbnailOpts = new DeploymentOptions();
@@ -159,9 +165,10 @@ public class MainVerticle extends AbstractVerticle {
         workerOpts.setWorkerPoolSize(1);
         workerOpts.setWorkerPoolName(ImageWorkerVerticle.class.getSimpleName() + THREAD_NAME);
 
-        // TODO: make these variables configurable
-        uploaderOpts.setInstances(1);
-        uploaderOpts.setWorkerPoolSize(60);
+        LOGGER.debug(MessageCodes.BUCKETEER_112, uploaderInstances, uploaderThreads);
+
+        uploaderOpts.setInstances(uploaderInstances);
+        uploaderOpts.setWorkerPoolSize(uploaderThreads);
         uploaderOpts.setWorkerPoolName(S3BucketVerticle.class.getSimpleName() + THREAD_NAME);
 
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));

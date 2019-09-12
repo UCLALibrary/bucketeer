@@ -113,4 +113,5 @@
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
   <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached:</entry>
+  <entry key="BUCKETEER-112">Configuring S3 uploader: {} instances and {} threads per instance</entry>
 </properties>

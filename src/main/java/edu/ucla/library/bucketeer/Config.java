@@ -26,6 +26,10 @@ public final class Config {
 
     public static final String MAX_WAIT_QUEUE_SIZE = "httpclient.max.queue.size";
 
+    public static final String S3_UPLOADER_INSTANCES = "s3.uploader.instances";
+
+    public static final String S3_UPLOADER_THREADS = "s3.uploader.threads";
+
     public static final String FILESYSTEM_MOUNT = "bucketeer.fs.mount";
 
     public static final String FILESYSTEM_PREFIX = "bucketeer.fs.prefix";
