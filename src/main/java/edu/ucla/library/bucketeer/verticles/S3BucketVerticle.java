@@ -75,15 +75,15 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                 storageRequest.mergeIn(config);
             }
 
-            final String jpxPath = storageRequest.getString(Constants.FILE_PATH);
+            final String filePath = storageRequest.getString(Constants.FILE_PATH);
             final String jobName = storageRequest.getString(Constants.JOB_NAME);
             final String s3Bucket = storageRequest.getString(Config.S3_BUCKET);
             final String imageID = storageRequest.getString(Constants.IMAGE_ID);
             final String imageIDSansExt = FileUtils.stripExt(imageID);
 
-            LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, jpxPath, s3Bucket);
+            LOGGER.debug(MessageCodes.BUCKETEER_010, imageID, filePath, s3Bucket);
 
-            vertx.fileSystem().open(jpxPath, new OpenOptions().setRead(true), open -> {
+            vertx.fileSystem().open(filePath, new OpenOptions().setWrite(false), open -> {
                 if (open.succeeded()) {
                     final AsyncFile asyncFile = open.result();
                     final UserMetadata metadata = new UserMetadata(Constants.IMAGE_ID, imageIDSansExt);
@@ -93,7 +93,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                         metadata.add(Constants.JOB_NAME, jobName);
                     }
 
-                    LOGGER.debug(MessageCodes.BUCKETEER_044, imageID, jpxPath, s3Bucket);
+                    LOGGER.debug(MessageCodes.BUCKETEER_044, imageID, filePath, s3Bucket);
 
                     // If our connection pool is full, drop back and try resubmitting the request
                     try {
@@ -122,7 +122,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                     } catch (final ConnectionPoolTooBusyException details) {
                         asyncFile.close(closure -> {
                             if (closure.failed()) {
-                                LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, jpxPath);
+                                LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, filePath);
                             }
                         });
 
@@ -130,7 +130,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                         message.reply(Op.RETRY);
                     }
                 } else {
-                    LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, jpxPath));
+                    LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, filePath));
                     message.reply(Op.FAILURE);
                 }
             });
