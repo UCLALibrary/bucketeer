@@ -50,6 +50,9 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadCsvHandler.class, Constants.MESSAGES);
 
+    /* Default delay for requeuing, measured in seconds */
+    private static final long DEFAULT_REQUEUE_DELAY = 1;
+
     private final JsonObject myConfig;
 
     private Vertx myVertx;
@@ -57,6 +60,8 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
     private final String myExceptionPage;
 
     private final String mySuccessPage;
+
+    private final long myRequeueDelay;
 
     /**
      * Creates a handler to ingest CSV files.
@@ -90,6 +95,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         templateReader.close();
         mySuccessPage = templateBuilder.toString();
         myConfig = aConfig;
+        myRequeueDelay = myConfig.getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
     }
 
     @Override
@@ -273,8 +279,9 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                     LOGGER.error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 }
             } else if (response.result().body().equals(Op.RETRY)) {
-                LOGGER.debug(MessageCodes.BUCKETEER_048, aVerticleName);
-                sendMessage(aJsonObject, aVerticleName, aTimeout);
+                myVertx.setTimer(myRequeueDelay, timer -> {
+                    sendMessage(aJsonObject, aVerticleName, aTimeout);
+                });
             }
         });
     }

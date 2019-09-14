@@ -55,7 +55,7 @@
   <entry key="BUCKETEER-044">Sending '{}' [{}] to S3 bucket: {}</entry>
   <entry key="BUCKETEER-045">AWS S3 access / secret keys: {} / {}</entry>
   <entry key="BUCKETEER-046">S3 connection pool is full; re-queuing the request: {}</entry>
-  <entry key="BUCKETEER-047">Failed to close the JPX image file after trying to upload it to S3: {}</entry>
+  <entry key="BUCKETEER-047">Failed to close the image file after trying to upload it to S3: {}</entry>
   <entry key="BUCKETEER-048">Resending message to: {}</entry>
   <entry key="BUCKETEER-049">Form submission is missing an uploaded CSV file.</entry>
   <entry key="BUCKETEER-050">Form submission is missing a Slack handle.</entry>
@@ -101,6 +101,8 @@
   <entry key="BUCKETEER-090">Slack file upload failed: {}</entry>
   <entry key="BUCKETEER-091">Preparing to upload file with message: '{}' to Slack channel: {}</entry>
   <entry key="BUCKETEER-092">Error writing to placeholder.json: '{}'.</entry>
+  <entry key="BUCKETEER-093">Failed to decrement the S3 request counter</entry>
+  <entry key="BUCKETEER-094">Couldn't retrieve the S3 request counter</entry>
   <entry key="BUCKETEER-100">Passed date time isn't valid: {} (Must be: yyyyMMdd'T'HHmmss'Z')</entry>
   <entry key="BUCKETEER-101">Test failed to catch a bad datetime: {}</entry>
   <entry key="BUCKETEER-102">Unexpected status code: {} [{}] {}</entry>
@@ -113,5 +115,5 @@
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
   <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached:</entry>
-  <entry key="BUCKETEER-112">Configuring S3 uploader: {} instances and {} threads per instance</entry>
+  <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
 </properties>
