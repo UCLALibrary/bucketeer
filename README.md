@@ -4,7 +4,7 @@ A TIFF to JPX to S3 bucket microservice. It will turn TIFF images into JPEG 2000
 
 1) The first way is to convert individual TIFF images into JPEG 2000 images on the local machine. To do this Bucketeer receives individual requests, accesses the TIFFs from a mounted directory, converts TIFFs into JPEG 2000 images, and then uploads them to S3. This method is triggered by a RESTful API.
 
-2) The second way is to convert TIFF images into JPEG 2000 images in batch. With this method, a CSV file is uploaded to Bucketeer and TIFF images from the CSV file, available to Bucketeer from a locally mounted directory, are uploaded to a S3 bucket. An AWS Lambda function picks up on that event and converts the TIFFs into JPEG 2000 images. Lastly, the AWS Lambda function stores the JPEG 2000 images in another S3 bucket. This method is triggered by uploading a CSV file through a Web page on the Bucketeer site.
+2) The second way is to convert TIFF images into JPEG 2000 images in batch. With this method, a CSV file is uploaded to Bucketeer and TIFF images from the CSV file, available to Bucketeer from a locally mounted directory, are uploaded to an S3 bucket. An AWS Lambda function picks up on that event and converts the TIFFs into JPEG 2000s. Lastly, the Bucketeer Lambda function stores the JPEG 2000 images in another S3 bucket. This method is triggered by uploading a CSV file through a Web page on the Bucketeer site.
 
 Currently, the CSV upload method is hard-coded for UCLA's particular metadata model. This will be changed to make the process more generic.
 
