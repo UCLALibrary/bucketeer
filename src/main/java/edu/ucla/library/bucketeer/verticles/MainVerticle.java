@@ -31,6 +31,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.handler.StaticHandler;
+import oshi.SystemInfo;
+import oshi.hardware.CentralProcessor;
+import oshi.hardware.HardwareAbstractionLayer;
 
 /**
  * Main verticle that starts the application.
@@ -47,7 +50,22 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final int DEFAULT_S3_UPLOADER_INSTANCES = 1;
 
-    private static final int DEFAULT_S3_UPLOADER_THREADS = 20;
+    private static final int DEFAULT_S3_UPLOADER_THREADS = getAvailableProcessors();
+
+    private static final String EMPTY = "";
+
+    /**
+     * Gets the available logical processors on the system minus one.
+     *
+     * @return
+     */
+    private static int getAvailableProcessors() {
+        final SystemInfo systemInfo = new SystemInfo();
+        final HardwareAbstractionLayer hardwareAbstractionLayer = systemInfo.getHardware();
+        final CentralProcessor centralProcessor = hardwareAbstractionLayer.getProcessor();
+
+        return centralProcessor.getLogicalProcessorCount() - 1;
+    }
 
     /**
      * Starts a Web server.
@@ -55,65 +73,68 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void start(final Future<Void> aFuture) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
-        final HttpServer server = vertx.createHttpServer(getHttpServerOptions());
 
         // We pull our application's configuration before configuring the server
         configRetriever.getConfig(configuration -> {
             if (configuration.failed()) {
                 aFuture.fail(configuration.cause());
             } else {
-                final JsonObject config = configuration.result();
-                final String apiSpec = config.getString(Config.OPENAPI_SPEC_PATH, DEFAULT_SPEC);
+                buildRouter(configuration.result(), aFuture);
+            }
+        });
+    }
 
-                // We can use our OpenAPI specification file to configure our app's router
-                OpenAPI3RouterFactory.create(vertx, apiSpec, creation -> {
-                    if (creation.succeeded()) {
-                        final OpenAPI3RouterFactory routerFactory = creation.result();
-                        final int port = config.getInteger(Config.HTTP_PORT, DEFAULT_PORT);
-                        final Router router;
+    private void buildRouter(final JsonObject aConfig, final Future<Void> aFuture) {
+        final String apiSpec = aConfig.getString(Config.OPENAPI_SPEC_PATH, DEFAULT_SPEC);
+        final HttpServer server = vertx.createHttpServer(getHttpServerOptions());
 
-                        try {
-                            final FailureHandler failureHandler = new FailureHandler();
-                            final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(config);
-                            final BatchJobStatusHandler batchJobStatusHandler = new BatchJobStatusHandler(config);
+        // We can use our OpenAPI specification file to configure our app's router
+        OpenAPI3RouterFactory.create(vertx, apiSpec, creation -> {
+            if (creation.succeeded()) {
+                final OpenAPI3RouterFactory routerFactory = creation.result();
+                final int port = aConfig.getInteger(Config.HTTP_PORT, DEFAULT_PORT);
+                final Router router;
 
-                            // Next, we associate handlers with routes from our specification
-                            routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
-                            routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
-                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, failureHandler);
-                            routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
-                            routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, failureHandler);
-                            routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, batchJobStatusHandler);
+                try {
+                    final FailureHandler failureHandler = new FailureHandler();
+                    final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(aConfig);
+                    final BatchJobStatusHandler batchJobStatusHandler = new BatchJobStatusHandler(aConfig);
 
-                            // After that, we can get a router that's been configured by our OpenAPI spec
-                            router = routerFactory.getRouter();
+                    // Next, we associate handlers with routes from our specification
+                    routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
+                    routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
+                    routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, failureHandler);
+                    routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);
+                    routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, failureHandler);
+                    routerFactory.addHandlerByOperationId(Op.UPDATE_BATCH_JOB, batchJobStatusHandler);
 
-                            // Serve our static pages (docs, CSV submission form, etc.)
-                            router.get("/*").order(0).blockingHandler(StaticHandler.create("webroot"));
+                    // After that, we can get a router that's been configured by our OpenAPI spec
+                    router = routerFactory.getRouter();
 
-                            // Add an /upload redirect; we may want different options in the future, but not now
-                            router.routeWithRegex("/upload(/?)").order(1).handler(context -> {
-                                context.response().putHeader("location", "/upload/csv").setStatusCode(307).end();
-                            });
+                    // Serve our static pages (docs, CSV submission form, etc.)
+                    router.get("/*").order(0).blockingHandler(StaticHandler.create("webroot"));
 
-                            // Start our server
-                            server.requestHandler(router).listen(port);
+                    // Add an /upload redirect; we may want different options in the future, but not now
+                    router.routeWithRegex("/upload(/?)").order(1).handler(context -> {
+                        context.response().putHeader("location", "/upload/csv").setStatusCode(307).end();
+                    });
 
-                            // Deploy our verticles that convert and upload images to S3
-                            deployVerticles(config, deployment -> {
-                                if (deployment.succeeded()) {
-                                    aFuture.complete();
-                                } else {
-                                    aFuture.fail(deployment.cause());
-                                }
-                            });
-                        } catch (final IOException details) {
-                            aFuture.fail(details);
+                    // Start our server
+                    server.requestHandler(router).listen(port);
+
+                    // Deploy our verticles that convert and upload images to S3
+                    deployVerticles(aConfig, deployment -> {
+                        if (deployment.succeeded()) {
+                            aFuture.complete();
+                        } else {
+                            aFuture.fail(deployment.cause());
                         }
-                    } else {
-                        aFuture.fail(creation.cause());
-                    }
-                });
+                    });
+                } catch (final IOException details) {
+                    aFuture.fail(details);
+                }
+            } else {
+                aFuture.fail(creation.cause());
             }
         });
     }
@@ -125,8 +146,8 @@ public class MainVerticle extends AbstractVerticle {
      */
     private HttpServerOptions getHttpServerOptions() {
         final HttpServerOptions options = new HttpServerOptions();
-        final String osName = System.getProperty("os.name", "");
-        final String osArch = System.getProperty("os.arch", "");
+        final String osName = System.getProperty("os.name", EMPTY);
+        final String osArch = System.getProperty("os.arch", EMPTY);
 
         // Set Linux options if we're running on a Linux machine
         if ("unix".equals(osName) && "amd64".equals(osArch)) {
@@ -165,12 +186,20 @@ public class MainVerticle extends AbstractVerticle {
         workerOpts.setWorkerPoolSize(1);
         workerOpts.setWorkerPoolName(ImageWorkerVerticle.class.getSimpleName() + THREAD_NAME);
 
-        LOGGER.debug(MessageCodes.BUCKETEER_112, uploaderInstances, uploaderThreads);
-
         uploaderOpts.setInstances(uploaderInstances);
-        uploaderOpts.setWorkerPoolSize(uploaderThreads);
+
+        // If we've set threads to <= 0, we want to use whatever cores are available on the system
+        if (uploaderThreads <= 0) {
+            uploaderOpts.setWorkerPoolSize(DEFAULT_S3_UPLOADER_THREADS);
+        } else {
+            uploaderOpts.setWorkerPoolSize(uploaderThreads);
+        }
+
         uploaderOpts.setWorkerPoolName(S3BucketVerticle.class.getSimpleName() + THREAD_NAME);
 
+        LOGGER.debug(MessageCodes.BUCKETEER_112, uploaderInstances, uploaderOpts.getWorkerPoolSize());
+
+        // We initiate the various verticles that Bucketeer uses
         futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
         futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
         futures.add(deployVerticle(ThumbnailVerticle.class.getName(), thumbnailOpts, Future.future()));

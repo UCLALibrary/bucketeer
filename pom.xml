@@ -58,6 +58,7 @@
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
+    <oshi.version>4.0.0</oshi.version>
     <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
 
     <!-- Build plug-in versions -->
@@ -88,14 +89,17 @@
     <!-- We can use a lambda kakadu converter if we send things to its bucket -->
     <lambda.s3.bucket>test-bucketeer-tiff</lambda.s3.bucket>
 
-    <!-- Requests have to complete in 15 minutes or be re-queued to get a new S3 signature -->
-    <httpclient.max.queue.size>5</httpclient.max.queue.size>
+    <!-- The maximum number of active S3 upload requests allowed at a time -->
+    <s3.max.requests>20</s3.max.requests>
+
+    <!-- The delay in seconds before pending S3 requests are re-queued -->
+    <s3.requeue.delay>1</s3.requeue.delay>
 
     <!-- The number of instances of the S3 upload verticle are created -->
-    <s3.uploader.instances>1</s3.uploader.instances>
+    <s3.uploader.instances>20</s3.uploader.instances>
 
-    <!-- The number of threads per instance that the S3 upload verticle has available to it -->
-    <s3.uploader.threads>20</s3.uploader.threads>
+    <!-- The number of threads per instance; a number <= 0 sets to total logical cores minus one -->
+    <s3.uploader.threads>1</s3.uploader.threads>
 
     <!-- IIIF server URL (including the prefix, if there is one) -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
@@ -177,6 +181,11 @@
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
       <version>${woodstox.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.oshi</groupId>
+      <artifactId>oshi-core</artifactId>
+      <version>${oshi.version}</version>
     </dependency>
     <!-- Generic AWS S3 library -->
     <dependency>
@@ -567,6 +576,7 @@
                   <exclude>com.github.fge:uri-template</exclude>
                   <exclude>com.github.java-json-tools:json-schema-core</exclude>
                   <exclude>com.github.java-json-tools:json-schema-validator</exclude>
+                  <exclude>com.github.oshi:oshi-core</exclude>
                   <exclude>com.github.seratch:jslack</exclude>
                   <exclude>com.github.seratch:jslack-api-client</exclude>
                   <exclude>com.github.seratch:jslack-app-backend</exclude>
