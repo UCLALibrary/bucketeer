@@ -1,9 +1,9 @@
 [ {
-  "myItemArk" : "ark%3A%2F13030%2Fhb000003n9",
+  "myItemArk" : "ark:/13030/hb000003n9",
   "myObjectType" : "Work",
   "myTitle" : "Mexican American youths detained for questioning",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -40,11 +40,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb009n998t",
+  "myItemArk" : "ark:/13030/hb009n998t",
   "myObjectType" : "Work",
   "myTitle" : "Telles family at the Sleepy Lagoon murder case acquittal",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "failed",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -81,11 +81,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb038nb0bm",
+  "myItemArk" : "ark:/13030/hb038nb0bm",
   "myObjectType" : "Work",
   "myTitle" : "Sleepy Lagoon murder case acquittal",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -122,11 +122,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb0489n655",
+  "myItemArk" : "ark:/13030/hb0489n655",
   "myObjectType" : "Work",
   "myTitle" : "Mexican American female gang",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "failed",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -163,11 +163,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb058002j1",
+  "myItemArk" : "ark:/13030/hb058002j1",
   "myObjectType" : "Work",
   "myTitle" : "Los Angeles slums in the Great Depression",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -204,11 +204,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb058002kj",
+  "myItemArk" : "ark:/13030/hb058002kj",
   "myObjectType" : "Work",
   "myTitle" : "Japanese immigrants register as Los Angeles residents, Los Angeles, 1940",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "failed",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -245,11 +245,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb0779n6bd",
+  "myItemArk" : "ark:/13030/hb0779n6bd",
   "myObjectType" : "Work",
   "myTitle" : "Street scene on Terminal Island (Calif.) on December 8, 1941",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -286,11 +286,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb0779n6cx",
+  "myItemArk" : "ark:/13030/hb0779n6cx",
   "myObjectType" : "Work",
   "myTitle" : "Japanese women board bus for evacuation and relocation",
   "myFileName" : "src/test/resources/images/fail.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
@@ -327,11 +327,11 @@
   "myVisibility" : null,
   "slackHandle" : null
 }, {
-  "myItemArk" : "ark%3A%2F13030%2Fhb08700381",
+  "myItemArk" : "ark:/13030/hb08700381",
   "myObjectType" : "Work",
   "myTitle" : "Japanese nationals on a bus during evacuation and relocation",
   "myFileName" : "src/test/resources/images/test.tif",
-  "myParentArk" : "ark%3A%2F21198%2Fzz00294nz8",
+  "myParentArk" : "ark:/21198/zz00294nz8",
   "myWorkflowState" : "",
   "myAccessCopy" : null,
   "myLocalAltID" : null,
