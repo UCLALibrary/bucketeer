@@ -1,0 +1,50 @@
+{
+    "count": 9,
+    "jobs": [
+        {
+            "image-id": "ark:/13030/hb000003n9",
+            "status": "",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb009n998t",
+            "status": "failed",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb038nb0bm",
+            "status": "",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb0489n655",
+            "status": "failed",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb058002j1",
+            "status": "",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb058002kj",
+            "status": "failed",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb0779n6bd",
+            "status": "",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb0779n6cx",
+            "status": "failed",
+            "file-path": ""
+        },
+        {
+            "image-id": "ark:/13030/hb08700381",
+            "status": "",
+            "file-path": ""
+        }
+    ]
+}

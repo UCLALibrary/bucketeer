@@ -20,6 +20,50 @@ paths:
       responses:
         '200':
           description: OK
+  /batch/jobs:
+    get:
+      summary: Jobs in Progress
+      description: A listing of batch jobs currently in practice
+      operationId: getJobs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+        '500':
+          description: There was an internal server error
+  /batch/jobs/{job-name}:
+    get:
+      summary: Statuses of a Job
+      description: A listing of images being processed in a job
+      operationId: getJobStatuses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+        '404':
+          description: The job was not found
+        '500':
+          description: There was an internal server error
+    delete:
+      summary: Batch Job Deletion
+      description: Deletes the job with the supplied name
+      operationId: deleteJob
+      responses:
+        '204':
+          description: No content, the job has been deleted
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    parameters:
+       - in: path
+         name: job-name
+         required: true
+         schema:
+           type: string
+         description: The batch job name
   /batch/jobs/{job-name}/{image-id}/{success}:
     patch:
       summary: Batch Job Status

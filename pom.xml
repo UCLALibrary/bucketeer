@@ -97,7 +97,7 @@
     <s3.requeue.delay>1</s3.requeue.delay>
 
     <!-- The number of instances of the S3 upload verticle are created -->
-    <s3.uploader.instances>20</s3.uploader.instances>
+    <s3.uploader.instances>1</s3.uploader.instances>
 
     <!-- The number of threads per instance; a number <= 0 sets to total logical cores minus one -->
     <s3.uploader.threads>1</s3.uploader.threads>
