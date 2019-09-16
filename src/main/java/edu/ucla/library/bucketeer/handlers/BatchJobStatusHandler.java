@@ -2,8 +2,6 @@
 package edu.ucla.library.bucketeer.handlers;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -104,7 +102,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
             final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
-        final String imageId = URLEncoder.encode(request.getParam(Constants.IMAGE_ID), StandardCharsets.UTF_8);
+        final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
         final ListIterator<Metadata> iterator = aMetadataList.listIterator();
