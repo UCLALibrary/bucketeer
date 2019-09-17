@@ -2,6 +2,8 @@
 package edu.ucla.library.bucketeer.handlers;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -127,7 +129,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     }
 
                     metadata.setWorkflowState(WorkflowState.SUCCEEDED);
-                    metadata.setAccessCopy(iiif + id);
+                    metadata.setAccessCopy(iiif + URLEncoder.encode(id, StandardCharsets.UTF_8));
                 }
 
                 found = true;
