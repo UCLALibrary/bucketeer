@@ -23,7 +23,7 @@ paths:
   /batch/jobs:
     get:
       summary: Jobs in Progress
-      description: A listing of batch jobs currently in practice
+      description: A listing of the jobs currently in progress
       operationId: getJobs
       responses:
         '200':
@@ -35,7 +35,7 @@ paths:
   /batch/jobs/{job-name}:
     get:
       summary: Statuses of a Job
-      description: A listing of images being processed in a job
+      description: A listing of images being processed in specific job
       operationId: getJobStatuses
       responses:
         '200':
