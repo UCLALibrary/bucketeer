@@ -14,7 +14,10 @@ import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler;
+import edu.ucla.library.bucketeer.handlers.DeleteJobHandler;
 import edu.ucla.library.bucketeer.handlers.FailureHandler;
+import edu.ucla.library.bucketeer.handlers.GetJobStatusesHandler;
+import edu.ucla.library.bucketeer.handlers.GetJobsHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
 import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
@@ -102,6 +105,9 @@ public class MainVerticle extends AbstractVerticle {
 
                     // Next, we associate handlers with routes from our specification
                     routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
+                    routerFactory.addHandlerByOperationId(Op.GET_JOBS, new GetJobsHandler());
+                    routerFactory.addHandlerByOperationId(Op.GET_JOB_STATUSES, new GetJobStatusesHandler());
+                    routerFactory.addHandlerByOperationId(Op.DELETE_JOB, new DeleteJobHandler());
                     routerFactory.addHandlerByOperationId(Op.LOAD_IMAGE, new LoadImageHandler());
                     routerFactory.addFailureHandlerByOperationId(Op.LOAD_IMAGE, failureHandler);
                     routerFactory.addHandlerByOperationId(Op.LOAD_IMAGES_FROM_CSV, loadCsvHandler);

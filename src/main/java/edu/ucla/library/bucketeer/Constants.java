@@ -17,6 +17,21 @@ public final class Constants {
     public static final String IMAGE_ID = "image-id";
 
     /**
+     * A number of jobs.
+     */
+    public static final String COUNT = "count";
+
+    /**
+     * Bucketeer jobs.
+     */
+    public static final String JOBS = "jobs";
+
+    /**
+     * The status of a job.
+     */
+    public static final String STATUS = "status";
+
+    /**
      * An array of all the IDs that have been processed.
      */
     public static final String IMAGE_ID_ARRAY = "image-id-array";
@@ -89,7 +104,7 @@ public final class Constants {
     /**
      * The name of the lambda queue.
      */
-    public static final String LAMBDA_MAP = "lambda-map";
+    public static final String LAMBDA_JOBS = "lambda-jobs";
 
     /**
      * The name of the mapping of deployed verticles.

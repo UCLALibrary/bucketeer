@@ -152,7 +152,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 sharedData = myVertx.sharedData();
 
                 // Get our s3/lambda job queue and register the CSV file we've just received (and its contents)
-                sharedData.<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
+                sharedData.<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
                     if (getMap.succeeded()) {
                         final AsyncMap<String, List<Metadata>> map = getMap.result();
 

@@ -12,6 +12,12 @@ public final class Op {
 
     public static final String GET_STATUS = "getStatus";
 
+    public static final String GET_JOBS = "getJobs";
+
+    public static final String GET_JOB_STATUSES = "getJobStatuses";
+
+    public static final String DELETE_JOB = "deleteJob";
+
     public static final String LOAD_IMAGE = "loadImage";
 
     public static final String LOAD_IMAGES_FROM_CSV = "loadImagesFromCSV";

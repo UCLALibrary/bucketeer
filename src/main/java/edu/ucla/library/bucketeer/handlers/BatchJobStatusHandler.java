@@ -61,7 +61,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
             myVertx = aContext.vertx();
         }
 
-        myVertx.sharedData().<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_MAP, getMap -> {
+        myVertx.sharedData().<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
                 final AsyncMap<String, List<Metadata>> map = getMap.result();
 

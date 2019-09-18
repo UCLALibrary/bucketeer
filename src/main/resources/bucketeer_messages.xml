@@ -103,6 +103,11 @@
   <entry key="BUCKETEER-092">Error writing to placeholder.json: '{}'.</entry>
   <entry key="BUCKETEER-093">Failed to decrement the S3 request counter</entry>
   <entry key="BUCKETEER-094">Couldn't retrieve the S3 request counter</entry>
+  <entry key="BUCKETEER-095">Unable to retrieve the lambda jobs map</entry>
+  <entry key="BUCKETEER-096">Failed to retrieve job from jobs queue</entry>
+  <entry key="BUCKETEER-097">Failed to remove job from jobs queue</entry>
+  <entry key="BUCKETEER-098">Not Found: {}</entry>
+  <entry key="BUCKETEER-099">Job deleted: {}</entry>
   <entry key="BUCKETEER-100">Passed date time isn't valid: {} (Must be: yyyyMMdd'T'HHmmss'Z')</entry>
   <entry key="BUCKETEER-101">Test failed to catch a bad datetime: {}</entry>
   <entry key="BUCKETEER-102">Unexpected status code: {} [{}] {}</entry>
@@ -116,4 +121,6 @@
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
   <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached:</entry>
   <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
+  <entry key="BUCKETEER-113">Failed to find job keys in shared lambda map</entry>
+  <entry key="BUCKETEER-114">Unexpected response code: {} [{}]</entry>
 </properties>
