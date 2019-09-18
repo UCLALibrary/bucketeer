@@ -25,8 +25,8 @@ jobs:
             -Dbucketeer.slack.channel_id="${SLACK_CHANNEL_ID}" \
             -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}"
 
-    - stage: Trigger Latest Build
-      name: Trigger Docker Latest Build
+    - stage: Trigger Jenkins for Containerization
+      name: Trigger Jenkins for Containerization
       language: minimal
       deploy:
         - provider: script
@@ -34,8 +34,8 @@ jobs:
           on:
             branch: master
       if: (NOT type IN (pull_request)) AND (branch = master)
-    - stage: Trigger Tag Build
-      name: Trigger Docker Tag Build
+    - stage: Trigger Jenkins with Tag for Containerization
+      name: Trigger Jenkins with Tag for Containerization
       language: minimal
       deploy:
         - provider: script
