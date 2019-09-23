@@ -28,6 +28,8 @@ public class ItemTest {
 
     private static final String IIIF_URL = "http://iiif.test.edu/" + TEST_ID;
 
+    private static final String FILE_PATH_KEY = "filePath";
+
     /**
      * Tests Item construction with ID and file path.
      */
@@ -132,7 +134,7 @@ public class ItemTest {
         final Item item = new Item(TEST_ID, FILE_PATH).setWorkflowState(WorkflowState.FAILED);
         final JsonObject expected = new JsonObject(StringUtils.read(new File("src/test/resources/json/item.json")));
 
-        expected.put("filePath", new File(FILE_PATH).getCanonicalPath());
+        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getCanonicalPath());
 
         assertEquals(expected, item.toJSON());
     }
@@ -143,9 +145,12 @@ public class ItemTest {
     @Test
     public final void testToJSONWithGenericPrefix() throws IOException {
         final Item item = new Item(TEST_ID, FILE_PATH).setWorkflowState(WorkflowState.EMPTY);
-        final String expected = StringUtils.read(new File("src/test/resources/json/generic-item.json"));
+        final JsonObject expected = new JsonObject(StringUtils.read(new File(
+                "src/test/resources/json/generic-item.json")));
 
-        assertEquals(new JsonObject(expected), item.setFilePathPrefix(new GenericFilePathPrefix()).toJSON());
+        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getCanonicalPath());
+
+        assertEquals(expected, item.setFilePathPrefix(new GenericFilePathPrefix()).toJSON());
     }
 
     /**

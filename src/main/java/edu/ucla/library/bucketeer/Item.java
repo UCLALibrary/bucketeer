@@ -2,6 +2,7 @@
 package edu.ucla.library.bucketeer;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
 
@@ -123,8 +124,8 @@ public class Item implements Serializable {
      *
      * @return The file path
      */
-    public String getFilePath() {
-        return getFile().getAbsolutePath();
+    public String getFilePath() throws IOException {
+        return getFile().getCanonicalPath();
     }
 
     /**
