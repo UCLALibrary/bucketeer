@@ -134,6 +134,7 @@ public class ItemTest {
         final Item item = new Item(TEST_ID, FILE_PATH).setWorkflowState(WorkflowState.FAILED);
         final JsonObject expected = new JsonObject(StringUtils.read(new File("src/test/resources/json/item.json")));
 
+        item.setFilePathPrefix(new GenericFilePathPrefix());
         expected.put(FILE_PATH_KEY, new File(FILE_PATH).getCanonicalPath());
 
         assertEquals(expected, item.toJSON());

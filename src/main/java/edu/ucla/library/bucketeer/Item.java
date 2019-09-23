@@ -121,6 +121,8 @@ public class Item implements Serializable {
 
             if (myFilePathPrefix != null) {
                 file = Paths.get(myFilePathPrefix.getPrefix(file), file.getPath()).toFile();
+            } else {
+                LOGGER.warn(MessageCodes.BUCKETEER_128);
             }
 
             return file;

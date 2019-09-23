@@ -30,7 +30,35 @@ public final class JobFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobFactory.class, Constants.MESSAGES);
 
+    private static JobFactory myJobFactory;
+
+    private IFilePathPrefix myFilePathPrefix;
+
     private JobFactory() {
+    }
+
+    /**
+     * Gets an instance of the JobFactory.
+     *
+     * @return An instance of the JobFactory
+     */
+    public static JobFactory getInstance() {
+        if (myJobFactory == null) {
+            myJobFactory = new JobFactory().setPathPrefix(new GenericFilePathPrefix());
+        }
+
+        return myJobFactory;
+    }
+
+    /**
+     * Sets the IFilePathPrefix for the JobFactory.
+     *
+     * @param aFilePathPrefix The file path prefix
+     * @return The JobFactory instance
+     */
+    public JobFactory setPathPrefix(final IFilePathPrefix aFilePathPrefix) {
+        myFilePathPrefix = aFilePathPrefix;
+        return this;
     }
 
     /**
@@ -40,7 +68,7 @@ public final class JobFactory {
      * @return A new batch job
      * @throws IOException If there is trouble reading the CSV file
      */
-    public static Job createJob(final String aName, final File aCsvFile) throws IOException, CsvParsingException {
+    public Job createJob(final String aName, final File aCsvFile) throws IOException, CsvParsingException {
         final List<CsvParsingException> exceptions = new ArrayList<>();
         final Reader reader = new BufferedFileReader(aCsvFile);
         final CSVReader csvReader = new CSVReader(reader);
@@ -63,6 +91,9 @@ public final class JobFactory {
                 final CsvParsingException csvParsingException = new CsvParsingException();
                 final String[] columns = metadata.get(rowIndex);
                 final Item item = new Item();
+
+                // Set the IFilePathPrefix implementation that Item(s) will use to access files
+                item.setFilePathPrefix(myFilePathPrefix);
 
                 for (int columnIndex = 0; columnIndex < columns.length; columnIndex++) {
                     // We assume first line contains the headers and remember the indices of those we care about

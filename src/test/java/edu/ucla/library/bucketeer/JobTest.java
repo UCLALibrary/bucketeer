@@ -40,7 +40,7 @@ public class JobTest {
      */
     @Test
     public final void testJsonSerialization() throws IOException, CsvParsingException {
-        final Job job = JobFactory.createJob(TEST_JOB_NAME, CSV_FILE);
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final JsonObject expected = new JsonObject(StringUtils.read(JSON_FILE));
         final JsonArray items = expected.getJsonArray(ITEMS);
 
@@ -54,7 +54,7 @@ public class JobTest {
             }
         }
 
-        assertEquals(expected.encodePrettily(), job.setSlackHandle(SLACK_HANDLE).toJSON().encodePrettily());
+        assertEquals(expected, job.setSlackHandle(SLACK_HANDLE).toJSON());
     }
 
     /**
@@ -83,7 +83,7 @@ public class JobTest {
      */
     @Test
     public final void testGetItems() throws IOException, CsvParsingException {
-        assertEquals(9, JobFactory.createJob(TEST_JOB_NAME, CSV_FILE).size());
+        assertEquals(9, JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE).size());
     }
 
     /**
@@ -107,8 +107,8 @@ public class JobTest {
      */
     @Test
     public final void testGetMetadataHeader() throws IOException, CsvParsingException {
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final String header = StringUtils.read(HEADER_FILE);
-        final Job job = JobFactory.createJob(TEST_JOB_NAME, CSV_FILE);
 
         assertEquals(header, StringUtils.toString(job.getMetadataHeader(), '|'));
     }
