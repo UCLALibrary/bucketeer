@@ -21,6 +21,9 @@ import edu.ucla.library.bucketeer.handlers.GetJobsHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
 import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
+import edu.ucla.library.bucketeer.utils.FilePathPrefixFactory;
+import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
+import edu.ucla.library.bucketeer.utils.JobFactory;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -82,7 +85,21 @@ public class MainVerticle extends AbstractVerticle {
             if (configuration.failed()) {
                 aFuture.fail(configuration.cause());
             } else {
-                buildRouter(configuration.result(), aFuture);
+                final JsonObject config = configuration.result();
+                final String fsMount = config.getString(Config.FILESYSTEM_MOUNT);
+                final String fsPrefix = config.getString(Config.FILESYSTEM_PREFIX);
+
+                if (fsMount != null && fsPrefix != null) {
+                    final IFilePathPrefix filePathPrefix = FilePathPrefixFactory.getPrefix(fsPrefix, fsMount);
+
+                    // Initialize our JobFactory with our pre-configured IFilePathPrefix implementation
+                    JobFactory.getInstance().setPathPrefix(filePathPrefix);
+                } else {
+                    LOGGER.warn(MessageCodes.BUCKETEER_128);
+                }
+
+                // Build the router that will respond to all traffic
+                buildRouter(config, aFuture);
             }
         });
     }

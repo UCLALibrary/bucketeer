@@ -136,4 +136,5 @@
   <entry key="BUCKETEER-125">Item '{}' is missing a source file: {}</entry>
   <entry key="BUCKETEER-126">CSV input errors in '{}': {}</entry>
   <entry key="BUCKETEER-127">Didn't find a custom file path prefix deserializer, so using a generic one: {}</entry>
+  <entry key="BUCKETEER-128">A IFilePathPrefix implementation is not configured, so we're using the default one</entry>
 </properties>

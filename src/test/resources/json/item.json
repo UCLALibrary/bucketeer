@@ -3,5 +3,7 @@
     "filePath": "",
     "accessURL": null,
     "workflowState": "failed",
-    "filePathPrefix": null
+    "filePathPrefix": {
+        "genericRootDir": "."
+    }
 }

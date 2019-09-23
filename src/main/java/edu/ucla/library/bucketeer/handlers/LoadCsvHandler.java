@@ -24,8 +24,6 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.utils.FilePathPrefixFactory;
-import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
 import edu.ucla.library.bucketeer.utils.JobFactory;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
 import io.vertx.core.Handler;
@@ -133,7 +131,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             }
 
             try {
-                final Job job = JobFactory.createJob(jobName, new File(filePath));
+                final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath));
 
                 // Set the Slack handle and whether the job is a subsequent or initial run
                 job.setSlackHandle(slackHandle).setIsSubsequentRun(Boolean.parseBoolean(runFailures));
@@ -242,15 +240,12 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
     }
 
     private void updateJobsQueue(final Job aJob, final Counter aCounter) {
-        final String fsMount = myConfig.getString(Config.FILESYSTEM_MOUNT);
-        final String fsPrefix = myConfig.getString(Config.FILESYSTEM_PREFIX);
         final String s3Bucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
-        final IFilePathPrefix filePathPrefix = FilePathPrefixFactory.getPrefix(fsPrefix, fsMount);
         final Iterator<Item> iterator = aJob.getItems().iterator();
 
         while (iterator.hasNext()) {
             final Item item = iterator.next();
-            final File imageFile = item.setFilePathPrefix(filePathPrefix).getFile();
+            final File imageFile = item.getFile();
             final WorkflowState state = item.getWorkflowState();
             final JsonObject s3UploadMessage = new JsonObject();
             final boolean isOkayInitialRun = !aJob.getIsSubsequentRun() && state.equals(Job.WorkflowState.EMPTY);
