@@ -3,22 +3,40 @@ package edu.ucla.library.bucketeer.utils;
 
 import java.io.File;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class GenericFilePathPrefix implements IFilePathPrefix {
 
-    private final String myRootPath;
+    /**
+     * The <code>serialVersionUID</code> of GenericFilePathPrefix.
+     */
+    private static final long serialVersionUID = 4651239370553190271L;
+
+    @JsonProperty("genericRootDir")
+    private final String myGenericRootDir;
+
+    /**
+     * Creates a generic file path prefix that returns the current path as the root.
+     */
+    public GenericFilePathPrefix() {
+        myGenericRootDir = ".";
+    }
 
     /**
      * Creates a generic file prefix that just returns the root path with which it's initialized.
      *
-     * @param aRootPath A root path to use as the prefix
+     * @param aRootDir A root path to use as the prefix
      */
-    public GenericFilePathPrefix(final String aRootPath) {
-        myRootPath = aRootPath;
+    @JsonIgnore
+    public GenericFilePathPrefix(final String aRootDir) {
+        myGenericRootDir = aRootDir;
     }
 
     @Override
+    @JsonIgnore
     public String getPrefix(final File aFile) {
-        return myRootPath;
+        return myGenericRootDir;
     }
 
 }

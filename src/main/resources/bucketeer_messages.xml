@@ -61,8 +61,6 @@
   <entry key="BUCKETEER-050">Form submission is missing a Slack handle.</entry>
   <entry key="BUCKETEER-051">Slack user '{}' uploaded CSV file '{}' to: {}</entry>
   <entry key="BUCKETEER-052">CSV contains an entry that is not a work or collection: {}</entry>
-  <entry key="BUCKETEER-053">'{}' claims it's a collection but it contains a parent ARK and/or a file name</entry>
-  <entry key="BUCKETEER-054">'{}' claims it's a work but it doesn't have a parent ARK and/or a file name</entry>
   <entry key="BUCKETEER-055">Invalid CSV line: {}</entry>
   <entry key="BUCKETEER-056">Failed to create test file needed for testing: {}</entry>
   <entry key="BUCKETEER-057">Unable to delete test file used in testing: {}</entry>
@@ -123,4 +121,16 @@
   <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
   <entry key="BUCKETEER-113">Failed to find job keys in shared lambda map</entry>
   <entry key="BUCKETEER-114">Unexpected response code: {} [{}]</entry>
+  <entry key="BUCKETEER-115">Batch update of '{}'; the result was successful: {}</entry>
+  <entry key="BUCKETEER-116">Ignore: This is just a test</entry>
+  <entry key="BUCKETEER-117">Item ID header index: {}</entry>
+  <entry key="BUCKETEER-118">File path header index: {}</entry>
+  <entry key="BUCKETEER-119">Object type header index: {}</entry>
+  <entry key="BUCKETEER-120">Bucketeer state header index: {}</entry>
+  <entry key="BUCKETEER-121">IIIF access URL header index: {}</entry>
+  <entry key="BUCKETEER-122">CSV is missing the 'File Name' header</entry>
+  <entry key="BUCKETEER-123">CSV is missing the 'Item ARK' header</entry>
+  <entry key="BUCKETEER-124">Unexpected workflow state: {}</entry>
+  <entry key="BUCKETEER-125">Item '{}' is missing a source file: {}</entry>
+  <entry key="BUCKETEER-126">CSV input errors in '{}': {}</entry>
 </properties>

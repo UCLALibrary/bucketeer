@@ -29,6 +29,14 @@ public class CsvParsingException extends Exception {
     }
 
     /**
+     * Create a CSV exception.
+     */
+    public CsvParsingException(final String aMessage) {
+        myMessages = new ArrayList<>();
+        myMessages.add(LOGGER.getMessage(aMessage));
+    }
+
+    /**
      * Adds message to the CsvException.
      *
      * @param aMessage A new message to add to the CsvException
@@ -70,6 +78,15 @@ public class CsvParsingException extends Exception {
      */
     public String getMessages(final String aDelimiter) {
         return String.join(aDelimiter, myMessages);
+    }
+
+    /**
+     * Get the number of exception messages we've logged.
+     *
+     * @return The number of exception messages
+     */
+    public int countMessages() {
+        return myMessages.size();
     }
 
     @Override

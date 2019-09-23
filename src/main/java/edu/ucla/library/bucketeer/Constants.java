@@ -102,7 +102,7 @@ public final class Constants {
     public static final String S3_REQUEST_COUNT = "s3-request-count";
 
     /**
-     * The name of the lambda queue.
+     * The name of the lambda jobs queue.
      */
     public static final String LAMBDA_JOBS = "lambda-jobs";
 
