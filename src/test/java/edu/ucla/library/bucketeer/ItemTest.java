@@ -130,9 +130,11 @@ public class ItemTest {
     @Test
     public final void testToJSON() throws IOException {
         final Item item = new Item(TEST_ID, FILE_PATH).setWorkflowState(WorkflowState.FAILED);
-        final String json = StringUtils.read(new File("src/test/resources/json/item.json"));
+        final JsonObject expected = new JsonObject(StringUtils.read(new File("src/test/resources/json/item.json")));
 
-        assertEquals(new JsonObject(json), item.toJSON());
+        expected.put("filePath", new File(FILE_PATH).getCanonicalPath());
+
+        assertEquals(expected, item.toJSON());
     }
 
     /**

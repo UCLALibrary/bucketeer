@@ -4,55 +4,55 @@
   "isSubsequentRun" : false,
   "items" : [ {
     "id" : "ark:/13030/hb000003n9",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb009n998t",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "failed",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb038nb0bm",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb0489n655",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "failed",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb058002j1",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb058002kj",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "failed",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb0779n6bd",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb0779n6cx",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/fail.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "failed",
     "filePathPrefix" : null
   }, {
     "id" : "ark:/13030/hb08700381",
-    "filePath" : "/home/kevin/Workspace/bucketeer/src/test/resources/images/test.tif",
+    "filePath" : "",
     "accessURL" : null,
     "workflowState" : "",
     "filePathPrefix" : null

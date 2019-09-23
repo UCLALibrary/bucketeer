@@ -12,6 +12,7 @@ import org.junit.Test;
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.utils.JobFactory;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 public class JobTest {
@@ -26,15 +27,34 @@ public class JobTest {
 
     private static final File HEADER_FILE = new File("src/test/resources/text/headers.txt");
 
+    private static final File TEST_TIFF_FILE = new File("src/test/resources/images/test.tif");
+
+    private static final File TEST_FAIL_FILE = new File("src/test/resources/images/fail.tif");
+
+    private static final String FILE_PATH = "filePath";
+
+    private static final String ITEMS = "items";
+
     /**
      * Tests JSON serialization.
      */
     @Test
     public final void testJsonSerialization() throws IOException, CsvParsingException {
         final Job job = JobFactory.createJob(TEST_JOB_NAME, CSV_FILE);
-        final String expected = StringUtils.read(JSON_FILE);
+        final JsonObject expected = new JsonObject(StringUtils.read(JSON_FILE));
+        final JsonArray items = expected.getJsonArray(ITEMS);
 
-        assertEquals(new JsonObject(expected), job.setSlackHandle(SLACK_HANDLE).toJSON());
+        for (int index = 0; index < items.size(); index++) {
+            final JsonObject item = items.getJsonObject(index);
+
+            if (index != 7) {
+                item.put(FILE_PATH, TEST_TIFF_FILE.getCanonicalPath());
+            } else {
+                item.put(FILE_PATH, TEST_FAIL_FILE.getCanonicalPath());
+            }
+        }
+
+        assertEquals(expected.encodePrettily(), job.setSlackHandle(SLACK_HANDLE).toJSON().encodePrettily());
     }
 
     /**
