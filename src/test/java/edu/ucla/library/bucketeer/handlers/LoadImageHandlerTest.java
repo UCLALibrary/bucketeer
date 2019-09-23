@@ -153,7 +153,10 @@ public class LoadImageHandlerTest {
                     myVertx.setPeriodic(5000, timer -> {
                         if (myVertx.sharedData().getLocalMap(Constants.RESULTS_MAP).get(id) != null) {
                             myAmazonS3.deleteObject(s3Bucket, id + DOT_JPX);
-                            async.complete();
+
+                            if (!async.isCompleted()) {
+                                async.complete();
+                            }
                         } else {
                             int counter = jsonConfirm.getInteger(Constants.WAIT_COUNT);
 

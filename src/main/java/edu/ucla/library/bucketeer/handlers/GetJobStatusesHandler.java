@@ -10,8 +10,9 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.Item;
+import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Metadata;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -37,9 +38,9 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
             myVertx = aContext.vertx();
         }
 
-        myVertx.sharedData().<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
+        myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
-                final AsyncMap<String, List<Metadata>> map = getMap.result();
+                final AsyncMap<String, Job> map = getMap.result();
 
                 map.keys(keyCheck -> {
                     if (keyCheck.succeeded()) {
@@ -50,19 +51,21 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
 
                             map.get(jobName, getJob -> {
                                 if (getJob.succeeded()) {
-                                    final List<Metadata> metadataList = getJob.result();
+                                    final Job job = getJob.result();
                                     final JsonArray images = new JsonArray();
 
-                                    result.put(Constants.COUNT, metadataList.size());
+                                    result.put(Constants.COUNT, job.size());
 
                                     try {
-                                        for (int index = 0; index < metadataList.size(); index++) {
-                                            final Metadata metadata = metadataList.get(index);
+                                        final List<Item> items = job.getItems();
+
+                                        for (int index = 0; index < items.size(); index++) {
+                                            final Item item = items.get(index);
                                             final JsonObject image = new JsonObject();
 
-                                            image.put(Constants.IMAGE_ID, metadata.getID());
-                                            image.put(Constants.STATUS, metadata.getWorkflowState().toString());
-                                            image.put(Constants.FILE_PATH, metadata.getFile().getCanonicalPath());
+                                            image.put(Constants.IMAGE_ID, item.getID());
+                                            image.put(Constants.STATUS, item.getWorkflowState().toString());
+                                            image.put(Constants.FILE_PATH, item.getFile().getCanonicalPath());
 
                                             images.add(image);
                                         }

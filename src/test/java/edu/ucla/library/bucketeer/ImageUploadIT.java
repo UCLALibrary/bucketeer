@@ -151,7 +151,7 @@ public class ImageUploadIT {
     @SuppressWarnings("deprecation")
     @Test
     public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException, SdkClientException,
-            AmazonServiceException, ConfigurationException {
+            AmazonServiceException {
 
         // if we don't Have Kakadu installed, we *should* fail, but we will instead be crafty
         canRunKakadu = ConverterFactory.hasSystemKakadu();

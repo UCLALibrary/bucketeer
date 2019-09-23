@@ -1,7 +1,6 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import java.util.List;
 import java.util.Set;
 
 import info.freelibrary.util.Logger;
@@ -9,8 +8,8 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Metadata;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
@@ -35,9 +34,9 @@ public class GetJobsHandler extends AbstractBucketeerHandler {
             myVertx = aContext.vertx();
         }
 
-        myVertx.sharedData().<String, List<Metadata>>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
+        myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
-                final AsyncMap<String, List<Metadata>> map = getMap.result();
+                final AsyncMap<String, Job> map = getMap.result();
 
                 map.keys(keyCheck -> {
                     if (keyCheck.succeeded()) {
