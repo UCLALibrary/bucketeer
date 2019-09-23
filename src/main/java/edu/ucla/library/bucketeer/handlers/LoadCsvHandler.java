@@ -256,7 +256,6 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             final boolean isOkayInitialRun = !aJob.getIsSubsequentRun() && state.equals(Job.WorkflowState.EMPTY);
             final boolean isOkaySubsequentRun = aJob.getIsSubsequentRun() && state.equals(Job.WorkflowState.FAILED);
 
-            //
             // For normal runs only process empty states and for failure runs only processes failures
             if (item.hasFile() && (isOkayInitialRun || isOkaySubsequentRun)) {
                 s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + FileUtils.getExt(imageFile.getName()));
