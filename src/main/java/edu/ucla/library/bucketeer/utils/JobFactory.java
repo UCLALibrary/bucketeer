@@ -127,6 +127,13 @@ public final class JobFactory {
                             // Note if we're not expecting this column to have a source file
                             if (Metadata.COLLECTION.equals(columns[columnIndex])) {
                                 item.hasFile(false);
+
+                                // If we don't have a source file to process, we can mark this done
+                                if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
+                                    item.setWorkflowState(WorkflowState.INGESTED);
+                                } else {
+                                    item.setWorkflowState(WorkflowState.SUCCEEDED);
+                                }
                             }
                         }
                     }

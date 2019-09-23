@@ -62,10 +62,17 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
                                         for (int index = 0; index < items.size(); index++) {
                                             final Item item = items.get(index);
                                             final JsonObject image = new JsonObject();
+                                            final String filePath;
+
+                                            if (item.hasFile()) {
+                                                filePath = item.getFile().getCanonicalPath();
+                                            } else {
+                                                filePath = "";
+                                            }
 
                                             image.put(Constants.IMAGE_ID, item.getID());
                                             image.put(Constants.STATUS, item.getWorkflowState().toString());
-                                            image.put(Constants.FILE_PATH, item.getFile().getCanonicalPath());
+                                            image.put(Constants.FILE_PATH, filePath);
 
                                             images.add(image);
                                         }
