@@ -13,6 +13,7 @@ import com.opencsv.CSVReader;
 import info.freelibrary.util.BufferedFileReader;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.CsvParsingException;
@@ -100,7 +101,16 @@ public final class JobFactory {
                             csvParsingException.addMessage(MessageCodes.BUCKETEER_123);
                             break;
                         } else if (fileNameIndex == columnIndex) {
-                            item.setFilePath(columns[columnIndex]);
+                            final String filePath = StringUtils.trimToNull(columns[columnIndex]);
+
+                            // Items have files by default so it may just be that hasFile(false) has not yet been set
+                            if (item.hasFile()) {
+                                if (filePath != null) {
+                                    item.setFilePath(columns[columnIndex]);
+                                } else {
+                                    item.setFilePath("");
+                                }
+                            }
                         } else if (itemIdIndex == columnIndex) {
                             item.setID(columns[columnIndex]);
                         } else if (bucketeerStateIndex == columnIndex) {
