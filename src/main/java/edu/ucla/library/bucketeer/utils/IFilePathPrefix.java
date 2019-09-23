@@ -4,9 +4,12 @@ package edu.ucla.library.bucketeer.utils;
 import java.io.File;
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 /**
  * An interface for providing a file path prefix to use with an object's metadata.
  */
+@JsonDeserialize(using = PrefixDeserializer.class)
 public interface IFilePathPrefix extends Serializable {
 
     /**

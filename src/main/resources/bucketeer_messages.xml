@@ -87,7 +87,7 @@
   <entry key="BUCKETEER-076">Unable to get job from jobs queue: {}</entry>
   <entry key="BUCKETEER-077">Received an ID for an image that isn't in our '{}' jobs queue: {}</entry>
   <entry key="BUCKETEER-078">The batch job for converting images from '{}' has been completed</entry>
-  <entry key="BUCKETEER-079">Discrepancy over whether this is the last job in the '{}' batch</entry>
+  <entry key="BUCKETEER-079">Completed '{}' job, but with a discrepancy between counter and item statuses</entry>
   <entry key="BUCKETEER-080">Unable to decrement job counter for: {}</entry>
   <entry key="BUCKETEER-081">Finished processing the batch job for '{}'</entry>
   <entry key="BUCKETEER-082">Failed to removed completed batch job from the queue: {}</entry>
@@ -135,4 +135,5 @@
   <entry key="BUCKETEER-124">Unexpected workflow state: {}</entry>
   <entry key="BUCKETEER-125">Item '{}' is missing a source file: {}</entry>
   <entry key="BUCKETEER-126">CSV input errors in '{}': {}</entry>
+  <entry key="BUCKETEER-127">Didn't find a custom file path prefix deserializer, so using a generic one: {}</entry>
 </properties>

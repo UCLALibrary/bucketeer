@@ -118,7 +118,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                 if (!success) {
                     item.setWorkflowState(WorkflowState.FAILED);
-                } else {
+                } else if (item.hasFile()) {
                     String iiif = myConfig.getString(Config.IIIF_URL);
 
                     // Just confirm the config value ends with a slash
@@ -171,17 +171,19 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                 counter.decrementAndGet(decrement -> {
                     if (decrement.succeeded()) {
-                        // Double check our belief that this is the last job in the batch run
-                        if (aCompletedRun && !decrement.result().equals(0L)) {
-                            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_079, aJobName);
-                            final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage);
+                        if (aCompletedRun) {
+                            // Double check our belief that this is the last job in the batch run
+                            if (!decrement.result().equals(0L)) {
+                                final String warning = LOGGER.getMessage(MessageCodes.BUCKETEER_079, aJobName);
+                                final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, warning);
 
-                            LOGGER.error(errorMessage);
+                                LOGGER.warn(warning);
 
-                            // And post to Slack about it so we can investigate
-                            sendSlackMessage(slackErrorChannelID, slackMessage);
-                        } else if (aCompletedRun) {
-                            LOGGER.info(MessageCodes.BUCKETEER_081, aJobName);
+                                // And post to Slack about it so we can investigate
+                                sendSlackMessage(slackErrorChannelID, slackMessage);
+                            } else {
+                                LOGGER.info(MessageCodes.BUCKETEER_081, aJobName);
+                            }
 
                             // Remove the batch from our jobs queue so that it can be submitted again if desired
                             aJobMap.remove(aJobName, removeJob -> {
