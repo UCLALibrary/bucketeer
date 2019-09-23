@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Job.WorkflowState;
@@ -26,6 +28,8 @@ public class Item implements Serializable {
      * The <code>serialVersionUID</code> of the Item.
      */
     private static final long serialVersionUID = 2062164135217237338L;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Item.class, Constants.MESSAGES);
 
     private String myID;
 
@@ -110,13 +114,17 @@ public class Item implements Serializable {
      */
     @JsonIgnore
     public File getFile() {
-        File file = new File(StringUtils.trimTo(myFilePath, ""));
+        if (!hasFile()) {
+            return null;
+        } else {
+            File file = new File(StringUtils.trimTo(myFilePath, ""));
 
-        if (myFilePathPrefix != null) {
-            file = Paths.get(myFilePathPrefix.getPrefix(file), file.getPath()).toFile();
+            if (myFilePathPrefix != null) {
+                file = Paths.get(myFilePathPrefix.getPrefix(file), file.getPath()).toFile();
+            }
+
+            return file;
         }
-
-        return file;
     }
 
     /**
@@ -125,7 +133,7 @@ public class Item implements Serializable {
      * @return The file path
      */
     public String getFilePath() throws IOException {
-        return getFile().getCanonicalPath();
+        return hasFile() ? getFile().getCanonicalPath() : null;
     }
 
     /**
@@ -134,7 +142,12 @@ public class Item implements Serializable {
      * @param aFilePath A file path
      */
     public Item setFilePath(final String aFilePath) {
-        myFilePath = aFilePath;
+        if (!hasFile()) {
+            throw new IllegalArgumentException(LOGGER.getMessage(MessageCodes.BUCKETEER_053, myID));
+        } else {
+            myFilePath = aFilePath;
+        }
+
         return this;
     }
 
@@ -145,7 +158,7 @@ public class Item implements Serializable {
      */
     @JsonIgnore
     public boolean fileExists() {
-        return getFile().exists();
+        return myFilePath == null ? false : getFile().exists();
     }
 
     /**
