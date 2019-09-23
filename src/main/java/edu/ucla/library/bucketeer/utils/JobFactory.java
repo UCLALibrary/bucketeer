@@ -140,6 +140,7 @@ public final class JobFactory {
                                     item.setFilePath(columns[columnIndex]);
                                 } else {
                                     item.setFilePath("");
+                                    item.setWorkflowState(WorkflowState.FAILED);
                                 }
                             }
                         } else if (itemIdIndex == columnIndex) {
