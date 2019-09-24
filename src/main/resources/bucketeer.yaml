@@ -2,7 +2,12 @@ openapi: "3.0.0"
 info:
   version: 1.0.0
   title: Bucketeer API
-  description: A TIFF to JP2 to S3 Bucket Microservice
+  description: "Bucketeer, a TIFF to JPEG 2000 to S3 Bucket Microservice, provides a way for TIFF images, mounted on
+  a Bucketeer server (or Docker image), to be converted into JPX format and, then, uploaded to an S3 bucket. This
+  conversion can either happen one at a time through the 'Convert Single TIFF' endpoint or in batch mode through the
+  'Start CSV Batch Job' endpoint. Individual conversions are done on Bucketeer. Batch conversions are done on AWS
+  Lambda, with status updates reported back to Bucketeer. Which route you choose depends in large part on whether you
+  can get a decent upload speed from Bucketeer to the S3 Bucket."
   license:
     name: The 3-Clause BSD License
     url: https://opensource.org/licenses/BSD-3-Clause
@@ -10,53 +15,108 @@ info:
     name: UCLA Library Services Team
     email: lib_softwaredev-services@library.ucla.edu
 servers:
-  - url: http://bucketeer.library.ucla.edu/
+  - url: http://bucketeer.library.ucla.edu
 paths:
   /status:
     get:
-      summary: Application Status
-      description: Requests an application status check
+      summary: Get Application Status
+      description: "This is a query of the application's status. Right now, this just responds with the string 'Hello'
+      to indicate that the application is alive and functioning as expected. This response will be expanded in the
+      future."
       operationId: getStatus
       responses:
         '200':
           description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Hello
+        '500':
+          description: There was an internal server error
   /batch/jobs:
     get:
-      summary: Jobs in Progress
-      description: A listing of the jobs currently in progress
+      summary: Get Jobs in Progress
+      description: A listing of all the jobs currently in progress.
       operationId: getJobs
       responses:
         '200':
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 2
+                  jobs:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - capostcards
+                      - bennet
         '500':
           description: There was an internal server error
   /batch/jobs/{job-name}:
     get:
-      summary: Statuses of a Job
-      description: A listing of images being processed in specific job
+      summary: Get Item Statuses
+      description: A list of items being processed in the specified job.
       operationId: getJobStatuses
       responses:
         '200':
           description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 5
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        image-id:
+                          type: string
+                        status:
+                          type: string
+                        file-path:
+                          type: string
+                    example:
+                      - image-id: ark:/21198/zz00090nmj
+                        status: succeeded
+                        file-path: /usr/local/data/tiffs/ladailynews/image/000001.tif
+                      - image-id: ark:/21198/zz00090nn2
+                        status: succeeded
+                        file-path: /usr/local/data/tiffs/ladailynews/image/000002.tif
+                      - image-id: ark:/21198/zz00090npk
+                        status: failed
+                        file-path: /usr/local/data/tiffs/ladailynews/image/000003.tif
+                      - image-id: ark:/21198/zz00090nq3
+                        status: succeeded
+                        file-path: /usr/local/data/tiffs/ladailynews/image/000004.tif
+                      - image-id: ark:/21198/zz00090nrm
+                        status: ingested
+                        file-path: /usr/local/data/tiffs/ladailynews/image/000005.tif
         '404':
-          description: The job was not found
+          description: The requested job and/or item was not found
         '500':
           description: There was an internal server error
     delete:
-      summary: Batch Job Deletion
-      description: Deletes the job with the supplied name
+      summary: Delete Batch Job
+      description: Deletes the batch job with the specified name.
       operationId: deleteJob
       responses:
         '204':
           description: No content, the job has been deleted
         '403':
-          description: Forbidden
+          description: Deleting the specified job was forbidden
         '500':
-          description: Internal server error
+          description: There was an internal server error
     parameters:
        - in: path
          name: job-name
@@ -66,14 +126,14 @@ paths:
          description: The batch job name
   /batch/jobs/{job-name}/{image-id}/{success}:
     patch:
-      summary: Batch Job Status
-      description: Updates a batch job that's in process
+      summary: Update Item Status
+      description: Updates the status of an item in the specified job.
       operationId: updateBatchJob
       responses:
         '204':
-          description: The job status was successfully updated
+          description: The item's status was successfully updated
         '404':
-          description: The job status was not found
+          description: The item's status was not found
         '500':
           description: There was an internal server error
     parameters:
@@ -97,8 +157,15 @@ paths:
          description: Whether the image was successfully processed
   /batch/input/csv:
     post:
-      summary: CSV Batch Conversion
-      description: Loads a bunch of images into Bucketeer's batch ingest workflow so that Cantaloupe can access them
+      summary: Start CSV Batch Job
+      description: "This endpoint loads items into Bucketeer's batch processing system. The standard way to use this
+      interface is to use Bucketeer's upload form. The upload form is meant to be metadata agnostic, but there are two
+      metadata fields that must be present in the uploaded CSV file: 'Item ARK' and 'File Name'. The Bucketeer process
+      also produces a CSV file as output. There will be two additional fields that Bucketeer adds in its output CSV:
+      'Bucketeer State' and 'IIIF Access URL' (the URL of the item served from the pre-configured IIIF server). The
+      output CSV file is sent to the Slack channel that has been configured to receive Bucketeer output. The output is
+      addressed to the Slack user that is sent as a argument to the 'Start CSV Batch Job' endpoint. The Slack user's
+      handle does not need to be prefixed with an @ symbol."
       operationId: loadImagesFromCSV
       requestBody:
         content:
@@ -112,7 +179,7 @@ paths:
                   type: string
                   format: binary
                 failure:
-                  type: string
+                  type: boolean
       responses:
         '200': 
           description: An HTML page informing the user that their job has been queued
@@ -123,11 +190,28 @@ paths:
                 format: binary
         '400':
           description: Bad request (missing Slack handle/CSV file or invalid CSV uploaded)
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
         '415':
           description: Unsupported media type (i.e. not a CSV file)
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
+        '500':
+          description: There was an internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+                format: binary
   /{image-id}/{file-path}:
     get:
-      summary: New JPEG 2000 Image
+      summary: Convert Single TIFF
       description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it
       operationId: loadImage
       responses:
@@ -138,12 +222,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    description: Whether the load succeeded
-                  message:
+                  image-id:
                     type: string
-                    description: Any related text about the loadImage operation
+                    description: The ID of the requested TIFF image
+                    example: "ark:/21198/zz00090p17"
+                  file-path:
+                    type: string
+                    description: The file path of the requested TIFF image
+                    example: "/usr/local/data/ladailynews/images/000001.tif"
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Bad Request: imageId and filePath required"
     parameters:
        - in: path
          name: image-id

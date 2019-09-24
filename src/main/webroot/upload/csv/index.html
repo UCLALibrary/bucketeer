@@ -66,13 +66,26 @@
             href="https://github.com/uclalibrary/eureka">Eureka</a> GitHub repository). If this is the first time that
           the file has been processed, do <i>not</i> select the
           <code>Process previous failures only</code>
-          option -- this is only for files that have been previously processed (and that have had failed images).
+          option -- this is only for files that contain items that failed to be processed in a first run.
         </p>
+        <p>There are only two required fields in the CSV file that you upload: 'Item ARK' and 'File Name'. The
+          ingest process will add two additional fields to the output CSV file: 'Bucketeer State' and 'IIIF Access URL'.
+          Do not remove them. They will be needed if the CSV file is later re-ingested into Bucketeer (for instance, to
+          re-process items that failed on the first run).
         <p>
           To submit the form, you will also need to input your Slack handle so that Bucketeer can notify you when your
           batch job is done. To be notified of this, you need to join the
           <code>#bucketeer-jobs</code>
-          Slack channel. The processed CSV file will also be uploaded to you there.
+          Slack channel. The processed CSV file will also be uploaded to you there. You do not need to include the '@'
+          symbol before your Slack handle. This will be provided by Bucketeer when it messages you.
+        </p>
+        <br />
+        <h4>Problems?</h4>
+        <p>
+          This software is in an alpha release. You might run into issues when trying to use it. Please feel free to
+          contact us in the
+          <code>#softwaredev-services</code>
+          Slack channel so that we can assist you by troubleshooting any problems that you may encounter. Thanks!
         </p>
       </div>
     </div>
