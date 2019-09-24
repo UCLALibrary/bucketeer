@@ -29,6 +29,6 @@ public class UCLAFilePathPrefixTest {
      */
     @Test
     public final void testGetPrefixMasters() {
-        assertEquals("/mnt/ucla/Masters", new UCLAFilePathPrefix(ROOT_PATH).getPrefix(MASTERS_TEST_FILE));
+        assertEquals(ROOT_PATH, new UCLAFilePathPrefix(ROOT_PATH).getPrefix(MASTERS_TEST_FILE));
     }
 }
