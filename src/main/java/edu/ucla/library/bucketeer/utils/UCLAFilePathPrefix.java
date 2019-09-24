@@ -49,7 +49,7 @@ public class UCLAFilePathPrefix implements IFilePathPrefix {
         final String path;
 
         if (aFile.getPath().startsWith(MASTERS_DIR_PATH)) {
-            path = Paths.get(myUCLARootDir, MASTERS_DIR_PATH).toString();
+            path = Paths.get(myUCLARootDir).toString();
         } else {
             path = Paths.get(myUCLARootDir, DL_MASTERS_DIR_PATH).toString();
         }
