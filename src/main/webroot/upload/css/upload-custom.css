@@ -21,3 +21,8 @@ h1 {
 info-form {
     color: black;
 }
+
+#important {
+  margin-top: 60px;
+  font-style: italic;
+}
