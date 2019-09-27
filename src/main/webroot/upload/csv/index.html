@@ -33,11 +33,7 @@
 
   <div class="container-fluid">
     <h1 id="csv-upload-title">CSV Upload</h1>
-    <p>
-      The CSV upload form can be used to upload CSV files for processing by the Bucketeer application. Looking for a
-      file to upload? UCLA's CSV files can be found in the <a href="https://github.com/uclalibrary/eureka">Eureka</a>
-      GitHub repository.
-    </p>
+    <p>The CSV upload form can be used to upload CSV files for processing by the Bucketeer application.</p>
     <div class="row csv-upload-form">
       <div class="col-sm-3 offset-sm-1">
         <div class="info-form">
@@ -56,6 +52,10 @@
             <div class="form-group">
               <input type="submit" value="Upload" name="submit">
             </div>
+            <div id="important">
+              Remember to join the <a href="https://uclalibrary.slack.com/messages/bucketeer-jobs">#bucketeer-jobs</a>
+              Slack channel to receive notification of the batch job's completion.
+            </div>
           </form>
         </div>
       </div>
@@ -68,16 +68,16 @@
           <code>Process previous failures only</code>
           option -- this is only for files that contain items that failed to be processed in a first run.
         </p>
-        <p>There are only two required fields in the CSV file that you upload: 'Item ARK' and 'File Name'. The
+        <p>There are only two required fields in the uploaded CSV file: 'Item ARK' and 'File Name'. The Bucketeer
           ingest process will add two additional fields to the output CSV file: 'Bucketeer State' and 'IIIF Access URL'.
           Do not remove them. They will be needed if the CSV file is later re-ingested into Bucketeer (for instance, to
           re-process items that failed on the first run).
         <p>
-          To submit the form, you will also need to input your Slack handle so that Bucketeer can notify you when your
-          batch job is done. To be notified of this, you need to join the
+          You will need to provide your Slack handle so that Bucketeer can notify you when your batch job is done. You
+          must also have joined the
           <code>#bucketeer-jobs</code>
-          Slack channel. The processed CSV file will also be uploaded to you there. You do not need to include the '@'
-          symbol before your Slack handle. This will be provided by Bucketeer when it messages you.
+          Slack channel to see that notification. The processed CSV file will be uploaded to you there. You do not need
+          to include the '@' symbol before your Slack handle.
         </p>
         <br />
         <h4>Problems?</h4>
