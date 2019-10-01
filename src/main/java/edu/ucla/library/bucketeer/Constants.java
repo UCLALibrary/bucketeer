@@ -127,6 +127,16 @@ public final class Constants {
     public static final String SPACE = " ";
 
     /**
+     * just a empty string, useful
+     */
+    public static final String EMPTY_STRING = "";
+
+    /**
+     * an @ AT symbol
+     */
+    public static final String AT = "@";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {

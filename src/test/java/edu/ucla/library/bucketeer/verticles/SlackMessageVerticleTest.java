@@ -70,7 +70,8 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
 
-                mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE);
+                mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE).replace(Constants.AT,
+                        Constants.EMPTY_STRING);
                 mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
                 mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
 
