@@ -129,7 +129,7 @@ public class LoadImageHandlerTest {
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
-        final String encodedImagePath = "/test/src%2Ftest%2Fresources%2Fimages%2Ftest.tif";
+        final String encodedImagePath = "/test/src%2Ftest%2Fresources%2Fimages%2F熵.tif";
         final RequestOptions request = new RequestOptions();
 
         request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(encodedImagePath);
@@ -145,7 +145,7 @@ public class LoadImageHandlerTest {
 
                     aContext.assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), id);
                     aContext.assertEquals(jsonConfirm.getString(Constants.FILE_PATH),
-                            "src/test/resources/images/test.tif");
+                            "src/test/resources/images/熵.tif");
 
                     jsonConfirm.put(Constants.WAIT_COUNT, 0);
 
