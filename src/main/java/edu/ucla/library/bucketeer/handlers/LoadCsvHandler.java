@@ -97,7 +97,8 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         final HttpServerRequest request = aContext.request();
         final MultiMap formAttributes = request.formAttributes();
         final Set<FileUpload> csvUploads = aContext.fileUploads();
-        final String slackHandle = StringUtils.trimToNull(formAttributes.get(Constants.SLACK_HANDLE));
+        final String slackHandle = StringUtils.trimToNull(formAttributes.get(Constants.SLACK_HANDLE)).replace(
+                Constants.AT, Constants.EMPTY_STRING);
 
         if (slackHandle == null) {
             final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_050);
