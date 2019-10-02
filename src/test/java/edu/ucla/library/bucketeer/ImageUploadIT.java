@@ -55,7 +55,7 @@ public class ImageUploadIT {
 
     private static final String DEFAULT_S3_BUCKET = "cantaloupe-jp2k";
 
-    private static final String TEST_FILE_PATH = "src/test/resources/images/test.tif";
+    private static final String TEST_FILE_PATH = "src/test/resources/images/熵.tif";
 
     private static final String SLASH = "/";
 
@@ -156,7 +156,7 @@ public class ImageUploadIT {
         // if we don't Have Kakadu installed, we *should* fail, but we will instead be crafty
         canRunKakadu = ConverterFactory.hasSystemKakadu();
 
-        // let's use our test.tif file
+        // let's use our 熵.tif file
         myTIFF = new File(TEST_FILE_PATH);
         final String defaultTestFileName = myTIFF.getName();
         LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
