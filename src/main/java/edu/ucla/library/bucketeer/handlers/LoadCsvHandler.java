@@ -97,8 +97,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         final HttpServerRequest request = aContext.request();
         final MultiMap formAttributes = request.formAttributes();
         final Set<FileUpload> csvUploads = aContext.fileUploads();
-        final String slackHandle = StringUtils.trimToNull(formAttributes.get(Constants.SLACK_HANDLE)).replace(
-                Constants.AT, Constants.EMPTY_STRING);
+        final String slackHandle = StringUtils.trimToNull(formAttributes.get(Constants.SLACK_HANDLE));
 
         if (slackHandle == null) {
             final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_050);
@@ -119,13 +118,14 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
             response.end(StringUtils.format(myExceptionPage, errorMessage + extendedErrorMessage));
         } else {
+            final String cleanSlackHandle = slackHandle.replace(Constants.AT, Constants.EMPTY_STRING);
             final String runFailures = StringUtils.trimTo(formAttributes.get(Constants.FAILURES_ONLY), "false");
             final FileUpload csvFile = csvUploads.iterator().next();
             final String filePath = csvFile.uploadedFileName();
             final String fileName = csvFile.fileName();
             final String jobName = FileUtils.stripExt(fileName);
 
-            LOGGER.info(MessageCodes.BUCKETEER_051, slackHandle, fileName, filePath);
+            LOGGER.info(MessageCodes.BUCKETEER_051, cleanSlackHandle, fileName, filePath);
 
             if (myVertx == null) {
                 myVertx = aContext.vertx();
@@ -135,7 +135,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath));
 
                 // Set the Slack handle and whether the job is a subsequent or initial run
-                job.setSlackHandle(slackHandle).setIsSubsequentRun(Boolean.parseBoolean(runFailures));
+                job.setSlackHandle(cleanSlackHandle).setIsSubsequentRun(Boolean.parseBoolean(runFailures));
 
                 initiateJob(job, response);
             } catch (final FileNotFoundException details) {

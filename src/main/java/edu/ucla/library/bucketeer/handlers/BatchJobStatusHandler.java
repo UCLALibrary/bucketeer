@@ -214,7 +214,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      */
     private void finalizeJob(final Job aJob) {
         final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
-        final String slackHandle = aJob.getSlackHandle().replace(Constants.AT, Constants.EMPTY_STRING);
+        final String slackHandle = aJob.getSlackHandle();
         final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle);
         final JsonArray thumbnails = new JsonArray();
 
