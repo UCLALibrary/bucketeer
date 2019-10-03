@@ -236,7 +236,7 @@ paths:
             text/plain:
               schema:
                 type: string
-              example: "Bad Request: imageId and filePath required"
+              example: "Bad Request: imageId and valid filePath required"
     parameters:
        - in: path
          name: image-id
@@ -249,4 +249,4 @@ paths:
          required: true
          schema:
           type: string
-         description: The local image path
+          description: The local image path, MUST be a valid path
