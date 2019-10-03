@@ -67,6 +67,11 @@ public final class Constants {
     public static final String CONTENT_TYPE = "content-type";
 
     /**
+     * The content-type value for text.
+     */
+    public static final String TEXT = "text/plain";
+
+    /**
      * The content-type value for HTML.
      */
     public static final String HTML = "text/html";
@@ -80,11 +85,6 @@ public final class Constants {
      * The content-type value for XML.
      */
     public static final String XML = "application/xml";
-
-    /**
-     * the content-type value for text.
-     */
-    public static final String TEXT = "text/plain";
 
     /**
      * The record of completed S3 uploads.
