@@ -18,6 +18,8 @@ jobs:
           mvn verify \
             -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" \
             -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}" \
+            -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}" \
+            -Dbucketeer.s3.bucket="${BUCKETEER_S3_BUCKET}" \
             -Dcdn.distribution.id="${CLOUDFRONT_DISTRO_ID}" \
             -Dbucketeer.iiif.url="${BUCKETEER_IIIF_URL}" \
             -Dbucketeer.slack.test_user_handle="${SLACK_TEST_USER_HANDLE}" \
