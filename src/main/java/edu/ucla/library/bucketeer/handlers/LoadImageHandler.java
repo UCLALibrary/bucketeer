@@ -10,6 +10,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -27,7 +28,8 @@ public class LoadImageHandler implements Handler<RoutingContext> {
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
-        final EventBus eventBus = aContext.vertx().eventBus();
+        final Vertx vertx = aContext.vertx();
+        final EventBus eventBus = vertx.eventBus();
 
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String filePath = request.getParam(Constants.FILE_PATH);
@@ -36,7 +38,12 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_020);
 
             response.setStatusCode(HTTP.BAD_REQUEST);
-            response.putHeader(Constants.CONTENT_TYPE, "text/plain").end(responseMessage);
+            response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
+            response.close();
+        } else if (!vertx.fileSystem().existsBlocking(filePath)) {
+            final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_129, filePath);
+            response.setStatusCode(HTTP.BAD_REQUEST);
+            response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
             response.close();
         } else {
             // On receiving a valid request, we put the request info in JSON and send it to the ImageWorkerVerticle
@@ -51,6 +58,10 @@ public class LoadImageHandler implements Handler<RoutingContext> {
                 eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
             } catch (final Exception details) {
                 LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
+                final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_023, details.getMessage());
+                response.setStatusCode(HTTP.BAD_REQUEST);
+                response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
+                response.close();
             }
 
             // We also want to acknowledge that we've received the request
