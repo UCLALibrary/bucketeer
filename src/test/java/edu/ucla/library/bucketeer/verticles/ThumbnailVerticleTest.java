@@ -74,11 +74,12 @@ public class ThumbnailVerticleTest extends AbstractBucketeerVerticle {
                         aContext.fail(message);
                     }
 
-                    asyncTask.complete();
+                    if (!asyncTask.isCompleted()) {
+                        asyncTask.complete();
+                    }
                 });
             } else {
                 aContext.fail(getConfig.cause());
-                asyncTask.complete();
             }
         });
     }
@@ -91,7 +92,7 @@ public class ThumbnailVerticleTest extends AbstractBucketeerVerticle {
      */
     @After
     public void tearDown(final TestContext aContext) throws Exception {
-        final Async async = aContext.async();
+        final Async asyncTask = aContext.async();
 
         myRunTestOnContextRule.vertx().close(result -> {
             if (!result.succeeded()) {
@@ -101,7 +102,9 @@ public class ThumbnailVerticleTest extends AbstractBucketeerVerticle {
                 aContext.fail(message);
             }
 
-            async.complete();
+            if (!asyncTask.isCompleted()) {
+                asyncTask.complete();
+            }
         });
     }
 
@@ -134,7 +137,9 @@ public class ThumbnailVerticleTest extends AbstractBucketeerVerticle {
                 }
             }
 
-            asyncTask.complete();
+            if (!asyncTask.isCompleted()) {
+                asyncTask.complete();
+            }
         });
     }
 
