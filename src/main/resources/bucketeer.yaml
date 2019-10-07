@@ -36,7 +36,7 @@ paths:
           description: There was an internal server error
   /config:
     get:
-      summary: Get viewable config
+      summary: Get Viewable Config
       description: A listing of all configuration options that are publicly viewable
       operationId: getConfig
       responses:
