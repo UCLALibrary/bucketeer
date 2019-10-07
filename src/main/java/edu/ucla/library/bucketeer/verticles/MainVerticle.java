@@ -16,6 +16,7 @@ import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler;
 import edu.ucla.library.bucketeer.handlers.DeleteJobHandler;
 import edu.ucla.library.bucketeer.handlers.FailureHandler;
+import edu.ucla.library.bucketeer.handlers.GetConfigHandler;
 import edu.ucla.library.bucketeer.handlers.GetJobStatusesHandler;
 import edu.ucla.library.bucketeer.handlers.GetJobsHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
@@ -122,6 +123,7 @@ public class MainVerticle extends AbstractVerticle {
 
                     // Next, we associate handlers with routes from our specification
                     routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
+                    routerFactory.addHandlerByOperationId(Op.GET_CONFIG, new GetConfigHandler(aConfig));
                     routerFactory.addHandlerByOperationId(Op.GET_JOBS, new GetJobsHandler());
                     routerFactory.addHandlerByOperationId(Op.GET_JOB_STATUSES, new GetJobStatusesHandler());
                     routerFactory.addHandlerByOperationId(Op.DELETE_JOB, new DeleteJobHandler());
