@@ -13,7 +13,6 @@ import java.util.UUID;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
-import info.freelibrary.util.I18nRuntimeException;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
@@ -110,7 +109,7 @@ public class ThumbnailVerticle extends AbstractBucketeerVerticle {
                         final String iiifPath = compositeFuture.resultAt(index);
 
                         // Not all successfully completed jobs need cache invalidation
-                        if (iiifPath != null) {
+                        if (StringUtils.trimToNull(iiifPath) != null) {
                             LOGGER.debug(MessageCodes.BUCKETEER_107, iiifPath);
                             invalidation.addPath(iiifPath);
                         }
@@ -146,45 +145,46 @@ public class ThumbnailVerticle extends AbstractBucketeerVerticle {
             } else {
                 url = new URL(aURL + aIiifPath);
             }
-        } catch (final MalformedURLException details) {
-            throw new I18nRuntimeException(Constants.MESSAGES, MessageCodes.BUCKETEER_106, aURL, aIiifPath);
-        }
 
-        // Set the request options for the caching request
-        request.setHost(url.getHost()).setURI(url.getPath());
+            // Set the request options for the caching request
+            request.setHost(url.getHost()).setURI(url.getPath());
 
-        // If we're sending to a HTTPS server, note that in our request options
-        if (url.getProtocol().equals(HTTPS_PROTOCOL)) {
-            request.setPort(DEFAULT_SECURE_PORT).setSsl(true);
-        } else {
-            request.setPort(DEFAULT_INSECURE_PORT);
-        }
-
-        aClient.get(request, response -> {
-            final int statusCode = response.statusCode();
-            final String statusMessage = response.statusMessage();
-
-            if (statusCode == HTTP.OK) {
-                final String cacheHeader = StringUtils.trimTo(response.getHeader("x-cache"), EMPTY);
-
-                if (cacheHeader.startsWith("Miss")) {
-                    aFuture.complete();
-                } else if (cacheHeader.startsWith("Hit")) {
-                    aFuture.complete(aIiifPath);
-                } else {
-                    final String failureDetails = EMPTY.equals(cacheHeader) ? "(empty)" : cacheHeader;
-                    final String failureMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_105, failureDetails);
-
-                    LOGGER.warn(failureMessage);
-                    aFuture.fail(failureMessage);
-                }
+            // If we're sending to a HTTPS server, note that in our request options
+            if (url.getProtocol().equals(HTTPS_PROTOCOL)) {
+                request.setPort(DEFAULT_SECURE_PORT).setSsl(true);
             } else {
-                aFuture.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
+                request.setPort(DEFAULT_INSECURE_PORT);
             }
-        }).exceptionHandler(details -> {
-            LOGGER.error(details, details.getMessage());
+
+            aClient.get(request, response -> {
+                final int statusCode = response.statusCode();
+                final String statusMessage = response.statusMessage();
+
+                if (statusCode == HTTP.OK) {
+                    final String cacheHeader = StringUtils.trimTo(response.getHeader("x-cache"), EMPTY);
+
+                    if (cacheHeader.startsWith("Miss")) {
+                        aFuture.complete();
+                    } else if (cacheHeader.startsWith("Hit")) {
+                        aFuture.complete(aIiifPath);
+                    } else {
+                        final String failureDetails = EMPTY.equals(cacheHeader) ? "(empty)" : cacheHeader;
+                        final String failureMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_105, failureDetails);
+
+                        LOGGER.warn(failureMessage);
+                        aFuture.fail(failureMessage);
+                    }
+                } else {
+                    aFuture.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
+                }
+            }).exceptionHandler(details -> {
+                LOGGER.error(details, details.getMessage());
+                aFuture.fail(details);
+            }).end();
+        } catch (final MalformedURLException details) {
+            LOGGER.error(details, LOGGER.getMessage(MessageCodes.BUCKETEER_106, aURL, aIiifPath));
             aFuture.fail(details);
-        }).end();
+        }
 
         return aFuture;
     }
@@ -192,62 +192,68 @@ public class ThumbnailVerticle extends AbstractBucketeerVerticle {
     @SuppressWarnings("deprecation")
     private void invalidateCache(final HttpClient aClient, final Message<JsonObject> aMessage,
             final JsonObject aConfig, final Future<String> aFuture, final InvalidationBatch aInvalidation) {
-        final String cdnDistId = aConfig.getString(Config.CDN_DISTRO_ID);
-        final String host = aConfig.getString(Config.IIIF_URL);
-        final RequestOptions request = new RequestOptions();
+        if (aInvalidation.size() > 0) {
+            final String cdnDistId = aConfig.getString(Config.CDN_DISTRO_ID);
+            final String host = aConfig.getString(Config.IIIF_URL);
+            final RequestOptions request = new RequestOptions();
 
-        // We must have a host and CloudFront distribution ID
-        Objects.requireNonNull(host);
-        Objects.requireNonNull(cdnDistId);
+            // We must have a host and CloudFront distribution ID
+            Objects.requireNonNull(host);
+            Objects.requireNonNull(cdnDistId);
 
-        try {
-            final String invalidation = new XmlMapper().writeValueAsString(aInvalidation);
-            final URL url = new URL(StringUtils.format(INVALIDATION_URL, cdnDistId));
+            try {
+                final String invalidation = new XmlMapper().writeValueAsString(aInvalidation);
+                final URL url = new URL(StringUtils.format(INVALIDATION_URL, cdnDistId));
 
-            LOGGER.debug(MessageCodes.BUCKETEER_103, invalidation);
+                LOGGER.debug(MessageCodes.BUCKETEER_103, invalidation);
 
-            request.setHost(url.getHost());
-            request.setURI(url.getPath());
+                request.setHost(url.getHost());
+                request.setURI(url.getPath());
 
-            if (url.getProtocol().equals(HTTPS_PROTOCOL)) {
-                request.setPort(DEFAULT_SECURE_PORT);
-                request.setSsl(true);
-            } else {
-                request.setPort(DEFAULT_INSECURE_PORT);
-            }
-
-            // Send the invalidation request to CloudFront, signing the request with a valid signature
-            authenticate(aClient.post(request, response -> {
-                final String statusMessage = response.statusMessage();
-                final int statusCode = response.statusCode();
-
-                // Check to see if our batch job has been created in the CloudFront jobs queue
-                if (statusCode == HTTP.CREATED) {
-                    response.bodyHandler(body -> {
-                        LOGGER.info(MessageCodes.BUCKETEER_104, body.toString());
-                    });
-
-                    aMessage.reply(Op.SUCCESS);
-                    aFuture.complete();
+                if (url.getProtocol().equals(HTTPS_PROTOCOL)) {
+                    request.setPort(DEFAULT_SECURE_PORT);
+                    request.setSsl(true);
                 } else {
-                    response.bodyHandler(body -> {
-                        LOGGER.error(MessageCodes.BUCKETEER_102, statusCode, statusMessage, body.toString());
-                    });
-
-                    aMessage.reply(Op.FAILURE);
-                    aFuture.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
+                    request.setPort(DEFAULT_INSECURE_PORT);
                 }
-            }), cdnDistId, invalidation).exceptionHandler(details -> {
-                // Catch any errors from our HTTP client
+
+                // Send the invalidation request to CloudFront, signing the request with a valid signature
+                authenticate(aClient.post(request, response -> {
+                    final String statusMessage = response.statusMessage();
+                    final int statusCode = response.statusCode();
+
+                    // Check to see if our batch job has been created in the CloudFront jobs queue
+                    if (statusCode == HTTP.CREATED) {
+                        response.bodyHandler(body -> {
+                            LOGGER.info(MessageCodes.BUCKETEER_104, body.toString());
+                        });
+
+                        aMessage.reply(Op.SUCCESS);
+                        aFuture.complete();
+                    } else {
+                        response.bodyHandler(body -> {
+                            LOGGER.error(MessageCodes.BUCKETEER_102, statusCode, statusMessage, body.toString());
+                        });
+
+                        aMessage.reply(Op.FAILURE);
+                        aFuture.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
+                    }
+                }), cdnDistId, invalidation).exceptionHandler(details -> {
+                    // Catch any errors from our HTTP client
+                    LOGGER.error(details, details.getMessage());
+                    aMessage.reply(Op.FAILURE);
+                    aFuture.fail(details);
+                }).end(invalidation);
+            } catch (final JsonProcessingException | MalformedURLException details) {
+                // Catch any errors from preparing our HTTP request
                 LOGGER.error(details, details.getMessage());
                 aMessage.reply(Op.FAILURE);
                 aFuture.fail(details);
-            }).end(invalidation);
-        } catch (final JsonProcessingException | MalformedURLException details) {
-            // Catch any errors from preparing our HTTP request
-            LOGGER.error(details, details.getMessage());
-            aMessage.reply(Op.FAILURE);
-            aFuture.fail(details);
+            }
+        } else {
+            // We have nothing to invalidate, so we're good as is
+            aMessage.reply(Op.SUCCESS);
+            aFuture.complete();
         }
     }
 
