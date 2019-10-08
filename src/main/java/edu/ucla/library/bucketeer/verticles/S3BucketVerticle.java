@@ -139,45 +139,55 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                         // If we get a successful upload response code, note this in our final results map
                         if (statusCode == HTTP.OK) {
-                            vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageIDSansExt, true);
-
                             LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
+
+                            vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageIDSansExt, true);
 
                             // Send the success result and decrement the S3 request counter
                             sendReply(aMessage, Op.SUCCESS);
                         } else {
+                            LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
+
+                            // Log the detailed reason we failed so we can track down the issue
                             response.bodyHandler(body -> {
-                                final String xmlMessage = body.getString(0, body.length());
+                                LOGGER.error(MessageCodes.BUCKETEER_000, body.getString(0, body.length()));
+                            });
 
-                                // Log the reason why we failed so we can track down the issue
-                                LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
-                                LOGGER.error(MessageCodes.BUCKETEER_000, xmlMessage);
-
-                                // Send the failure result and decrement the S3 request counter
+                            // Send the information that our PUT failed
+                            response.endHandler(end -> {
                                 sendReply(aMessage, Op.FAILURE);
                             });
                         }
 
                         // Client sent the file, so we want to close our reference to it
-                        asyncFile.close(closure -> {
-                            if (closure.failed()) {
-                                LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, filePath);
-                            }
-                        });
+                        closeUploadedFile(asyncFile, filePath);
                     });
                 } catch (final ConnectionPoolTooBusyException details) {
-                    asyncFile.close(closure -> {
-                        if (closure.failed()) {
-                            LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, filePath);
-                        }
-                    });
-
                     LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
                     sendReply(aMessage, Op.RETRY);
+                    closeUploadedFile(asyncFile, filePath);
+                } catch (final Exception details) {
+                    LOGGER.error(details, MessageCodes.BUCKETEER_130, imageID);
+                    sendReply(aMessage, Op.FAILURE);
+                    closeUploadedFile(asyncFile, filePath);
                 }
             } else {
                 LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, filePath));
                 sendReply(aMessage, Op.FAILURE);
+            }
+        });
+    }
+
+    /**
+     * Closes reference to the file that should have been uploaded.
+     *
+     * @param aAsyncFile An asynchronous file handle
+     * @param aFilePath The path to the file
+     */
+    private void closeUploadedFile(final AsyncFile aAsyncFile, final String aFilePath) {
+        aAsyncFile.close(closure -> {
+            if (closure.failed()) {
+                LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, aFilePath);
             }
         });
     }
