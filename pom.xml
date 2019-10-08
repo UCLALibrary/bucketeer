@@ -330,7 +330,6 @@
               <resources>
                 <resource>
                   <directory>${basedir}/src/main/webroot</directory>
-                  <filtering>true</filtering>
                 </resource>
               </resources>
             </configuration>

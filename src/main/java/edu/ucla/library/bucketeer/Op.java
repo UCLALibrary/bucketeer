@@ -14,6 +14,8 @@ public final class Op {
 
     public static final String GET_JOBS = "getJobs";
 
+    public static final String GET_CONFIG = "getConfig";
+
     public static final String GET_JOB_STATUSES = "getJobStatuses";
 
     public static final String DELETE_JOB = "deleteJob";

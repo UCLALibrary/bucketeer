@@ -64,18 +64,54 @@
           other values:</p>
         <dl>
           <dt>IIIF Server</dt>
-          <dd>${bucketeer.iiif.url}</dd>
+          <dd id="bucketeer-iiif-url">Unknown</dd>
           <dt>S3 Bucket</dt>
-          <dd>${bucketeer.s3.bucket}</dd>
+          <dd id="bucketeer-s3-bucket">Unknown</dd>
           <dt>S3 Bucket Region</dt>
-          <dd>${bucketeer.s3.region}</dd>
+          <dd id="bucketeer-s3-region">Unknown</dd>
           <dt>AWS Lambda S3 Bucket for TIFFs</dt>
-          <dd>${lambda.s3.bucket}</dd>
+          <dd id="lambda-s3-bucket">Unknown</dd>
           <dt>Local file system mount</dt>
-          <dd>${bucketeer.fs.mount}</dd>
+          <dd id="bucketeer-fs-mount">Unknown</dd>
           <dt>Thumbnail Size / Dimensions</dt>
-          <dd>${bucketeer.thumbnail.size}</dd>
+          <dd id="bucketeer-tn-size">Unknown</dd>
         </dl>
+        <script>
+          var xhttp = new XMLHttpRequest();
+
+          xhttp.onreadystatechange = function() {
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+              var json = JSON.parse(xhttp.responseText);
+
+              if (json["bucketeer-iiif-url"]) {
+                document.getElementById("bucketeer-iiif-url").textContent = json["bucketeer-iiif-url"];
+              }
+
+              if (json["bucketeer-s3-bucket"]) {
+                document.getElementById("bucketeer-s3-bucket").textContent = json["bucketeer-s3-bucket"];
+              }
+
+              if (json["bucketeer-s3-region"]) {
+                document.getElementById("bucketeer-s3-region").textContent = json["bucketeer-s3-region"];
+              }
+
+              if (json["lambda-s3-bucket"]) {
+                document.getElementById("lambda-s3-bucket").textContent = json["lambda-s3-bucket"];
+              }
+
+              if (json["bucketeer-fs-mount"]) {
+                document.getElementById("bucketeer-fs-mount").textContent = json["bucketeer-fs-mount"];
+              }
+
+              if (json["bucketeer-tn-size"]) {
+                document.getElementById("bucketeer-tn-size").textContent = json["bucketeer-tn-size"];
+              }
+            }
+          };
+
+          xhttp.open("GET", "/config", true);
+          xhttp.send();
+        </script>
       </div>
       <div class="col-sm-8">
         <h4>Learn more about Bucketeer</h4>

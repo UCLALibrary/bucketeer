@@ -34,6 +34,39 @@ paths:
               example: Hello
         '500':
           description: There was an internal server error
+  /config:
+    get:
+      summary: Get Viewable Config
+      description: A listing of all configuration options that are publicly viewable
+      operationId: getConfig
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bucketeer-iiif-url:
+                    type: string
+                    example: http://bucketeer.library.ucla.edu
+                  bucketeer-s3-region:
+                    type: string
+                    example: us-west-1
+                  bucketeer-s3-bucket:
+                    type: string
+                    example: bucketeer-bucket
+                  lambda-s3-bucket:
+                    type: string
+                    example: bucketeer-lambda-bucket
+                  bucketeer-fs-mount:
+                    type: string
+                    example: bucketeer-fs-mount
+                  bucketeer-tn-size:
+                    type: string
+                    example: '!200,200'
+        '500':
+          description: There was an internal server error
   /batch/jobs:
     get:
       summary: Get Jobs in Progress
