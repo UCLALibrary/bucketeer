@@ -12,10 +12,10 @@ jobs:
       jdk:
         - openjdk11
       install:
-        - mvn -s src/test/resources/settings.xml package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+        - mvn package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
         - >
-          mvn -s src/test/resources/settings.xml help:active-profiles verify \
+          mvn help:active-profiles verify \
             -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" \
             -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}" \
             -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}" \

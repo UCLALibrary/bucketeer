@@ -45,7 +45,7 @@ public class ImageUploadIT {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageUploadIT.class, Constants.MESSAGES);
 
-    private static final Integer PORT = Integer.parseInt(System.getProperty("http.port"));
+    private static final Integer PORT = Integer.parseInt(System.getProperty(Config.HTTP_PORT));
 
     private static final String DEFAULT_ACCESS_KEY = "YOUR_ACCESS_KEY";
 
@@ -131,7 +131,7 @@ public class ImageUploadIT {
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, STATUS_CHECK, response -> {
             // validate the response
             myStatusCode = response.statusCode();
-            aContext.assertEquals(200, myStatusCode);
+            aContext.assertEquals(HTTP.OK, myStatusCode);
             response.bodyHandler(body -> {
                 aContext.assertEquals(body.getString(0, body.length()), HELLO);
                 LOGGER.debug("Bucketeer service confirmed to be available.");
@@ -177,7 +177,7 @@ public class ImageUploadIT {
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, myImageLoadRequest, response -> {
             // validate the response
             myStatusCode = response.statusCode();
-            assertEquals(myStatusCode, 200);
+            assertEquals(myStatusCode, HTTP.OK);
             response.bodyHandler(body -> {
                 final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
                 assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), myUUID);
