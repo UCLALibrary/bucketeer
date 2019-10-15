@@ -137,6 +137,11 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                     myS3Client.put(s3Bucket, imageID, asyncFile, metadata, response -> {
                         final int statusCode = response.statusCode();
 
+                        response.exceptionHandler(exception -> {
+                            LOGGER.error(exception, exception.getMessage());
+                            sendReply(aMessage, Op.FAILURE);
+                        });
+
                         // If we get a successful upload response code, note this in our final results map
                         if (statusCode == HTTP.OK) {
                             LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
@@ -161,14 +166,13 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                         // Client sent the file, so we want to close our reference to it
                         closeUploadedFile(asyncFile, filePath);
+                    }, exception -> {
+                        LOGGER.error(exception, exception.getMessage());
+                        sendReply(aMessage, Op.FAILURE);
                     });
                 } catch (final ConnectionPoolTooBusyException details) {
                     LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
                     sendReply(aMessage, Op.RETRY);
-                    closeUploadedFile(asyncFile, filePath);
-                } catch (final Exception details) {
-                    LOGGER.error(details, MessageCodes.BUCKETEER_130, imageID);
-                    sendReply(aMessage, Op.FAILURE);
                     closeUploadedFile(asyncFile, filePath);
                 }
             } else {

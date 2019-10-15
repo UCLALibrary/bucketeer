@@ -42,27 +42,19 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             response.close();
         } else if (!vertx.fileSystem().existsBlocking(filePath)) {
             final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_129, filePath);
+
             response.setStatusCode(HTTP.BAD_REQUEST);
             response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
             response.close();
         } else {
             // On receiving a valid request, we put the request info in JSON and send it to the ImageWorkerVerticle
+            final JsonObject imageWorkJson = new JsonObject();
+            final DeliveryOptions options = new DeliveryOptions();
 
-            try {
-                final JsonObject imageWorkJson = new JsonObject();
-                final DeliveryOptions options = new DeliveryOptions();
+            imageWorkJson.put(Constants.IMAGE_ID, imageId);
+            imageWorkJson.put(Constants.FILE_PATH, filePath);
 
-                imageWorkJson.put(Constants.IMAGE_ID, imageId);
-                imageWorkJson.put(Constants.FILE_PATH, filePath);
-
-                eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
-            } catch (final Exception details) {
-                LOGGER.error(details, MessageCodes.BUCKETEER_023, details.getMessage());
-                final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_023, details.getMessage());
-                response.setStatusCode(HTTP.BAD_REQUEST);
-                response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
-                response.close();
-            }
+            eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
 
             // We also want to acknowledge that we've received the request
             final JsonObject responseJson = new JsonObject();

@@ -3,14 +3,12 @@ package edu.ucla.library.bucketeer;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-import info.freelibrary.util.Logger;
-import info.freelibrary.util.LoggerFactory;
 
 import io.vertx.core.json.JsonObject;
 
@@ -25,9 +23,6 @@ public class Job implements Serializable {
      */
     private static final long serialVersionUID = -2430620678602342169L;
 
-    @JsonIgnore
-    private static final Logger LOGGER = LoggerFactory.getLogger(Job.class, Constants.MESSAGES);
-
     private String mySlackHandle;
 
     private List<Item> myItems;
@@ -38,12 +33,13 @@ public class Job implements Serializable {
 
     private String[] myMetadataHeader;
 
-    private boolean isSubsequentRun;
+    private boolean myRunIsSubsequent;
 
     /**
      * Creates a new batch job.
      */
     public Job() {
+        // Used for deserialization
     }
 
     /**
@@ -74,16 +70,16 @@ public class Job implements Serializable {
         int remaining = 0;
 
         // If this is the first run, only process unprocessed items
-        if (!isSubsequentRun) {
-            for (int index = 0; index < myItems.size(); index++) {
-                if (WorkflowState.EMPTY.equals(myItems.get(index).getWorkflowState())) {
+        if (!isSubsequentRun()) {
+            for (final Item item : myItems) {
+                if (WorkflowState.EMPTY.equals(item.getWorkflowState())) {
                     remaining += 1;
                 }
             }
         } else {
             // If this is a subsequent run, only process failures
-            for (int index = 0; index < myItems.size(); index++) {
-                if (WorkflowState.FAILED.equals(myItems.get(index).getWorkflowState())) {
+            for (final Item item : myItems) {
+                if (WorkflowState.FAILED.equals(item.getWorkflowState())) {
                     remaining += 1;
                 }
             }
@@ -98,9 +94,7 @@ public class Job implements Serializable {
     @JsonIgnore
     public void markIngestedItems() {
         if (myItems != null) {
-            for (int index = 0; index < myItems.size(); index++) {
-                final Item item = myItems.get(index);
-
+            for (final Item item : myItems) {
                 if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
                     item.setWorkflowState(WorkflowState.INGESTED);
                 }
@@ -114,10 +108,11 @@ public class Job implements Serializable {
      *
      * @param aBool True if subsequent run; else, false
      */
-    public Job setIsSubsequentRun(final boolean aBool) {
-        isSubsequentRun = aBool;
+    @JsonProperty("isSubsequentRun")
+    public Job isSubsequentRun(final boolean aBool) {
+        myRunIsSubsequent = aBool;
 
-        if (isSubsequentRun) {
+        if (myRunIsSubsequent) {
             markIngestedItems();
         }
 
@@ -129,8 +124,9 @@ public class Job implements Serializable {
      *
      * @return True if subsequent run; else, false
      */
-    public boolean getIsSubsequentRun() {
-        return isSubsequentRun;
+    @JsonProperty("isSubsequentRun")
+    public boolean isSubsequentRun() {
+        return myRunIsSubsequent;
     }
 
     /**
@@ -200,8 +196,8 @@ public class Job implements Serializable {
      * @param aMetadataHeader The job's metadata header
      * @return The job
      */
-    public Job setMetadataHeader(final String[] aMetadataHeader) {
-        myMetadataHeader = aMetadataHeader;
+    public Job setMetadataHeader(final String... aMetadataHeader) {
+        myMetadataHeader = aMetadataHeader.clone();
         return this;
     }
 
@@ -211,7 +207,7 @@ public class Job implements Serializable {
      * @return The job's metadata header
      */
     public String[] getMetadataHeader() {
-        return myMetadataHeader;
+        return myMetadataHeader.clone();
     }
 
     /**
@@ -270,7 +266,7 @@ public class Job implements Serializable {
 
         @Override
         public String toString() {
-            return name().equals(WorkflowState.EMPTY.name()) ? "" : name().toLowerCase();
+            return name().equals(WorkflowState.EMPTY.name()) ? "" : name().toLowerCase(Locale.US);
         }
     }
 

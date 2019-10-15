@@ -55,9 +55,9 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final String THREAD_NAME = "-thread";
 
-    private static final int DEFAULT_S3_UPLOADER_INSTANCES = 1;
+    private static final int S3_UPLOADER_INSTANCES = 1;
 
-    private static final int DEFAULT_S3_UPLOADER_THREADS = getAvailableProcessors();
+    private static final int S3_UPLOADER_THREADS = getAvailableProcessors();
 
     private static final String EMPTY = "";
 
@@ -189,8 +189,8 @@ public class MainVerticle extends AbstractVerticle {
      */
     @SuppressWarnings("rawtypes")
     private void deployVerticles(final JsonObject aConfig, final Handler<AsyncResult<Void>> aHandler) {
-        final int uploaderInstances = aConfig.getInteger(Config.S3_UPLOADER_INSTANCES, DEFAULT_S3_UPLOADER_INSTANCES);
-        final int uploaderThreads = aConfig.getInteger(Config.S3_UPLOADER_THREADS, DEFAULT_S3_UPLOADER_THREADS);
+        final int uploaderInstances = aConfig.getInteger(Config.S3_UPLOADER_INSTANCES, S3_UPLOADER_INSTANCES);
+        final int uploaderThreads = aConfig.getInteger(Config.S3_UPLOADER_THREADS, S3_UPLOADER_THREADS);
         final DeploymentOptions uploaderOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions thumbnailOpts = new DeploymentOptions();
@@ -215,7 +215,7 @@ public class MainVerticle extends AbstractVerticle {
 
         // If we've set threads to <= 0, we want to use whatever cores are available on the system
         if (uploaderThreads <= 0) {
-            uploaderOpts.setWorkerPoolSize(DEFAULT_S3_UPLOADER_THREADS);
+            uploaderOpts.setWorkerPoolSize(S3_UPLOADER_THREADS);
         } else {
             uploaderOpts.setWorkerPoolSize(uploaderThreads);
         }

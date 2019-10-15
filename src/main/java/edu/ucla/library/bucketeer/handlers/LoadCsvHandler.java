@@ -34,7 +34,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
-import io.vertx.core.shareddata.Counter;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
@@ -91,6 +90,11 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         myRequeueDelay = myConfig.getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
     }
 
+    /**
+     * Handles the CSV upload request.
+     *
+     * @param aContext A routing context
+     */
     @Override
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
@@ -108,7 +112,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             response.setStatusMessage(errorMessage);
             response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
             response.end(StringUtils.format(myExceptionPage, errorMessage + extendedErrorMessage));
-        } else if (csvUploads.size() == 0) {
+        } else if (csvUploads.isEmpty()) {
             final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_049);
             final String extendedErrorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_071);
 
@@ -135,7 +139,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath));
 
                 // Set the Slack handle and whether the job is a subsequent or initial run
-                job.setSlackHandle(cleanSlackHandle).setIsSubsequentRun(Boolean.parseBoolean(runFailures));
+                job.setSlackHandle(cleanSlackHandle).isSubsequentRun(Boolean.parseBoolean(runFailures));
 
                 initiateJob(job, response);
             } catch (final FileNotFoundException details) {
@@ -170,15 +174,15 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         final SharedData sharedData = myVertx.sharedData();
         final String jobName = aJob.getName();
 
-        // Get our s3/lambda job queue and register the CSV file we've just received (and its contents)
+        // Get our job queue
         sharedData.<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
                 final AsyncMap<String, Job> map = getMap.result();
 
-                // Check for the pre-existence of the file name in the map (meaning a job is already running)
+                // Check for the pre-existence of the job name in the map (meaning a job is already running)
                 map.keys(keyCheck -> {
                     if (keyCheck.succeeded()) {
-                        // If CSV file is already in the queue, let the user know to check Slack for results
+                        // If job name is already in the queue, let the user know to check Slack for results
                         if (keyCheck.result().contains(jobName)) {
                             final String duplicate = LOGGER.getMessage(MessageCodes.BUCKETEER_060, jobName);
 
@@ -189,7 +193,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                             aResponse.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
                             aResponse.end(StringUtils.format(myExceptionPage, duplicate));
                         } else {
-                            registerJob(aJob, map, aResponse);
+                            queueJob(aJob, map, aResponse);
                         }
                     } else {
                         returnError(aResponse, MessageCodes.BUCKETEER_062, jobName);
@@ -201,9 +205,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         });
     }
 
-    private void registerJob(final Job aJob, final AsyncMap<String, Job> aAsyncMap,
-            final HttpServerResponse aResponse) {
-        final SharedData sharedData = myVertx.sharedData();
+    private void queueJob(final Job aJob, final AsyncMap<String, Job> aAsyncMap, final HttpServerResponse aResponse) {
         final String jobName = aJob.getName();
 
         // Put our metadata into the jobs queue map using the CSV file name as the key
@@ -211,36 +213,21 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             if (put.succeeded()) {
                 final String statusMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_064);
 
-                // Set a shared counter to the number of records in the metadata list
-                sharedData.getCounter(jobName, getCounter -> {
-                    if (getCounter.succeeded()) {
-                        final Counter counter = getCounter.result();
+                LOGGER.info(statusMessage);
 
-                        counter.compareAndSet(0, aJob.remaining(), compareAndSet -> {
-                            if (compareAndSet.succeeded()) {
-                                LOGGER.info(statusMessage);
+                // Don't fail the submission on bad metadata; we'll note it in output CSV instead
+                aResponse.setStatusCode(HTTP.OK);
+                aResponse.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
+                aResponse.end(StringUtils.format(mySuccessPage, statusMessage));
 
-                                // Don't fail the submission on bad metadata; we'll note it in output CSV instead
-                                aResponse.setStatusCode(HTTP.OK);
-                                aResponse.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
-                                aResponse.end(StringUtils.format(mySuccessPage, statusMessage));
-
-                                updateJobsQueue(aJob, counter);
-                            } else {
-                                returnError(aResponse, MessageCodes.BUCKETEER_067, jobName);
-                            }
-                        });
-                    } else {
-                        returnError(aResponse, MessageCodes.BUCKETEER_066, jobName);
-                    }
-                });
+                startJob(aJob);
             } else {
                 returnError(aResponse, MessageCodes.BUCKETEER_068, jobName);
             }
         });
     }
 
-    private void updateJobsQueue(final Job aJob, final Counter aCounter) {
+    private void startJob(final Job aJob) {
         final String s3Bucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
         final Iterator<Item> iterator = aJob.getItems().iterator();
 
@@ -249,8 +236,8 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             final File imageFile = item.getFile();
             final WorkflowState state = item.getWorkflowState();
             final JsonObject s3UploadMessage = new JsonObject();
-            final boolean isOkayInitialRun = !aJob.getIsSubsequentRun() && state.equals(Job.WorkflowState.EMPTY);
-            final boolean isOkaySubsequentRun = aJob.getIsSubsequentRun() && state.equals(Job.WorkflowState.FAILED);
+            final boolean isOkayInitialRun = !aJob.isSubsequentRun() && state.equals(Job.WorkflowState.EMPTY);
+            final boolean isOkaySubsequentRun = aJob.isSubsequentRun() && state.equals(Job.WorkflowState.FAILED);
 
             // For normal runs only process empty states and for failure runs only processes failures
             if (item.hasFile() && (isOkayInitialRun || isOkaySubsequentRun)) {
@@ -263,7 +250,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             } else {
                 final String filePath = imageFile == null ? "null" : imageFile.getAbsolutePath();
 
-                LOGGER.debug(MessageCodes.BUCKETEER_054, item.getID(), filePath, state);
+                LOGGER.debug(MessageCodes.BUCKETEER_054, item.getID(), aJob.getName(), filePath, state);
             }
         }
     }

@@ -1,8 +1,6 @@
 
 package edu.ucla.library.bucketeer.converters;
 
-import static edu.ucla.library.bucketeer.Constants.MESSAGES;
-
 import java.io.IOException;
 
 import info.freelibrary.util.I18nRuntimeException;
@@ -16,9 +14,10 @@ import edu.ucla.library.bucketeer.MessageCodes;
  * A converter factory returns the type of JP2 converter that the system supports. If KAKADU_HOME is defined, it will
  * use Kakadu; else it will use OpenJPEG.
  */
+@SuppressWarnings("PMD.NonThreadSafeSingleton") // FIXME: Letting it pass for now, but fix this in the future
 public final class ConverterFactory {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConverterFactory.class, MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConverterFactory.class, Constants.MESSAGES);
 
     private static final String KDU_VERSION_EXEC = "kdu_compress -v";
 
@@ -27,6 +26,7 @@ public final class ConverterFactory {
     private static boolean hasKakadu;
 
     private ConverterFactory() {
+        // Used internally in the class
     }
 
     /**

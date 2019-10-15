@@ -46,7 +46,7 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                 message.put(Constants.IMAGE_ID, jpx.getName());
 
                 sendMessage(message, S3BucketVerticle.class.getName(), Integer.MAX_VALUE);
-            } catch (final Exception details) {
+            } catch (final InterruptedException | IOException details) {
                 final String message = details.getMessage() != null ? details.getMessage() : LOGGER.getMessage(
                         MessageCodes.BUCKETEER_030);
 

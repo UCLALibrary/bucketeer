@@ -15,6 +15,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -132,7 +133,7 @@ public class AwsV4Signature {
      */
     private boolean isInvalid(final String aDateTime) {
         try {
-            final DateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT);
+            final DateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT, Locale.US);
 
             format.setLenient(false);
             format.parse(aDateTime);
@@ -152,8 +153,8 @@ public class AwsV4Signature {
     private String hashToHex(final byte[] aEncodedHash) {
         final StringBuilder hexString = new StringBuilder();
 
-        for (int index = 0; index < aEncodedHash.length; index++) {
-            final String hex = Integer.toHexString(0xff & aEncodedHash[index]);
+        for (final byte singleByte : aEncodedHash) {
+            final String hex = Integer.toHexString(0xff & singleByte);
 
             if (hex.length() == 1) {
                 hexString.append('0');

@@ -12,10 +12,10 @@ jobs:
       jdk:
         - openjdk11
       install:
-        - mvn install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+        - mvn -s src/test/resources/settings.xml install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
         - >
-          mvn verify \
+          mvn -s src/test/resources/settings.xml help:active-profiles verify \
             -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" \
             -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}" \
             -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}" \
@@ -25,7 +25,8 @@ jobs:
             -Dbucketeer.slack.test_user_handle="${SLACK_TEST_USER_HANDLE}" \
             -Dbucketeer.slack.oauth_token="${SLACK_OAUTH_TOKEN}" \
             -Dbucketeer.slack.channel_id="${SLACK_CHANNEL_ID}" \
-            -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}"
+            -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}" \
+            -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error
 
     - stage: Trigger Jenkins for Containerization
       name: Trigger Jenkins for Containerization
