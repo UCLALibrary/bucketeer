@@ -12,7 +12,7 @@ jobs:
       jdk:
         - openjdk11
       install:
-        - mvn -s src/test/resources/settings.xml install -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+        - mvn -s src/test/resources/settings.xml package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
         - >
           mvn -s src/test/resources/settings.xml help:active-profiles verify \
