@@ -104,6 +104,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      * @param aMessage The message containing the S3 upload request
      * @param aConfig The verticle's configuration
      */
+    @SuppressWarnings("Indentation") // Checkstyle's indentation check doesn't work with multiple lambdas
     private void upload(final Message<JsonObject> aMessage, final JsonObject aConfig) {
         final JsonObject storageRequest = aMessage.body();
 
