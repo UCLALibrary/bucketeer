@@ -47,7 +47,7 @@
 
   <properties>
     <vertx.version>3.7.1</vertx.version>
-    <vertx.super.s3.version>1.1.0</vertx.super.s3.version>
+    <vertx.super.s3.version>1.2.0</vertx.super.s3.version>
     <slf4j.ext.version>1.7.26</slf4j.ext.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
@@ -68,6 +68,7 @@
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <codacy.plugin.version>1.0.2</codacy.plugin.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
+    <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
 
     <!-- Whether auto-reloading should be turned on for the live test profile -->
     <live.test.reloads>false</live.test.reloads>
@@ -405,8 +406,6 @@
           <logViolationsToConsole>true</logViolationsToConsole>
           <violationSeverity>warning</violationSeverity>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
-          <!-- Override rules until upstream project is updated -->
-          <configLocation>${basedir}/src/main/resources/checkstyle.xml</configLocation>
         </configuration>
       </plugin>
 
@@ -495,6 +494,7 @@
             <http.port>${http.port}</http.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
           </systemPropertyVariables>
+          <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
         <executions>
           <execution>
@@ -504,12 +504,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-
-      <!-- Jacoco does code coverage for the test suite -->
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
 
       <!-- The Vert.x plug-in enables running the application from within Maven for development -->
@@ -936,7 +930,8 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>3.6.4</version>
+    <version>3.7.6</version>
   </parent>
 
 </project>
+

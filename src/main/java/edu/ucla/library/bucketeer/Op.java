@@ -4,6 +4,7 @@ package edu.ucla.library.bucketeer;
 /**
  * A constants class used in the handling of operations.
  */
+@SuppressWarnings("PMD.ShortClassName")
 public final class Op {
 
     //

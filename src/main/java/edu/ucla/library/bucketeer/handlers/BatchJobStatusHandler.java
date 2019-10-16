@@ -26,14 +26,13 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
-import io.vertx.core.shareddata.Counter;
 import io.vertx.ext.web.RoutingContext;
 
 public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
 
-    private static final String SLASH = "/";
+    private static final char SLASH = '/';
 
     private final JsonObject myConfig;
 
@@ -119,15 +118,15 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 if (!success) {
                     item.setWorkflowState(WorkflowState.FAILED);
                 } else if (item.hasFile()) {
-                    String iiif = myConfig.getString(Config.IIIF_URL);
+                    final StringBuilder iiif = new StringBuilder(myConfig.getString(Config.IIIF_URL, ""));
 
                     // Just confirm the config value ends with a slash
-                    if (!iiif.endsWith(SLASH)) {
-                        iiif += SLASH;
+                    if (iiif.charAt(iiif.length() - 1) != SLASH) {
+                        iiif.append(SLASH);
                     }
 
                     item.setWorkflowState(WorkflowState.SUCCEEDED);
-                    item.setAccessURL(iiif + URLEncoder.encode(id, StandardCharsets.UTF_8));
+                    item.setAccessURL(iiif.append(URLEncoder.encode(id, StandardCharsets.UTF_8)).toString());
                 }
 
                 found = true;
@@ -144,67 +143,20 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
             LOGGER.warn(MessageCodes.BUCKETEER_077, jobName, imageId);
         }
 
-        // Have we finished processing all the images in this job?
         if (finished) {
-            decrementJobsCounter(aJobMap, jobName, response, true);
+            // If finished, remove the batch from our jobs queue so that it can be submitted again if desired
+            aJobMap.remove(jobName, removeJob -> {
+                if (removeJob.succeeded()) {
+                    finalizeJob(removeJob.result());
+                    returnSuccess(response);
+                } else {
+                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, jobName, response);
+                }
+            });
         } else {
-            decrementJobsCounter(aJobMap, jobName, response, false);
+            // If not finished, return an acknowledgement to the image processor
+            returnSuccess(response);
         }
-    }
-
-    /**
-     * Decrement the job counter and do a final check if it's the last job in a batch run. We keep track of successes
-     * and failures in the job itself but the counter is an external check that we use to ensure consistency.
-     *
-     * @param aSharedData Data shared across different handler instances
-     * @param aJobName The name of the batch job that's currently running
-     * @param aResponse An HTTP response
-     * @param aCompletedRun Whether or not the batch job has completed
-     */
-    private void decrementJobsCounter(final AsyncMap<String, Job> aJobMap, final String aJobName,
-            final HttpServerResponse aResponse, final boolean aCompletedRun) {
-        final String slackErrorChannelID = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
-
-        myVertx.sharedData().getCounter(aJobName, getCounter -> {
-            if (getCounter.succeeded()) {
-                final Counter counter = getCounter.result();
-
-                counter.decrementAndGet(decrement -> {
-                    if (decrement.succeeded()) {
-                        if (aCompletedRun) {
-                            // Double check our belief that this is the last job in the batch run
-                            if (!decrement.result().equals(0L)) {
-                                final String warning = LOGGER.getMessage(MessageCodes.BUCKETEER_079, aJobName);
-                                final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, warning);
-
-                                LOGGER.warn(warning);
-
-                                // And post to Slack about it so we can investigate
-                                sendSlackMessage(slackErrorChannelID, slackMessage);
-                            } else {
-                                LOGGER.info(MessageCodes.BUCKETEER_081, aJobName);
-                            }
-
-                            // Remove the batch from our jobs queue so that it can be submitted again if desired
-                            aJobMap.remove(aJobName, removeJob -> {
-                                if (removeJob.succeeded()) {
-                                    finalizeJob(removeJob.result());
-                                    returnSuccess(aResponse);
-                                } else {
-                                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, aResponse);
-                                }
-                            });
-                        } else {
-                            returnSuccess(aResponse);
-                        }
-                    } else {
-                        returnError(decrement.cause(), MessageCodes.BUCKETEER_080, aJobName, aResponse);
-                    }
-                });
-            } else {
-                returnError(getCounter.cause(), MessageCodes.BUCKETEER_066, aJobName, aResponse);
-            }
-        });
     }
 
     /**

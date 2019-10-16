@@ -21,7 +21,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 public class PrefixDeserializer extends StdDeserializer<IFilePathPrefix> {
 
     /**
-     * The <code>serialVersionUID<code> for <code>PrefixDeserializer</code>
+     * The <code>serialVersionUID</code> for PrefixDeserializer.
      */
     private static final long serialVersionUID = 6823136469689445963L;
 

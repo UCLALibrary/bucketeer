@@ -99,7 +99,7 @@ public class JobTest {
      */
     @Test
     public final void testSetIsSunsequentRun() {
-        assertTrue(new Job(TEST_JOB_NAME).setIsSubsequentRun(true).getIsSubsequentRun());
+        assertTrue(new Job(TEST_JOB_NAME).isSubsequentRun(true).isSubsequentRun());
     }
 
     /**

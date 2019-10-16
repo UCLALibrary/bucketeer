@@ -26,6 +26,7 @@ import edu.ucla.library.bucketeer.Metadata;
 /**
  * A creator of jobs.
  */
+@SuppressWarnings("PMD.NonThreadSafeSingleton") // #FIXME but ignoring for now since it's not related to this ticket
 public final class JobFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobFactory.class, Constants.MESSAGES);
@@ -68,6 +69,7 @@ public final class JobFactory {
      * @return A new batch job
      * @throws IOException If there is trouble reading the CSV file
      */
+    @SuppressWarnings({ "PMD.ExcessiveMethodLength", "PMD.NcssCount" }) // FIXME: possible area for improvement
     public Job createJob(final String aName, final File aCsvFile) throws IOException, CsvParsingException {
         final List<CsvParsingException> exceptions = new ArrayList<>();
         final Reader reader = new BufferedFileReader(aCsvFile);
@@ -155,17 +157,15 @@ public final class JobFactory {
                         } else if (accessCopyIndex == columnIndex) {
                             // If item already has an access URL, preserve it
                             item.setAccessURL(columns[columnIndex]);
-                        } else if (objectTypeIndex == columnIndex) {
-                            // Note if we're not expecting this column to have a source file
-                            if (Metadata.COLLECTION.equals(columns[columnIndex])) {
-                                item.hasFile(false);
+                        } else if (objectTypeIndex == columnIndex && Metadata.COLLECTION.equals(
+                                columns[columnIndex])) {
+                            item.hasFile(false);
 
-                                // If we don't have a source file to process, we can mark this done
-                                if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
-                                    item.setWorkflowState(WorkflowState.INGESTED);
-                                } else {
-                                    item.setWorkflowState(WorkflowState.SUCCEEDED);
-                                }
+                            // If we don't have a source file to process, we can mark this done
+                            if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
+                                item.setWorkflowState(WorkflowState.INGESTED);
+                            } else {
+                                item.setWorkflowState(WorkflowState.SUCCEEDED);
                             }
                         }
                     }

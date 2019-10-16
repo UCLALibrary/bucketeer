@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -49,6 +50,7 @@ public class Item implements Serializable {
      * Creates new item.
      */
     public Item() {
+        // Used in deserialization
     }
 
     /**
@@ -93,7 +95,7 @@ public class Item implements Serializable {
     @JsonIgnore
     public WorkflowState getWorkflowState() throws IllegalArgumentException {
         return StringUtils.trimToNull(myWorkflowState) == null ? WorkflowState.EMPTY : WorkflowState.valueOf(
-                myWorkflowState.toUpperCase());
+                myWorkflowState.toUpperCase(Locale.US));
     }
 
     /**
@@ -160,7 +162,7 @@ public class Item implements Serializable {
      */
     @JsonIgnore
     public boolean fileExists() {
-        return myFilePath == null ? false : getFile().exists();
+        return myFilePath != null && getFile().exists();
     }
 
     /**

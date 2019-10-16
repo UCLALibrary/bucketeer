@@ -62,7 +62,7 @@
   <entry key="BUCKETEER-051">Slack user '{}' uploaded CSV file '{}' to: {}</entry>
   <entry key="BUCKETEER-052">CSV contains an entry that is not a work or collection: {}</entry>
   <entry key="BUCKETEER-053">Trying to set a file on an item that is set to not have a file: {}</entry>
-  <entry key="BUCKETEER-054">Skipping processing for: {} - {} [{}]</entry>
+  <entry key="BUCKETEER-054">Skipping processing for: {} [{}] - {} [{}]</entry>
   <entry key="BUCKETEER-055">Invalid CSV line: {}</entry>
   <entry key="BUCKETEER-056">Failed to create test file needed for testing: {}</entry>
   <entry key="BUCKETEER-057">Unable to delete test file used in testing: {}</entry>

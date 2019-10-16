@@ -59,8 +59,7 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
                                     try {
                                         final List<Item> items = job.getItems();
 
-                                        for (int index = 0; index < items.size(); index++) {
-                                            final Item item = items.get(index);
+                                        for (final Item item : items) {
                                             final JsonObject image = new JsonObject();
                                             final String filePath;
 

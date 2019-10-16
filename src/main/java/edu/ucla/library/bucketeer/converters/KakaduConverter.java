@@ -21,6 +21,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 public class KakaduConverter extends AbstractConverter implements Converter {
 
     public static final String KAKADU_HOME = "KAKADU_HOME";
+
     public static final String RATE = "-rate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverter.class, Constants.MESSAGES);
@@ -40,6 +41,7 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     // private static final List<String> ALPHA_OPTION = Arrays.asList("-jp2_alpha");
 
     KakaduConverter() {
+        // Constructed by factory method
     }
 
     @Override

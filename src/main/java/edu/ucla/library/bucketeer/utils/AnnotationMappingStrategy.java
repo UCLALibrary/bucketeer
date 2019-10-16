@@ -3,7 +3,6 @@ package edu.ucla.library.bucketeer.utils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,7 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
 
         // We need to run generateHeader() but after we do we can just use our own headers
         if (myHeader != null && myHeader.length > 0) {
-            return myHeader;
+            return myHeader.clone();
         } else {
             for (int index = 0; index < result.length; index++) {
                 result[index] = getColumnName(index);
@@ -80,8 +79,8 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
      *
      * @param aHeader
      */
-    public void setHeader(final String[] aHeader) {
-        myHeader = aHeader;
+    public void setHeader(final String... aHeader) {
+        myHeader = aHeader.clone();
     }
 
     /**
@@ -90,6 +89,7 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
      * @param aBean A Java Bean
      */
     @Override
+    @SuppressWarnings("PMD.PreserveStackTrace")
     public String[] transmuteBean(final T aBean) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
         final List<String> values = new ArrayList<>();
         final String[] headers = generateHeader(aBean);
@@ -118,12 +118,6 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
         }
 
         // Return the CSV row values
-        return values.toArray(new String[values.size()]);
+        return values.toArray(new String[] {});
     }
-
-    @Override
-    public void setColumnOrderOnWrite(final Comparator<String> aComparator) {
-        super.setColumnOrderOnWrite(aComparator);
-    }
-
 }
