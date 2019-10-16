@@ -26,7 +26,7 @@ import edu.ucla.library.bucketeer.Metadata;
 /**
  * A creator of jobs.
  */
-@SuppressWarnings("PMD.NonThreadSafeSingleton") // #FIXME but ignoring for now since
+@SuppressWarnings("PMD.NonThreadSafeSingleton") // #FIXME but ignoring for now since it's not related to this ticket
 public final class JobFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobFactory.class, Constants.MESSAGES);
