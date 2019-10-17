@@ -71,7 +71,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                 final JsonObject jsonConfig = config.result();
 
                 mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE).replace(Constants.AT,
-                        Constants.EMPTY_STRING);
+                        Constants.EMPTY);
                 mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
                 mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
 
@@ -83,6 +83,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                         LOGGER.error(details, message);
                         aContext.fail(message);
                     } else {
+                        LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
                         asyncTask.complete();
                     }
                 });
@@ -129,7 +130,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
         message.put(Constants.SLACK_MESSAGE_TEXT, errorMessage);
         message.put(Config.SLACK_CHANNEL_ID, mySlackErrorChannelID);
 
-        myVertx.eventBus().send(VERTICLE_NAME, message, send -> {
+        myVertx.eventBus().request(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
                 final Throwable details = send.cause();
 
@@ -163,9 +164,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
         message.put(Constants.JOB_NAME, TEST_JOB);
         message.put(Constants.BATCH_METADATA, job.toJSON());
 
-        System.out.println(job.toJSON().encodePrettily());
-
-        vertx.eventBus().send(VERTICLE_NAME, message, send -> {
+        vertx.eventBus().request(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
                 final Throwable details = send.cause();
 

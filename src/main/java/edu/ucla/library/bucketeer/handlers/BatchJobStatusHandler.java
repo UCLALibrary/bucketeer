@@ -1,10 +1,13 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
+import static edu.ucla.library.bucketeer.Constants.EMPTY;
+
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import info.freelibrary.util.Logger;
@@ -18,21 +21,23 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
-import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
+import io.vertx.core.shareddata.Lock;
+import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 
 public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
-
-    private static final char SLASH = '/';
 
     private final JsonObject myConfig;
 
@@ -52,12 +57,16 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
         final String jobName = request.getParam(Constants.JOB_NAME);
+        final SharedData sharedData;
 
         if (myVertx == null) {
             myVertx = aContext.vertx();
         }
 
-        myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
+        // Get the shared data store, where we keep our in-process jobs
+        sharedData = myVertx.sharedData();
+
+        sharedData.<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
                 final AsyncMap<String, Job> map = getMap.result();
 
@@ -66,15 +75,15 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                         final Set<String> jobs = keyCheck.result();
 
                         if (jobs.contains(jobName)) {
-                            map.get(jobName, getJob -> {
-                                if (getJob.succeeded()) {
-                                    checkJobStatus(map, getJob.result(), aContext);
+                            getLock(sharedData, getLock -> {
+                                if (getLock.succeeded()) {
+                                    setJobStatus(getLock.result(), map, aContext);
                                 } else {
-                                    returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
+                                    returnError(getLock.cause(), MessageCodes.BUCKETEER_132, jobName, response);
                                 }
                             });
                         } else {
-                            returnError(MessageCodes.BUCKETEER_075, jobName, response);
+                            returnError(MessageCodes.BUCKETEER_075, jobName, response); // here
                         }
                     } else {
                         returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response);
@@ -96,127 +105,104 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         return LOGGER;
     }
 
-    private void checkJobStatus(final AsyncMap<String, Job> aJobMap, final Job aJob, final RoutingContext aContext) {
+    /**
+     * Gets a lock for use with updates.
+     *
+     * @param aPromise A promise for the work being done
+     * @param aHandler A lock handler
+     */
+    private void getLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
+        final Promise<Lock> promise = Promise.<Lock>promise();
+
+        promise.future().setHandler(aHandler);
+
+        aSharedData.getLocalLockWithTimeout(Constants.JOB_LOCK, Constants.JOB_LOCK_TIMEOUT, getLock -> {
+            if (getLock.succeeded()) {
+                promise.complete(getLock.result());
+            } else {
+                promise.fail(getLock.cause());
+            }
+        });
+    }
+
+    /**
+     * Sets the status of the submitted job and sends to the job finalizer if the job is done.
+     *
+     * @param aLock A lock
+     * @param aJobsMap The jobs map
+     * @param aContext A routing context
+     */
+    private void setJobStatus(final Lock aLock, final AsyncMap<String, Job> aJobsMap, final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-        final Iterator<Item> iterator = aJob.getItems().iterator();
 
-        boolean finished = true;
-        boolean found = false;
+        aJobsMap.get(jobName, getJob -> {
+            if (getJob.succeeded()) {
+                final Job job = getJob.result();
+                final Iterator<Item> iterator = job.getItems().iterator();
 
-        while (iterator.hasNext()) {
-            final Item item = iterator.next();
-            final String id = item.getID();
+                boolean finished = true;
+                boolean found = false;
 
-            // Check to see if this is the item we're getting a status report for
-            if (imageId.equals(id)) {
-                LOGGER.debug(MessageCodes.BUCKETEER_115, id, success);
+                while (iterator.hasNext()) {
+                    final Item item = iterator.next();
+                    final String id = item.getID();
 
-                if (!success) {
-                    item.setWorkflowState(WorkflowState.FAILED);
-                } else if (item.hasFile()) {
-                    final StringBuilder iiif = new StringBuilder(myConfig.getString(Config.IIIF_URL, ""));
+                    // Check to see if this is the item we're getting a status report for
+                    if (imageId.equals(id)) {
+                        LOGGER.debug(MessageCodes.BUCKETEER_115, id, success);
 
-                    // Just confirm the config value ends with a slash
-                    if (iiif.charAt(iiif.length() - 1) != SLASH) {
-                        iiif.append(SLASH);
+                        if (!success) {
+                            item.setWorkflowState(WorkflowState.FAILED);
+                        } else if (item.hasFile()) {
+                            final StringBuilder iiif = new StringBuilder(myConfig.getString(Config.IIIF_URL, EMPTY));
+
+                            // Just confirm the config value ends with a slash
+                            if (iiif.charAt(iiif.length() - 1) != Constants.SLASH) {
+                                iiif.append(Constants.SLASH);
+                            }
+
+                            item.setWorkflowState(WorkflowState.SUCCEEDED);
+                            item.setAccessURL(iiif.append(URLEncoder.encode(id, StandardCharsets.UTF_8)).toString());
+                        }
+
+                        found = true;
                     }
 
-                    item.setWorkflowState(WorkflowState.SUCCEEDED);
-                    item.setAccessURL(iiif.append(URLEncoder.encode(id, StandardCharsets.UTF_8)).toString());
+                    // If any workflow object still has an empty state, the job isn't done
+                    if (WorkflowState.EMPTY.equals(item.getWorkflowState())) {
+                        finished = false;
+                    }
                 }
 
-                found = true;
-            }
+                // We're done with any updates we're going to do, we can release the lock
+                aLock.release();
 
-            // If any workflow object still has an empty state, the job isn't done
-            if (WorkflowState.EMPTY.equals(item.getWorkflowState())) {
-                finished = false;
-            }
-        }
+                // Could be some random submission, but it's worth flagging as suspicious
+                if (!found) {
+                    LOGGER.warn(MessageCodes.BUCKETEER_077, jobName, imageId);
+                }
 
-        // Could be some random submission, but it's worth flagging as suspicious
-        if (!found) {
-            LOGGER.warn(MessageCodes.BUCKETEER_077, jobName, imageId);
-        }
+                if (finished) {
+                    final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
-        if (finished) {
-            // If finished, remove the batch from our jobs queue so that it can be submitted again if desired
-            aJobMap.remove(jobName, removeJob -> {
-                if (removeJob.succeeded()) {
-                    finalizeJob(removeJob.result());
+                    // We send the name of the job to finalize to the appropriate verticle
+                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
+
+                    // Let the submitter know we're done
                     returnSuccess(response);
                 } else {
-                    returnError(removeJob.cause(), MessageCodes.BUCKETEER_082, jobName, response);
+                    // If not finished, return an acknowledgement to the image processor
+                    returnSuccess(response);
                 }
-            });
-        } else {
-            // If not finished, return an acknowledgement to the image processor
-            returnSuccess(response);
-        }
-    }
-
-    /**
-     * Wrap up notification services once the batch job has completed.
-     *
-     * @param aMetadataList A list of metadata objects
-     */
-    private void finalizeJob(final Job aJob) {
-        final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
-        final String slackHandle = aJob.getSlackHandle();
-        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle);
-        final JsonArray thumbnails = new JsonArray();
-
-        // Go through job items and look for ones that have just succeeded being processed
-        for (final Item item : aJob.getItems()) {
-            if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
-                thumbnails.add(item.getID());
+            } else {
+                aLock.release();
+                returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);
             }
-        }
-
-        // If there are recently succeeded images, send them off for thumbnail generation
-        if (thumbnails.size() > 0) {
-            final JsonObject thumbnailMessage = new JsonObject();
-
-            thumbnailMessage.put(Constants.IMAGE_ID_ARRAY, thumbnails);
-            sendMessage(myVertx, thumbnailMessage, ThumbnailVerticle.class.getName());
-        }
-
-        // Once that's completed, we can let the user know their job is ready
-        sendSlackMessage(slackChannelID, slackMessage, aJob);
-    }
-
-    /**
-     * Send a message to the specified Slack channel.
-     *
-     * @param aMessageText Text of the message we want to send
-     * @param aChannelId ID of the channel to which we want to send this message
-     */
-    private void sendSlackMessage(final String aChannelId, final String aMessageText) {
-        sendSlackMessage(aChannelId, aMessageText, null);
-    }
-
-    /**
-     * Send a message to the specified Slack channel with a list of metadata records.
-     *
-     * @param aMessageText Text of the message we want to send
-     * @param aChannelId ID of the channel to which we want to send this message
-     */
-    private void sendSlackMessage(final String aChannelId, final String aMessageText, final Job aJob) {
-        final JsonObject message = new JsonObject();
-
-        message.put(Config.SLACK_CHANNEL_ID, aChannelId);
-        message.put(Constants.SLACK_MESSAGE_TEXT, aMessageText);
-
-        if (aJob != null) {
-            message.put(Constants.JOB_NAME, aJob.getName());
-            message.put(Constants.BATCH_METADATA, JsonObject.mapFrom(aJob));
-        }
-
-        myVertx.eventBus().send(SlackMessageVerticle.class.getName(), message);
+        });
     }
 
     /**
@@ -238,22 +224,30 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aDetail Details about the exception
      * @param aResponse An HTTP server response
      */
-    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetail,
+    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetails,
             final HttpServerResponse aResponse) {
-        final String errorChannel = myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
-        final String errorMessage = LOGGER.getMessage(aMessageCode, aDetail);
+        final Optional<String> errorChannel = Optional.ofNullable(myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID));
+        final String errorDetails = LOGGER.getMessage(aMessageCode, aDetails);
 
         if (aThrowable != null) {
-            LOGGER.error(aThrowable, errorMessage);
+            LOGGER.error(aThrowable, errorDetails);
         } else {
-            LOGGER.error(errorMessage);
+            LOGGER.error(errorDetails);
         }
 
-        // Send notice about error to Slack channel too
-        sendSlackMessage(errorChannel, LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorMessage));
+        // Send notice about error to Slack channel too if we have one configured
+        if (errorChannel.isPresent()) {
+            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorDetails);
+            final JsonObject message = new JsonObject();
+
+            message.put(Config.SLACK_CHANNEL_ID, errorChannel.get());
+            message.put(Constants.SLACK_MESSAGE_TEXT, errorMessage);
+
+            myVertx.eventBus().send(SlackMessageVerticle.class.getName(), message);
+        }
 
         aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
-        aResponse.setStatusMessage(errorMessage);
+        aResponse.setStatusMessage(errorDetails);
         aResponse.end();
     }
 

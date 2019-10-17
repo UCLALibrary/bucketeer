@@ -27,6 +27,7 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.utils.CodeUtils;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -78,12 +79,10 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                         LOGGER.debug(MessageCodes.BUCKETEER_087, slackChannelID, response.toString());
                         message.reply(Op.SUCCESS);
                     } else {
-                        LOGGER.error(MessageCodes.BUCKETEER_090, response.getError());
-                        message.reply(Op.FAILURE);
+                        message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
                     }
                 } catch (IOException | SlackApiException | CsvParsingException details) {
-                    LOGGER.error(MessageCodes.BUCKETEER_089, details.getMessage());
-                    message.reply(Op.FAILURE);
+                    message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                 }
             } else {
                 try {
@@ -94,12 +93,10 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                         LOGGER.debug(MessageCodes.BUCKETEER_087, slackChannelID, response.toString());
                         message.reply(Op.SUCCESS);
                     } else {
-                        LOGGER.error(MessageCodes.BUCKETEER_090, response.getError());
-                        message.reply(Op.FAILURE);
+                        message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
                     }
                 } catch (IOException | SlackApiException details) {
-                    LOGGER.error(MessageCodes.BUCKETEER_089, details.getMessage());
-                    message.reply(Op.FAILURE);
+                    message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                 }
             }
 

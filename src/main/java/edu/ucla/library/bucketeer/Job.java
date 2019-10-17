@@ -33,7 +33,7 @@ public class Job implements Serializable {
 
     private String[] myMetadataHeader;
 
-    private boolean myRunIsSubsequent;
+    private boolean myJobIsSubsequentRun;
 
     /**
      * Creates a new batch job.
@@ -110,9 +110,9 @@ public class Job implements Serializable {
      */
     @JsonProperty("isSubsequentRun")
     public Job isSubsequentRun(final boolean aBool) {
-        myRunIsSubsequent = aBool;
+        myJobIsSubsequentRun = aBool;
 
-        if (myRunIsSubsequent) {
+        if (myJobIsSubsequentRun) {
             markIngestedItems();
         }
 
@@ -126,7 +126,7 @@ public class Job implements Serializable {
      */
     @JsonProperty("isSubsequentRun")
     public boolean isSubsequentRun() {
-        return myRunIsSubsequent;
+        return myJobIsSubsequentRun;
     }
 
     /**

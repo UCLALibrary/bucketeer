@@ -139,4 +139,18 @@
   <entry key="BUCKETEER-128">A IFilePathPrefix implementation is not configured, so we're using the default one</entry>
   <entry key="BUCKETEER-129">File at FilePath '{}' does not exist</entry>
   <entry key="BUCKETEER-130">Unexpected S3 PUT exception on: {}</entry>
+  <entry key="BUCKETEER-131">Finalizing batch job: {}</entry>
+  <entry key="BUCKETEER-132">Unable to get a lock on the jobs queue [job: {}]</entry>
+  <entry key="BUCKETEER-133">Failed to reset S3 upload retry counter for: {}</entry>
+  <entry key="BUCKETEER-134">Error in determining whether S3 upload should be retried: {}</entry>
+  <entry key="BUCKETEER-135">The supplied string isn't a MessageCode: {}</entry>
+  <entry key="BUCKETEER-136">No additional details available</entry>
+  <entry key="BUCKETEER-137">Failed to remove job from queue: {}</entry>
+  <entry key="BUCKETEER-138">Failed to increment S3 upload counter</entry>
+  <entry key="BUCKETEER-139">Failed to get S3 upload counter</entry>
+  <entry key="BUCKETEER-140">Stopped retrying S3 upload; maximum number of retries allowed reached: {}</entry>
+  <entry key="BUCKETEER-141">Successfully marked item '{}' as failed</entry>
+  <entry key="BUCKETEER-142">Refused to delete '{}' job because it's still processing images</entry>
+  <entry key="BUCKETEER-143">Test server for {} started...</entry>
+  <entry key="BUCKETEER-500">{}</entry>
 </properties>

@@ -55,6 +55,7 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
                                     final JsonArray images = new JsonArray();
 
                                     result.put(Constants.COUNT, job.size());
+                                    result.put(Constants.SLACK_HANDLE, job.getSlackHandle());
 
                                     try {
                                         final List<Item> items = job.getItems();

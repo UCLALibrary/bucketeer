@@ -1,6 +1,7 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
+import static edu.ucla.library.bucketeer.Constants.EMPTY;
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
 import com.amazonaws.regions.RegionUtils;
@@ -17,12 +18,17 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.utils.CodeUtils;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.http.ConnectionPoolTooBusyException;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.Counter;
 
 /**
  * Stores submitted images to an S3 bucket.
@@ -32,6 +38,8 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticle.class, MESSAGES);
 
     private static final int DEFAULT_S3_MAX_REQUESTS = 10;
+
+    private static final long MAX_RETRIES = 10;
 
     private S3Client myS3Client;
 
@@ -79,14 +87,14 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                                 upload(message, config);
                             } else {
                                 // If we have reached our maximum request count, re-queue the request
-                                sendReply(message, Op.RETRY);
+                                sendReply(message, 0, Op.RETRY);
                             }
                         } else {
-                            message.reply(Op.FAILURE);
+                            message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_138), EMPTY);
                         }
                     });
                 } else {
-                    message.reply(Op.FAILURE);
+                    message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_139), EMPTY);
                 }
             });
         });
@@ -139,8 +147,11 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                         final int statusCode = response.statusCode();
 
                         response.exceptionHandler(exception -> {
-                            LOGGER.error(exception, exception.getMessage());
-                            sendReply(aMessage, Op.FAILURE);
+                            final String details = exception.getMessage();
+
+                            LOGGER.error(exception, details);
+
+                            sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_500), details);
                         });
 
                         // If we get a successful upload response code, note this in our final results map
@@ -150,35 +161,93 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                             vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageIDSansExt, true);
 
                             // Send the success result and decrement the S3 request counter
-                            sendReply(aMessage, Op.SUCCESS);
+                            sendReply(aMessage, 0, Op.SUCCESS);
                         } else {
                             LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
 
                             // Log the detailed reason we failed so we can track down the issue
                             response.bodyHandler(body -> {
-                                LOGGER.error(MessageCodes.BUCKETEER_000, body.getString(0, body.length()));
+                                LOGGER.error(MessageCodes.BUCKETEER_500, body.getString(0, body.length()));
                             });
 
-                            // Send the information that our PUT failed
-                            response.endHandler(end -> {
-                                sendReply(aMessage, Op.FAILURE);
-                            });
+                            // If there is some internal S3 server error, let's try again
+                            if (statusCode == HTTP.INTERNAL_SERVER_ERROR) {
+                                sendReply(aMessage, 0, Op.RETRY);
+                            } else {
+                                // But be more tentative with other possible communication failures
+                                shouldRetry(imageID, retryCheck -> {
+                                    if (retryCheck.succeeded()) {
+                                        if (retryCheck.result()) {
+                                            sendReply(aMessage, 0, Op.RETRY);
+                                        } else {
+                                            sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), EMPTY);
+                                        }
+                                    } else {
+                                        final Throwable exception = retryCheck.cause();
+                                        final String details = exception.getMessage();
+
+                                        LOGGER.error(exception, MessageCodes.BUCKETEER_134, details);
+
+                                        // If we have an exception, don't retry... just log the issue
+                                        sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_134), details);
+                                    }
+                                });
+                            }
                         }
 
                         // Client sent the file, so we want to close our reference to it
                         closeUploadedFile(asyncFile, filePath);
                     }, exception -> {
                         LOGGER.error(exception, exception.getMessage());
-                        sendReply(aMessage, Op.FAILURE);
+                        sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_500), exception.getMessage());
                     });
                 } catch (final ConnectionPoolTooBusyException details) {
                     LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
-                    sendReply(aMessage, Op.RETRY);
+                    sendReply(aMessage, 0, Op.RETRY);
                     closeUploadedFile(asyncFile, filePath);
                 }
             } else {
                 LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, filePath));
-                sendReply(aMessage, Op.FAILURE);
+                sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_043), filePath);
+            }
+        });
+    }
+
+    /**
+     * A check to see whether an errored request should be retried.
+     *
+     * @param aImageID An image ID
+     * @param aHandler A retry handler
+     */
+    private void shouldRetry(final String aImageID, final Handler<AsyncResult<Boolean>> aHandler) {
+        final Promise<Boolean> promise = Promise.promise();
+
+        promise.future().setHandler(aHandler);
+
+        vertx.sharedData().getLocalCounter(aImageID, getCounter -> {
+            if (getCounter.succeeded()) {
+                final Counter counter = getCounter.result();
+
+                counter.addAndGet(1L, get -> {
+                    if (get.succeeded()) {
+                        if (get.result() == MAX_RETRIES) {
+                            promise.complete(Boolean.FALSE);
+
+                            // Reset the counter in case we ever need to process this item again
+                            counter.compareAndSet(MAX_RETRIES, 0L, reset -> {
+                                if (reset.failed()) {
+                                    LOGGER.error(MessageCodes.BUCKETEER_133, aImageID);
+                                }
+                            });
+                        } else {
+                            promise.complete(Boolean.TRUE);
+                        }
+                    } else {
+                        promise.fail(get.cause());
+                    }
+                });
+            } else {
+                promise.fail(getCounter.cause());
             }
         });
     }
@@ -202,9 +271,9 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      * incremented).
      *
      * @param aMessage A message requesting an S3 upload
-     * @param aOpStatus The result of the S3 upload
+     * @param aDetails The result of the S3 upload
      */
-    private void sendReply(final Message<JsonObject> aMessage, final String aOpStatus) {
+    private void sendReply(final Message<JsonObject> aMessage, final int aCode, final String aDetails) {
         getVertx().sharedData().getLocalCounter(Constants.S3_REQUEST_COUNT, getCounter -> {
             if (getCounter.succeeded()) {
                 getCounter.result().decrementAndGet(decrement -> {
@@ -212,11 +281,20 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                         LOGGER.error(MessageCodes.BUCKETEER_093);
                     }
 
-                    aMessage.reply(aOpStatus);
+                    if (aCode == 0) {
+                        aMessage.reply(aDetails);
+                    } else {
+                        aMessage.fail(aCode, aDetails);
+                    }
                 });
             } else {
                 LOGGER.error(MessageCodes.BUCKETEER_094);
-                aMessage.reply(aOpStatus);
+
+                if (aCode == 0) {
+                    aMessage.reply(aDetails);
+                } else {
+                    aMessage.fail(aCode, aDetails);
+                }
             }
         });
     }

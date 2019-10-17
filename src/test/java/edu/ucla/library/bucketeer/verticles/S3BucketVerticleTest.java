@@ -105,6 +105,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                     }
 
                     s3Bucket = config.getString(Config.S3_BUCKET);
+                    LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
                     asyncTask.complete();
                 });
             } else {
@@ -162,7 +163,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
         message.put(Constants.IMAGE_ID, myImageKey);
         message.put(Constants.FILE_PATH, JPX_PATH);
 
-        vertx.eventBus().send(VERTICLE_NAME, message, send -> {
+        vertx.eventBus().request(VERTICLE_NAME, message, send -> {
             if (send.failed()) {
                 final Throwable details = send.cause();
 
