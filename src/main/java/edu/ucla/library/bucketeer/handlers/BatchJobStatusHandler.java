@@ -83,7 +83,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                                 }
                             });
                         } else {
-                            returnError(MessageCodes.BUCKETEER_075, jobName, response); // here
+                            returnError(MessageCodes.BUCKETEER_075, jobName, response);
                         }
                     } else {
                         returnError(keyCheck.cause(), MessageCodes.BUCKETEER_062, jobName, response);
