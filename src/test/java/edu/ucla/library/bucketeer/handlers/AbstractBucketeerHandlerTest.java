@@ -24,7 +24,6 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.FakeS3BucketVerticle;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
-import edu.ucla.library.bucketeer.verticles.ThumbnailVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
@@ -93,7 +92,6 @@ public abstract class AbstractBucketeerHandlerTest {
                         final List<Future> futures = new ArrayList<>();
                         final LocalMap<String, String> map = myVertx.sharedData().getLocalMap(Constants.VERTICLE_MAP);
                         final String s3BucketDeploymentId = map.get(S3BucketVerticle.class.getSimpleName());
-                        final String thumbnailDeploymentId = map.get(ThumbnailVerticle.class.getSimpleName());
 
                         if (s3BucketDeploymentId.contains(DELIMITER)) {
                             for (final String delimitedId : s3BucketDeploymentId.split(DELIMITER)) {
@@ -103,16 +101,9 @@ public abstract class AbstractBucketeerHandlerTest {
                             futures.add(updateDeployment(s3BucketDeploymentId, Future.future()));
                         }
 
-                        if (thumbnailDeploymentId.contains(DELIMITER)) {
-                            for (final String delimitedId : thumbnailDeploymentId.split(DELIMITER)) {
-                                futures.add(updateDeployment(delimitedId, Future.future()));
-                            }
-                        } else {
-                            futures.add(updateDeployment(thumbnailDeploymentId, Future.future()));
-                        }
-
                         CompositeFuture.all(futures).setHandler(handler -> {
                             if (handler.succeeded()) {
+                                getLogger().debug(MessageCodes.BUCKETEER_143, getClass().getName());
                                 loadCSV(asyncTask, aContext, port);
                             } else {
                                 aContext.fail(handler.cause());

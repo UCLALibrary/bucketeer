@@ -51,6 +51,7 @@ public class MainVerticleTest {
         // Confirm our verticle has loaded before we attempt to test it
         myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
             if (deployment.succeeded()) {
+                LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
                 asyncTask.complete();
             } else {
                 aContext.fail();

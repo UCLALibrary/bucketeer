@@ -141,11 +141,14 @@ paths:
           description: There was an internal server error
     delete:
       summary: Delete Batch Job
-      description: Deletes the batch job with the specified name.
+      description: "Deletes the batch job with the specified name. It will only be deleted if it's stopped processing
+        images. If it's still processing images, a 400 (Bad Request) is returned."
       operationId: deleteJob
       responses:
         '204':
           description: No content, the job has been deleted
+        '400':
+          description: Bad request, the job is still processing images
         '403':
           description: Deleting the specified job was forbidden
         '500':

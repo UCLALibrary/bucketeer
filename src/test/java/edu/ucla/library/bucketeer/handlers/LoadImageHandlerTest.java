@@ -98,6 +98,7 @@ public class LoadImageHandlerTest {
 
                 myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
                     if (deployment.succeeded()) {
+                        LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
                         asyncTask.complete();
                     } else {
                         aContext.fail(deployment.cause());
@@ -205,14 +206,14 @@ public class LoadImageHandlerTest {
     public void confirmLoadImageHandlerFailsWithInvalideFilepath(final TestContext aContext) {
         final Async async = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
+        final String path = "/12345/this-file-does-not-exist.tiff";
 
         // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
         // incomplete data
-        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/this-file-does-not-exist.tiff",
-            response -> {
-                aContext.assertNotEquals(response.statusCode(), HTTP.OK);
-                async.complete();
-            });
+        myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, path, response -> {
+            aContext.assertNotEquals(response.statusCode(), HTTP.OK);
+            async.complete();
+        });
     }
 
 }

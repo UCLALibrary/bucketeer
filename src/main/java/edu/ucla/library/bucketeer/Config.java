@@ -56,9 +56,6 @@ public final class Config {
     // A Slack user handle that tests use as the recipient of test messages
     public static final String SLACK_TEST_USER_HANDLE = "bucketeer.slack.test_user_handle";
 
-    // A CloudFront distribution ID
-    public static final String CDN_DISTRO_ID = "cdn.distribution.id";
-
     /**
      * Private constructor for the Constants class.
      */

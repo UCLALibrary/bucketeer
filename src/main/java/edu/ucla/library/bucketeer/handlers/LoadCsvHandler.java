@@ -24,12 +24,15 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.utils.CodeUtils;
 import edu.ucla.library.bucketeer.utils.JobFactory;
+import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
+import edu.ucla.library.bucketeer.verticles.ItemFailureVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
-import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -38,7 +41,7 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 
-public class LoadCsvHandler implements Handler<RoutingContext> {
+public class LoadCsvHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadCsvHandler.class, Constants.MESSAGES);
 
@@ -122,7 +125,7 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
             response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
             response.end(StringUtils.format(myExceptionPage, errorMessage + extendedErrorMessage));
         } else {
-            final String cleanSlackHandle = slackHandle.replace(Constants.AT, Constants.EMPTY_STRING);
+            final String cleanSlackHandle = slackHandle.replace(Constants.AT, Constants.EMPTY);
             final String runFailures = StringUtils.trimTo(formAttributes.get(Constants.FAILURES_ONLY), "false");
             final FileUpload csvFile = csvUploads.iterator().next();
             final String filePath = csvFile.uploadedFileName();
@@ -168,6 +171,11 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 response.end(StringUtils.format(myExceptionPage, details.getMessages("<br>")));
             }
         }
+    }
+
+    @Override
+    protected Logger getLogger() {
+        return LOGGER;
     }
 
     private void initiateJob(final Job aJob, final HttpServerResponse aResponse) {
@@ -231,6 +239,8 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
         final String s3Bucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
         final Iterator<Item> iterator = aJob.getItems().iterator();
 
+        boolean processing = false;
+
         while (iterator.hasNext()) {
             final Item item = iterator.next();
             final File imageFile = item.getFile();
@@ -246,33 +256,75 @@ public class LoadCsvHandler implements Handler<RoutingContext> {
                 s3UploadMessage.put(Constants.JOB_NAME, aJob.getName());
                 s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
 
-                sendMessage(s3UploadMessage, S3BucketVerticle.class.getName(), Integer.MAX_VALUE);
-            } else {
-                final String filePath = imageFile == null ? "null" : imageFile.getAbsolutePath();
+                sendS3UploadMessage(s3UploadMessage);
 
+                if (!processing) {
+                    processing = true;
+                }
+            } else {
+                final String filePath = imageFile == null ? "missing source file" : imageFile.getAbsolutePath();
+
+                // We might be skipping because there is no file to process or because it's already been done
                 LOGGER.debug(MessageCodes.BUCKETEER_054, item.getID(), aJob.getName(), filePath, state);
             }
         }
+
+        // If we don't have any records to process, let's finalize the job and send the CSV back as submitted
+        if (!processing) {
+            final JsonObject message = new JsonObject().put(Constants.JOB_NAME, aJob.getName());
+
+            // We send the name of the job to finalize to the appropriate verticle
+            sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
+        }
     }
 
-    private void sendMessage(final JsonObject aJsonObject, final String aVerticleName, final long aTimeout) {
-        final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
+    /**
+     * This message sender is specifically for item processing requests; it behaves differently from the default
+     * message sender that our other handlers use.
+     *
+     * @param aJsonObject A message
+     * @param aVerticleName The destination of the message
+     * @param aTimeout A timeout period before the send is considered a failure
+     */
+    private void sendS3UploadMessage(final JsonObject aJsonObject) {
+        final DeliveryOptions options = new DeliveryOptions().setSendTimeout(Integer.MAX_VALUE);
+        final String listener = S3BucketVerticle.class.getName();
 
-        myVertx.eventBus().send(aVerticleName, aJsonObject, options, response -> {
+        myVertx.eventBus().request(listener, aJsonObject, options, response -> {
             if (response.failed()) {
-                if (response.cause() != null) {
-                    LOGGER.error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                final Throwable exception = response.cause();
+
+                if (exception != null) {
+                    if (exception instanceof ReplyException) {
+                        final ReplyException replyException = (ReplyException) exception;
+                        final String messageCode = CodeUtils.getCode(replyException.failureCode());
+                        final String details = replyException.getMessage();
+
+                        LOGGER.error(MessageCodes.BUCKETEER_005, listener, LOGGER.getMessage(messageCode, details));
+                    } else {
+                        LOGGER.error(MessageCodes.BUCKETEER_005, listener, exception.getMessage());
+                    }
                 } else {
-                    LOGGER.error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                    LOGGER.error(MessageCodes.BUCKETEER_005, listener, LOGGER.getMessage(MessageCodes.BUCKETEER_136));
                 }
+
+                // If we have a failure in processing this item, mark it as a failure
+                sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName());
             } else if (response.result().body().equals(Op.RETRY)) {
                 myVertx.setTimer(myRequeueDelay, timer -> {
-                    sendMessage(aJsonObject, aVerticleName, aTimeout);
+                    sendS3UploadMessage(aJsonObject);
                 });
             }
         });
     }
 
+    /**
+     * Returns an error page to the browser.
+     *
+     * @param aResponse An HTTP response
+     * @param aMessage An error message
+     * @param aDetail Additional details to send along with the error message
+     */
     private void returnError(final HttpServerResponse aResponse, final String aMessage, final String aDetail) {
         final String errorName = LOGGER.getMessage(MessageCodes.BUCKETEER_074);
         final String errorMessage = LOGGER.getMessage(aMessage, aDetail);

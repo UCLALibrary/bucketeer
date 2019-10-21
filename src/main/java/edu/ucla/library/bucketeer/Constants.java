@@ -27,6 +27,21 @@ public final class Constants {
     public static final String JOBS = "jobs";
 
     /**
+     * A job lock.
+     */
+    public static final String JOB_LOCK = "job-lock";
+
+    /**
+     * A timeout for a job lock.
+     */
+    public static final int JOB_LOCK_TIMEOUT = 10000;
+
+    /**
+     * A timeout for the job delete watcher. Just for context, the curl default timeout is 600 seconds.
+     */
+    public static final int JOB_DELETE_TIMEOUT = 5000;
+
+    /**
      * The status of a job.
      */
     public static final String STATUS = "status";
@@ -123,19 +138,24 @@ public final class Constants {
     public static final String BATCH_METADATA = "batch-metadata";
 
     /**
-     * just a space string, useful
+     * Just a space string, useful
      */
     public static final String SPACE = " ";
 
     /**
-     * just a empty string, useful
+     * Just a empty string, useful
      */
-    public static final String EMPTY_STRING = "";
+    public static final String EMPTY = "";
 
     /**
-     * an @ AT symbol
+     * An @ AT symbol
      */
     public static final String AT = "@";
+
+    /**
+     * A slash constant.
+     */
+    public static final char SLASH = '/';
 
     /**
      * Private constructor for Constants class.

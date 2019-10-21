@@ -46,7 +46,7 @@
   </developers>
 
   <properties>
-    <vertx.version>3.7.1</vertx.version>
+    <vertx.version>3.8.2</vertx.version>
     <vertx.super.s3.version>1.2.0</vertx.super.s3.version>
     <slf4j.ext.version>1.7.26</slf4j.ext.version>
     <aws.sdk.version>1.11.478</aws.sdk.version>
@@ -466,6 +466,7 @@
             <!-- Temporarily disable problematic test -->
             <exclude>**/BatchJobStatusHandlerTest.java</exclude>
           </excludes>
+          <forkCount>2</forkCount>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>

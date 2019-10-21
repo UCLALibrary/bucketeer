@@ -6,9 +6,11 @@ import info.freelibrary.util.Logger;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.utils.CodeUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -37,17 +39,30 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
             final long aTimeout) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
 
-        aVertx.eventBus().send(aVerticleName, aJsonObject, options, response -> {
+        aVertx.eventBus().request(aVerticleName, aJsonObject, options, response -> {
             if (response.failed()) {
-                if (response.cause() != null) {
-                    getLogger().error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                final Throwable exception = response.cause();
+                final Logger log = getLogger();
+
+                if (exception != null) {
+                    if (exception instanceof ReplyException) {
+                        final ReplyException replyException = (ReplyException) exception;
+                        final String messageCode = CodeUtils.getCode(replyException.failureCode());
+                        final String details = replyException.getMessage();
+
+                        log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(messageCode, details));
+                    } else {
+                        log.error(exception, MessageCodes.BUCKETEER_005, aVerticleName, exception.getMessage());
+                    }
                 } else {
-                    getLogger().error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                    log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(MessageCodes.BUCKETEER_136));
                 }
             } else if (response.result().body().equals(Op.RETRY)) {
                 getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
                 sendMessage(aVertx, aJsonObject, aVerticleName, aTimeout);
             }
+
+            // Do nothing if the response is an Op.SUCCESS
         });
     }
 

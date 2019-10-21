@@ -20,14 +20,6 @@ public class OpTest {
     }
 
     /**
-     * Tests the success operation result.
-     */
-    @Test
-    public final void testFailureResult() {
-        assertEquals("failure", Op.FAILURE);
-    }
-
-    /**
      * Tests the retry operation result.
      */
     @Test
