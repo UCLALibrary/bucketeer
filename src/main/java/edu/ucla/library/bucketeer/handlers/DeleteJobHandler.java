@@ -94,7 +94,7 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
                 final Job job = getJob.result();
                 final int remaining = job.remaining();
 
-                // Wait three seconds and see if the number of remaining items has changed
+                // Wait and see if the number of remaining items has changed
                 myVertx.setTimer(Constants.JOB_DELETE_TIMEOUT, timer -> {
                     if (remaining == job.remaining()) {
                         aJobsMap.remove(aJobName, deleteJob -> {
