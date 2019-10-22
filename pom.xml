@@ -112,9 +112,6 @@
     <!-- Where the source images are mounted on the local file system -->
     <bucketeer.fs.mount>.</bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
-
-    <!-- The distribution ID for Cloudfront's thumbnail cache -->
-    <cdn.distribution.id>YOUR_CLOUDFRONT_DISTRIBUTION_ID</cdn.distribution.id>
   </properties>
 
   <dependencies>
