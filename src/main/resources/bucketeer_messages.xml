@@ -152,5 +152,6 @@
   <entry key="BUCKETEER-141">Successfully marked item '{}' as failed</entry>
   <entry key="BUCKETEER-142">Refused to delete '{}' job because it's still processing images</entry>
   <entry key="BUCKETEER-143">Test server for {} started...</entry>
+  <entry key="BUCKETEER-144">Successfully deleted batch job: {}</entry>
   <entry key="BUCKETEER-500">{}</entry>
 </properties>
