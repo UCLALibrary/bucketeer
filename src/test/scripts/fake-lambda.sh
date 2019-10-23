@@ -16,7 +16,7 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-for id in `curl -s "http://localhost:8888/batch/jobs/${1}" | jq -r '.jobs[]."image-id"'`; do
+for id in `curl -s "http://localhost:8888/batch/jobs/${1}" | jq -r '.jobs[] | select(."status" == "")."image-id"'`; do
   encodedID=$(echo $id | sed 's|/|%2F|g')
   curl -X PATCH http://localhost:8888/batch/jobs/${1}/${encodedID}/true
 done

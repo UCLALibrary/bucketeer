@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -38,7 +39,7 @@ public class ItemTest {
         final Item item = new Item(TEST_ID, FILE_PATH);
 
         assertEquals(TEST_ID, item.getID());
-        assertEquals(new File(FILE_PATH).getCanonicalPath(), item.getFilePath());
+        assertEquals(new File(FILE_PATH).getPath(), item.getFilePath().get());
     }
 
     /**
@@ -66,7 +67,7 @@ public class ItemTest {
      */
     @Test
     public final void testGetFile() {
-        assertTrue(new Item(TEST_ID, FILE_PATH).getFile().exists());
+        assertTrue(new Item(TEST_ID, FILE_PATH).getFile().get().exists());
     }
 
     /**
@@ -76,9 +77,9 @@ public class ItemTest {
      */
     @Test
     public final void testGetFilePath() throws IOException {
-        final String path = new Item(TEST_ID, FILE_PATH).getFile().getCanonicalPath();
+        final String path = new Item(TEST_ID, FILE_PATH).getFile().get().getAbsolutePath();
 
-        assertEquals(new File(FILE_PATH).getCanonicalPath(), path);
+        assertEquals(new File(FILE_PATH).getAbsolutePath(), path);
     }
 
     /**
@@ -89,9 +90,9 @@ public class ItemTest {
     @Test
     public final void testSetFilePath() throws IOException {
         final Item item = new Item(TEST_ID, "fake_path");
-        final String filePath = new File(FILE_PATH).getCanonicalPath();
+        final String filePath = new File(FILE_PATH).getAbsolutePath();
 
-        assertEquals(filePath, item.setFilePath(filePath).getFilePath());
+        assertEquals(filePath, item.setFilePath(Optional.of(filePath)).getFilePath().get());
     }
 
     /**
@@ -135,7 +136,7 @@ public class ItemTest {
         final JsonObject expected = new JsonObject(StringUtils.read(new File("src/test/resources/json/item.json")));
 
         item.setFilePathPrefix(new GenericFilePathPrefix());
-        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getCanonicalPath());
+        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getPath());
 
         assertEquals(expected, item.toJSON());
     }
@@ -149,7 +150,7 @@ public class ItemTest {
         final JsonObject expected = new JsonObject(StringUtils.read(new File(
                 "src/test/resources/json/generic-item.json")));
 
-        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getCanonicalPath());
+        expected.put(FILE_PATH_KEY, new File(FILE_PATH).getPath());
 
         assertEquals(expected, item.setFilePathPrefix(new GenericFilePathPrefix()).toJSON());
     }

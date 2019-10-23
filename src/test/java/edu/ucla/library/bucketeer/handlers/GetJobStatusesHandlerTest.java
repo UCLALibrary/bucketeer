@@ -80,9 +80,9 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
                         // Update files' paths for the machine that's running the test
                         for (int index = 0; index < jobs.size(); index++) {
                             if (index != 7) {
-                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getCanonicalPath());
+                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getAbsolutePath());
                             } else {
-                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getCanonicalPath());
+                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getAbsolutePath());
                             }
                         }
 

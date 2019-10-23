@@ -21,12 +21,13 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.CsvParsingException;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
+import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
 import io.vertx.core.json.JsonObject;
 
@@ -81,7 +82,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                     } else {
                         message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
                     }
-                } catch (IOException | SlackApiException | CsvParsingException details) {
+                } catch (IOException | SlackApiException | ProcessingException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                 }
             } else {
@@ -114,7 +115,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
      * @param aJob A job whose metadata we want to update
      * @return The job with the updated metadata
      */
-    private Job updateMetadata(final Job aJob) throws CsvParsingException {
+    private Job updateMetadata(final Job aJob) throws ProcessingException {
         final List<String[]> metadata = aJob.getMetadata();
         final List<Item> items = aJob.getItems();
 
@@ -125,8 +126,10 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
         // Find the index position of our two columns: Bucketeer State and Access URL
         for (int headerIndex = 0; headerIndex < metadataHeader.length; headerIndex++) {
             if (Metadata.IIIF_ACCESS_URL.equals(metadataHeader[headerIndex])) {
+                LOGGER.debug(MessageCodes.BUCKETEER_154, headerIndex);
                 accessUrlIndex = headerIndex;
             } else if (Metadata.BUCKETEER_STATE.equals(metadataHeader[headerIndex])) {
+                LOGGER.debug(MessageCodes.BUCKETEER_153, headerIndex);
                 bucketeerStateIndex = headerIndex;
             }
         }
@@ -135,6 +138,8 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
         if (bucketeerStateIndex == -1 && accessUrlIndex == -1) {
             final String[] newHeader = new String[metadataHeader.length + 2];
 
+            LOGGER.debug(MessageCodes.BUCKETEER_155, 2);
+
             System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
             newHeader[metadataHeader.length] = Metadata.BUCKETEER_STATE;
             newHeader[metadataHeader.length + 1] = Metadata.IIIF_ACCESS_URL;
@@ -142,10 +147,12 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             accessUrlIndex = metadataHeader.length + 1;
             metadataHeader = newHeader;
             aJob.setMetadataHeader(metadataHeader);
-        } else if (bucketeerStateIndex != -1 || accessUrlIndex != -1) {
+        } else if (bucketeerStateIndex == -1 || accessUrlIndex == -1) {
             // If only one header is missing, we need to expand our headers array by one
             final String[] newHeader = new String[metadataHeader.length + 1];
             final int index = findHeader(metadataHeader, Metadata.BUCKETEER_STATE);
+
+            LOGGER.debug(MessageCodes.BUCKETEER_155, 1);
 
             System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
 
@@ -176,7 +183,13 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                 row = newRow;
             }
 
-            row[bucketeerStateIndex] = item.getWorkflowState().toString();
+            // We mark structural rows with empty statuses before outputting the CSV data
+            if (WorkflowState.STRUCTURAL.equals(item.getWorkflowState())) {
+                row[bucketeerStateIndex] = WorkflowState.EMPTY.toString();
+            } else {
+                row[bucketeerStateIndex] = item.getWorkflowState().toString();
+            }
+
             row[accessUrlIndex] = item.getAccessURL();
             metadata.set(index, row);
         }

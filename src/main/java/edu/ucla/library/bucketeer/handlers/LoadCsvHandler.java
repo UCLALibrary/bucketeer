@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
 
 import info.freelibrary.util.FileUtils;
@@ -17,15 +18,15 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.CsvParsingException;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
+import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
-import edu.ucla.library.bucketeer.utils.JobFactory;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.ItemFailureVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
@@ -127,6 +128,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
         } else {
             final String cleanSlackHandle = slackHandle.replace(Constants.AT, Constants.EMPTY);
             final String runFailures = StringUtils.trimTo(formAttributes.get(Constants.FAILURES_ONLY), "false");
+            final boolean subsequentRun = Boolean.parseBoolean(runFailures);
             final FileUpload csvFile = csvUploads.iterator().next();
             final String filePath = csvFile.uploadedFileName();
             final String fileName = csvFile.fileName();
@@ -139,10 +141,10 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
             }
 
             try {
-                final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath));
+                final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath), subsequentRun);
 
                 // Set the Slack handle and whether the job is a subsequent or initial run
-                job.setSlackHandle(cleanSlackHandle).isSubsequentRun(Boolean.parseBoolean(runFailures));
+                job.setSlackHandle(cleanSlackHandle);
 
                 initiateJob(job, response);
             } catch (final FileNotFoundException details) {
@@ -162,7 +164,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 response.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
                 response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
                 response.end(StringUtils.format(myExceptionPage, exceptionName + details.getMessage()));
-            } catch (final CsvParsingException details) {
+            } catch (final ProcessingException details) {
                 final String statusMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_072);
 
                 response.setStatusCode(HTTP.BAD_REQUEST);
@@ -243,16 +245,17 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         while (iterator.hasNext()) {
             final Item item = iterator.next();
-            final File imageFile = item.getFile();
-            final WorkflowState state = item.getWorkflowState();
             final JsonObject s3UploadMessage = new JsonObject();
-            final boolean isOkayInitialRun = !aJob.isSubsequentRun() && state.equals(Job.WorkflowState.EMPTY);
-            final boolean isOkaySubsequentRun = aJob.isSubsequentRun() && state.equals(Job.WorkflowState.FAILED);
+            final Optional<File> file = item.getFile();
+            final WorkflowState state = item.getWorkflowState();
 
             // For normal runs only process empty states and for failure runs only processes failures
-            if (item.hasFile() && (isOkayInitialRun || isOkaySubsequentRun)) {
-                s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + FileUtils.getExt(imageFile.getName()));
-                s3UploadMessage.put(Constants.FILE_PATH, imageFile.getAbsolutePath());
+            if (item.hasFile() && file.isPresent() && WorkflowState.EMPTY.equals(state)) {
+                final File source = file.get();
+                final String ext = FileUtils.getExt(source.getName());
+
+                s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + ext);
+                s3UploadMessage.put(Constants.FILE_PATH, source.getAbsolutePath());
                 s3UploadMessage.put(Constants.JOB_NAME, aJob.getName());
                 s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
 
@@ -262,7 +265,8 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                     processing = true;
                 }
             } else {
-                final String filePath = imageFile == null ? "missing source file" : imageFile.getAbsolutePath();
+                final String missingFileMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_147);
+                final String filePath = file.isEmpty() ? missingFileMessage : file.get().getAbsolutePath();
 
                 // We might be skipping because there is no file to process or because it's already been done
                 LOGGER.debug(MessageCodes.BUCKETEER_054, item.getID(), aJob.getName(), filePath, state);

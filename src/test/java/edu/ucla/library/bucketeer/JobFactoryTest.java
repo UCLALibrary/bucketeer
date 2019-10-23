@@ -1,5 +1,5 @@
 
-package edu.ucla.library.bucketeer.utils;
+package edu.ucla.library.bucketeer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,8 +10,6 @@ import org.junit.Test;
 
 import info.freelibrary.util.StringUtils;
 
-import edu.ucla.library.bucketeer.CsvParsingException;
-import edu.ucla.library.bucketeer.Job;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -40,7 +38,7 @@ public class JobFactoryTest {
      * Test JobFactory.createJob().
      */
     @Test
-    public final void testCreateJob() throws CsvParsingException, IOException {
+    public final void testCreateJob() throws ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final JsonObject expected = new JsonObject(StringUtils.read(JSON_FILE));
         final JsonArray items = expected.getJsonArray(ITEMS);
@@ -49,9 +47,9 @@ public class JobFactoryTest {
             final JsonObject item = items.getJsonObject(index);
 
             if (index != 7) {
-                item.put(FILE_PATH, TEST_TIFF_FILE.getCanonicalPath());
+                item.put(FILE_PATH, TEST_TIFF_FILE.getPath());
             } else {
-                item.put(FILE_PATH, TEST_FAIL_FILE.getCanonicalPath());
+                item.put(FILE_PATH, TEST_FAIL_FILE.getPath());
             }
         }
 

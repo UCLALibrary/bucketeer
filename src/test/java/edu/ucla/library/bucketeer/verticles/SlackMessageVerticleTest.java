@@ -18,10 +18,10 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.CsvParsingException;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.Job;
+import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.utils.JobFactory;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -152,7 +152,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      */
     @Test
     public final void testSlackFileUpload(final TestContext aContext) throws FileNotFoundException,
-            CsvParsingException, IOException {
+            ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB, LIVE_TEST_CSV);
         final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle);
         final Vertx vertx = myRunTestOnContextRule.vertx();

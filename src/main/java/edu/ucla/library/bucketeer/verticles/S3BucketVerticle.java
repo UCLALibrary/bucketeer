@@ -156,7 +156,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                         // If we get a successful upload response code, note this in our final results map
                         if (statusCode == HTTP.OK) {
-                            LOGGER.debug(MessageCodes.BUCKETEER_026, imageID);
+                            LOGGER.info(MessageCodes.BUCKETEER_026, imageID);
 
                             vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageIDSansExt, true);
 

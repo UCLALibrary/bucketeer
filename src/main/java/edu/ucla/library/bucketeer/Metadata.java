@@ -17,6 +17,11 @@ public final class Metadata {
     public static final String FILE_NAME = "File Name";
 
     /**
+     * The viewing hint for Work object types, indicating they don't have an image.
+     */
+    public static final String VIEWING_HINT = "viewingHint";
+
+    /**
      * The object type of the item being ingested.
      * <p>
      * This is optional, but we'll check for any occurrence that's 'Collection' to ignore a missing image file.
@@ -38,6 +43,11 @@ public final class Metadata {
      * Collection is a metadata value rather than type, indicating it has no source file.
      */
     public static final String COLLECTION = "Collection";
+
+    /**
+     * Work is a metadata value value rather than type; some works have files, some don't.
+     */
+    public static final String WORK = "Work";
 
     // Constants classes should not have public constructors.
     private Metadata() {
