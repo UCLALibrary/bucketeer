@@ -174,32 +174,18 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                             if (statusCode == HTTP.INTERNAL_SERVER_ERROR) {
                                 sendReply(aMessage, 0, Op.RETRY);
                             } else {
-                                // But be more tentative with other possible communication failures
-                                shouldRetry(imageID, retryCheck -> {
-                                    if (retryCheck.succeeded()) {
-                                        if (retryCheck.result()) {
-                                            sendReply(aMessage, 0, Op.RETRY);
-                                        } else {
-                                            sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), EMPTY);
-                                        }
-                                    } else {
-                                        final Throwable exception = retryCheck.cause();
-                                        final String details = exception.getMessage();
+                                final String errorMessage = statusCode + " - " + response.statusMessage();
 
-                                        LOGGER.error(exception, MessageCodes.BUCKETEER_134, details);
-
-                                        // If we have an exception, don't retry... just log the issue
-                                        sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_134), details);
-                                    }
-                                });
+                                LOGGER.warn(MessageCodes.BUCKETEER_156, errorMessage);
+                                retryUpload(imageID, aMessage);
                             }
                         }
 
                         // Client sent the file, so we want to close our reference to it
                         closeUploadedFile(asyncFile, filePath);
                     }, exception -> {
-                        LOGGER.error(exception, exception.getMessage());
-                        sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_500), exception.getMessage());
+                        LOGGER.warn(MessageCodes.BUCKETEER_156, exception.getMessage());
+                        retryUpload(imageID, aMessage);
                     });
                 } catch (final ConnectionPoolTooBusyException details) {
                     LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
@@ -209,6 +195,32 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
             } else {
                 LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, filePath));
                 sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_043), filePath);
+            }
+        });
+    }
+
+    /**
+     * A more tentative retry attempt. We count the number of times we've retried and give up after a certain point.
+     *
+     * @param aImageID An image ID to retry
+     * @param aMessage A message to respond to with the retry request (or exception if we've failed)
+     */
+    private void retryUpload(final String aImageID, final Message<JsonObject> aMessage) {
+        shouldRetry(aImageID, retryCheck -> {
+            if (retryCheck.succeeded()) {
+                if (retryCheck.result()) {
+                    sendReply(aMessage, 0, Op.RETRY);
+                } else {
+                    sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), EMPTY);
+                }
+            } else {
+                final Throwable retryException = retryCheck.cause();
+                final String details = retryException.getMessage();
+
+                LOGGER.error(retryException, MessageCodes.BUCKETEER_134, details);
+
+                // If we have an exception, don't retry... just log the issue
+                sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_134), details);
             }
         });
     }
