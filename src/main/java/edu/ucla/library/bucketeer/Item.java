@@ -215,12 +215,8 @@ public class Item implements Serializable {
      * @param aFilePath A file path
      */
     public Item setFilePath(final Optional<String> aFilePath) {
-        if (!hasFile()) {
-            throw new IllegalArgumentException(LOGGER.getMessage(MessageCodes.BUCKETEER_053, myID));
-        } else {
-            myPrefixedFilePath = null;
-            myFilePath = aFilePath;
-        }
+        myPrefixedFilePath = null;
+        myFilePath = aFilePath;
 
         return this;
     }
