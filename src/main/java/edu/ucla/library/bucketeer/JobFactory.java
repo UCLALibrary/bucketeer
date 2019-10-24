@@ -196,7 +196,7 @@ public final class JobFactory {
                 if (rowIndex != 0) {
                     final WorkflowState state = item.getWorkflowState();
 
-                    // Cf. https://github.com/UCLALibrary/bucketeer/blob/IIIF-524/docs/loading-CSVs.md
+                    // Cf. https://github.com/UCLALibrary/bucketeer/blob/master/docs/loading-CSVs.md
                     if (job.isSubsequentRun()) {
                         if (WorkflowState.FAILED.equals(state) || WorkflowState.MISSING.equals(state)) {
                             item.setWorkflowState(WorkflowState.EMPTY);
