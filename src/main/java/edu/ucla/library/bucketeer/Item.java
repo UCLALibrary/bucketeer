@@ -238,7 +238,7 @@ public class Item implements Serializable {
     /**
      * Sets whether this item is supposed to have an image file.
      *
-     * @param aBool True if the item should have an image file; else, false
+     * @param aStructuralObj True if object is structural and doesn't have a source file
      * @return The item
      */
     @JsonIgnore
