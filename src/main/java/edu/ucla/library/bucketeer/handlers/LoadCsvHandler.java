@@ -18,7 +18,6 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
@@ -26,6 +25,7 @@ import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.ItemFailureVerticle;
@@ -143,7 +143,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
             try {
                 final Job job = JobFactory.getInstance().createJob(jobName, new File(filePath), subsequentRun);
 
-                // Set the Slack handle and whether the job is a subsequent or initial run
+                // Set the Slack handle
                 job.setSlackHandle(cleanSlackHandle);
 
                 initiateJob(job, response);
