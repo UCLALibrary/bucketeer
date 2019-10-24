@@ -16,7 +16,7 @@ public class CsvParsingExceptionTest {
 
     private static final String THIRD_MESSAGE = "third message";
 
-    private CsvParsingException myException;
+    private ProcessingException myException;
 
     /**
      * Sets up the tests.
@@ -25,7 +25,7 @@ public class CsvParsingExceptionTest {
      */
     @Before
     public void setUp() {
-        myException = new CsvParsingException();
+        myException = new ProcessingException();
         myException.addMessage(FIRST_MESSAGE);
         myException.addMessage(SECOND_MESSAGE);
         myException.addMessage(THIRD_MESSAGE);

@@ -50,6 +50,12 @@ You can run a development instance of Bucketeer by typing the following within t
 
 Once run, the service can be verified/accessed at [http://localhost:8888/status](http://localhost:8888/status). The API documentation can be accessed at [http://localhost:8888/docs](http://localhost:8888/docs)
 
+If you want to run the application with a different mount point (for image sources) and file prefix (e.g. the UCLA file path prefix), you can use something like:
+
+    mvn -Plive test -Dbucketeer.fs.mount=/opt/data -Dbucketeer.fs.prefix=UCLAFilePathPrefix
+
+If you leave off the `bucketeer.fs.prefix` Bucketeer will treat the `bucketeer.fs.mount` as the default directory.
+
 ## Tweaking the Batch Upload
 
 Choosing between conversion methods depends largely on how quickly TIFF images can be uploaded to the AWS Lambda bucket. AWS Lambda scales horizontally (up to 1000 simultaneous functions), so if you can upload TIFFs to the S3 bucket faster than they can be processed by the X number of cores on your local machine, it makes sense to use the batch method.

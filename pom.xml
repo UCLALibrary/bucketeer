@@ -112,9 +112,6 @@
     <!-- Where the source images are mounted on the local file system -->
     <bucketeer.fs.mount>.</bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
-
-    <!-- The distribution ID for Cloudfront's thumbnail cache -->
-    <cdn.distribution.id>YOUR_CLOUDFRONT_DISTRIBUTION_ID</cdn.distribution.id>
   </properties>
 
   <dependencies>
@@ -182,6 +179,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-xml</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jdk8</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
@@ -522,7 +524,10 @@
         </executions>
         <configuration>
           <verticle>${main.verticle}</verticle>
-          <runArgs>-Dvertx-config-path=target/test-classes/test-config.properties</runArgs>
+          <runArgs>
+            <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
+            <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
+          </runArgs>
         </configuration>
       </plugin>
 
@@ -567,6 +572,7 @@
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-cbor</exclude>
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</exclude>
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
+                  <exclude>com.fasterxml.jackson.datatype:jackson-datatype-jdk8</exclude>
                   <exclude>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</exclude>
                   <exclude>com.github.dblock:oshi-core</exclude>
                   <exclude>com.github.fge:btf</exclude>
@@ -818,9 +824,15 @@
               <verticle>${main.verticle}</verticle>
               <redeploy>${live.test.reloads}</redeploy>
               <runArgs>
-                <runArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</runArg>
+                <!-- This setting is only for debugging purposes -->
+                <runArg>-Dvertx.options.blockedThreadCheckInterval=999999</runArg>
+                <!-- This configures the application -->
                 <runArg>-Dvertx-config-path=target/test-classes/test-config.properties</runArg>
               </runArgs>
+              <jvmArgs>
+                <!-- This configures the logging for our application -->
+                <jvmArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</jvmArg>
+              </jvmArgs>
             </configuration>
           </plugin>
         </plugins>

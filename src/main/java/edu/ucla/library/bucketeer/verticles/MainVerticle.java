@@ -11,6 +11,7 @@ import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
+import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler;
@@ -24,7 +25,6 @@ import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
 import edu.ucla.library.bucketeer.utils.FilePathPrefixFactory;
 import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
-import edu.ucla.library.bucketeer.utils.JobFactory;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;

@@ -1,12 +1,12 @@
 
-package edu.ucla.library.bucketeer.utils;
+package edu.ucla.library.bucketeer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import com.opencsv.CSVReader;
 
@@ -15,19 +15,20 @@ import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
-import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.CsvParsingException;
-import edu.ucla.library.bucketeer.Item;
-import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
-import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Metadata;
+import edu.ucla.library.bucketeer.utils.GenericFilePathPrefix;
+import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
+import io.vertx.core.json.jackson.DatabindCodec;
 
 /**
  * A creator of jobs.
  */
 @SuppressWarnings("PMD.NonThreadSafeSingleton") // #FIXME but ignoring for now since it's not related to this ticket
 public final class JobFactory {
+
+    static {
+        DatabindCodec.mapper().findAndRegisterModules();
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobFactory.class, Constants.MESSAGES);
 
@@ -65,38 +66,62 @@ public final class JobFactory {
     /**
      * Creates a batch job from a CSV file that has headers.
      *
+     * @param aName A job name
      * @param aCsvFile A CSV file containing the job's metadata
      * @return A new batch job
      * @throws IOException If there is trouble reading the CSV file
      */
-    @SuppressWarnings({ "PMD.ExcessiveMethodLength", "PMD.NcssCount" }) // FIXME: possible area for improvement
-    public Job createJob(final String aName, final File aCsvFile) throws IOException, CsvParsingException {
-        final List<CsvParsingException> exceptions = new ArrayList<>();
+    public Job createJob(final String aName, final File aCsvFile) throws IOException, ProcessingException {
+        return createJob(aName, aCsvFile, false);
+    }
+
+    /**
+     * Creates a batch job from a CSV file that has headers.
+     *
+     * @param aName A job name
+     * @param aCsvFile A CSV file containing the job's metadata
+     * @param aSubsequentRun If the job to be created is a subsequent run
+     * @return A new batch job
+     * @throws IOException If there is trouble reading the CSV file
+     */
+    @SuppressWarnings({ "PMD.ExcessiveMethodLength", "PMD.NcssCount" })
+    public Job createJob(final String aName, final File aCsvFile, final boolean aSubsequentRun) throws IOException,
+            ProcessingException {
         final Reader reader = new BufferedFileReader(aCsvFile);
         final CSVReader csvReader = new CSVReader(reader);
         final List<Item> items = new ArrayList<>();
-        final Job job = new Job(aName);
+        final Job job = new Job(aName).isSubsequentRun(aSubsequentRun);
 
         try {
             final List<String[]> metadata = csvReader.readAll();
 
+            /* Whether or not this item has a viewingHint (optional) */
+            boolean hasViewingHint = false;
+
+            /* The type of object of our item (optional) */
+            String objectType = "";
+
+            // These are the columns we care about
             int bucketeerStateIndex = -1;
             int objectTypeIndex = -1;
             int accessCopyIndex = -1;
             int fileNameIndex = -1;
             int itemIdIndex = -1;
+            int viewingHintIndex = -1;
 
             // Store the metadata without its headers
             job.setMetadata(metadata.subList(1, metadata.size()));
 
+            // Cycle through all the rows in the CSV file (the first row has headers, the rest have values)
             for (int rowIndex = 0; rowIndex < metadata.size(); rowIndex++) {
-                final CsvParsingException csvParsingException = new CsvParsingException();
+                final ProcessingException error = new ProcessingException();
                 final String[] columns = metadata.get(rowIndex);
                 final Item item = new Item();
 
                 // Set the IFilePathPrefix implementation that Item(s) will use to access files
                 item.setFilePathPrefix(myFilePathPrefix);
 
+                // Get the index positions of all the columns we care about
                 for (int columnIndex = 0; columnIndex < columns.length; columnIndex++) {
                     // We assume first line contains the headers and remember the indices of those we care about
                     if (rowIndex == 0) {
@@ -104,6 +129,10 @@ public final class JobFactory {
                             case Metadata.ITEM_ID:
                                 LOGGER.debug(MessageCodes.BUCKETEER_117, columnIndex);
                                 itemIdIndex = columnIndex;
+                                break;
+                            case Metadata.VIEWING_HINT:
+                                LOGGER.debug(MessageCodes.BUCKETEER_152, columnIndex);
+                                viewingHintIndex = columnIndex;
                                 break;
                             case Metadata.FILE_NAME:
                                 LOGGER.debug(MessageCodes.BUCKETEER_118, columnIndex);
@@ -125,47 +154,39 @@ public final class JobFactory {
                                 break;
                         }
                     } else {
+                        // Then we use the indices of the columns we care about to extract and/or check the values
                         if (fileNameIndex == -1) {
                             // File Name is a required header, if we don't find it complain
-                            csvParsingException.addMessage(MessageCodes.BUCKETEER_122);
+                            error.addMessage(MessageCodes.BUCKETEER_122);
                             break;
                         } else if (itemIdIndex == -1) {
                             // Item ID/ARK is a required header, if we don't find it complain
-                            csvParsingException.addMessage(MessageCodes.BUCKETEER_123);
+                            error.addMessage(MessageCodes.BUCKETEER_123);
                             break;
                         } else if (fileNameIndex == columnIndex) {
-                            final String filePath = StringUtils.trimToNull(columns[columnIndex]);
+                            item.setFilePath(Optional.ofNullable(StringUtils.trimToNull(columns[columnIndex])));
+                        } else if (viewingHintIndex == columnIndex) {
+                            final String viewingHint = columns[columnIndex];
 
-                            // Items have files by default so it may just be that hasFile(false) has not yet been set
-                            if (item.hasFile()) {
-                                if (filePath != null) {
-                                    item.setFilePath(columns[columnIndex]);
-                                } else {
-                                    item.setFilePath("");
-                                    item.setWorkflowState(WorkflowState.FAILED);
-                                }
+                            if (StringUtils.trimToNull(viewingHint) != null) {
+                                hasViewingHint = true;
                             }
                         } else if (itemIdIndex == columnIndex) {
                             item.setID(columns[columnIndex]);
                         } else if (bucketeerStateIndex == columnIndex) {
                             try {
-                                // If item already has a workflow state, preserve it
                                 item.setWorkflowState(WorkflowState.fromString(columns[columnIndex]));
                             } catch (final IllegalArgumentException details) {
-                                csvParsingException.addMessage(MessageCodes.BUCKETEER_124, columns[columnIndex]);
+                                // Adding an error sets the workflow state to failed
+                                error.addMessage(MessageCodes.BUCKETEER_124, columns[columnIndex]);
                             }
                         } else if (accessCopyIndex == columnIndex) {
-                            // If item already has an access URL, preserve it
                             item.setAccessURL(columns[columnIndex]);
-                        } else if (objectTypeIndex == columnIndex && Metadata.COLLECTION.equals(
-                                columns[columnIndex])) {
-                            item.hasFile(false);
-
-                            // If we don't have a source file to process, we can mark this done
-                            if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
-                                item.setWorkflowState(WorkflowState.INGESTED);
-                            } else {
-                                item.setWorkflowState(WorkflowState.SUCCEEDED);
+                        } else if (objectTypeIndex == columnIndex) {
+                            if (Metadata.COLLECTION.equalsIgnoreCase(columns[columnIndex])) {
+                                item.isStructural(true);
+                            } else if (Metadata.WORK.equalsIgnoreCase(columns[columnIndex])) {
+                                objectType = Metadata.WORK.toString();
                             }
                         }
                     }
@@ -173,35 +194,57 @@ public final class JobFactory {
 
                 // Skip the first headers row; there are no errors in that (we take it at face value)
                 if (rowIndex != 0) {
-                    // If we're supposed to have a file but don't have one, add an exception message
-                    if (item.hasFile() && !item.fileExists()) {
-                        csvParsingException.addMessage(MessageCodes.BUCKETEER_125, item.getID(), item.getFilePath());
+                    final WorkflowState state = item.getWorkflowState();
+
+                    // Cf. https://github.com/UCLALibrary/bucketeer/blob/master/docs/loading-CSVs.md
+                    if (job.isSubsequentRun()) {
+                        if (WorkflowState.FAILED.equals(state) || WorkflowState.MISSING.equals(state)) {
+                            item.setWorkflowState(WorkflowState.EMPTY);
+                        } else if (WorkflowState.SUCCEEDED.equals(state)) {
+                            item.setWorkflowState(WorkflowState.INGESTED);
+                        }
+                    } else if (!WorkflowState.STRUCTURAL.equals(state)) {
+                        item.setWorkflowState(WorkflowState.EMPTY);
                     }
 
-                    // If we've had any exceptions so far, mark the object as failed
-                    if (csvParsingException.countMessages() > 0) {
-                        exceptions.add(csvParsingException);
-                        item.setWorkflowState(WorkflowState.FAILED);
+                    if (Metadata.WORK.toString().equals(objectType) && hasViewingHint) {
+                        item.isStructural(true);
+
+                        // Reset our structural row indicators
+                        hasViewingHint = false;
+                        objectType = "";
                     }
 
+                    // If it's supposed to have a file, check to see if it does and fail if it doesn't
+                    if (item.hasFile() && WorkflowState.EMPTY.equals(item.getWorkflowState())) {
+                        final Optional<File> file = item.getFile();
+
+                        if (file.isEmpty()) {
+                            item.setWorkflowState(WorkflowState.MISSING);
+                            error.addMessage(MessageCodes.BUCKETEER_125, item.getID(), job.getName());
+                        } else if (!file.get().exists()) {
+                            error.addMessage(MessageCodes.BUCKETEER_146, item.getID(), file.get());
+                        }
+                    }
+
+                    // If we've had any exceptions so far, mark the object as failed and store the exception
+                    if (error.countMessages() > 0) {
+                        // Let missing be the primary error if there are other issues
+                        if (!WorkflowState.MISSING.equals(item.getWorkflowState())) {
+                            item.setWorkflowState(WorkflowState.FAILED);
+                        }
+
+                        // TODO: Store the exception in the item (have to change object to make this happen)
+                    }
+
+                    // Add this item to the job's items list
                     items.add(item);
                 } else {
                     job.setMetadataHeader(columns);
                 }
             }
         } finally {
-            final StringBuilder builder = new StringBuilder();
-            final Iterator<CsvParsingException> iterator = exceptions.iterator();
-
-            // Clean up the CSV reader
             csvReader.close();
-
-            while (iterator.hasNext()) {
-                builder.append(iterator.next().getMessages());
-            }
-
-            // Write out CSV errors as warnings in the application log
-            LOGGER.warn(MessageCodes.BUCKETEER_126, aName, builder.toString());
         }
 
         return job.setItems(items);

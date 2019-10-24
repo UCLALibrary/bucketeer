@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,11 +35,15 @@ public class Item implements Serializable {
 
     private String myID;
 
-    private String myFilePath;
+    private Optional<String> myFilePath;
+
+    private Optional<String> myPrefixedFilePath;
 
     private String myAccessURL;
 
     private boolean hasImageFile = true;
+
+    private ProcessingException myErrors;
 
     @JsonProperty("workflowState")
     private String myWorkflowState = WorkflowState.EMPTY.toString();
@@ -61,8 +66,8 @@ public class Item implements Serializable {
      */
     @JsonIgnore
     public Item(final String aID, final String aFilePath) {
+        myFilePath = Optional.ofNullable(aFilePath);
         myID = aID;
-        myFilePath = aFilePath;
     }
 
     /**
@@ -110,62 +115,6 @@ public class Item implements Serializable {
     }
 
     /**
-     * Gets the source file referenced in the object's metadata.
-     *
-     * @return The file referenced by the object's metadata
-     */
-    @JsonIgnore
-    public File getFile() {
-        if (!hasFile()) {
-            return null;
-        } else {
-            File file = new File(StringUtils.trimTo(myFilePath, ""));
-
-            if (myFilePathPrefix != null) {
-                file = Paths.get(myFilePathPrefix.getPrefix(file), file.getPath()).toFile();
-            } else {
-                LOGGER.warn(MessageCodes.BUCKETEER_128);
-            }
-
-            return file;
-        }
-    }
-
-    /**
-     * Gets the file path.
-     *
-     * @return The file path
-     */
-    public String getFilePath() throws IOException {
-        return hasFile() ? getFile().getCanonicalPath() : null;
-    }
-
-    /**
-     * Sets the file path.
-     *
-     * @param aFilePath A file path
-     */
-    public Item setFilePath(final String aFilePath) {
-        if (!hasFile()) {
-            throw new IllegalArgumentException(LOGGER.getMessage(MessageCodes.BUCKETEER_053, myID));
-        } else {
-            myFilePath = aFilePath;
-        }
-
-        return this;
-    }
-
-    /**
-     * Tests whether the metadata has an available source file.
-     *
-     * @return True if a file exists; else, false
-     */
-    @JsonIgnore
-    public boolean fileExists() {
-        return myFilePath != null && getFile().exists();
-    }
-
-    /**
      * Gets the item ID.
      *
      * @return The ID item
@@ -206,6 +155,73 @@ public class Item implements Serializable {
     }
 
     /**
+     * Gets the source file referenced in the object's metadata.
+     *
+     * @return The file referenced by the object's metadata
+     */
+    @JsonIgnore
+    public Optional<File> getFile() {
+        final String filePath;
+        final File file;
+
+        if (!hasFile() || myFilePath.isEmpty()) {
+            return Optional.empty();
+        } else {
+            if (myFilePathPrefix != null) {
+                filePath = myFilePath.get();
+                file = Paths.get(myFilePathPrefix.getPrefix(new File(filePath)), filePath).toFile();
+            } else {
+                LOGGER.warn(MessageCodes.BUCKETEER_128);
+                file = new File(myFilePath.get());
+            }
+
+            return Optional.of(file);
+        }
+    }
+
+    /**
+     * Returns the prefixed file name.
+     *
+     * @return The absolute file path of the item's source file
+     * @throws IOException If there is trouble resolving the path to the file
+     */
+    @JsonIgnore
+    public Optional<String> getPrefixedFilePath() {
+        if (myPrefixedFilePath == null) {
+            final Optional<File> file = getFile();
+
+            if (file.isEmpty()) {
+                myPrefixedFilePath = Optional.empty();
+            } else {
+                myPrefixedFilePath = Optional.of(file.get().getAbsolutePath());
+            }
+        }
+
+        return myPrefixedFilePath;
+    }
+
+    /**
+     * Gets the non-prefixed file path.
+     *
+     * @return The file path
+     */
+    public Optional<String> getFilePath() throws IOException {
+        return myFilePath;
+    }
+
+    /**
+     * Sets the non-prefixed file path.
+     *
+     * @param aFilePath A file path
+     */
+    public Item setFilePath(final Optional<String> aFilePath) {
+        myPrefixedFilePath = null;
+        myFilePath = aFilePath;
+
+        return this;
+    }
+
+    /**
      * Gets whether this item should have an image file.
      *
      * @return Whether this item should have an image file
@@ -218,12 +234,16 @@ public class Item implements Serializable {
     /**
      * Sets whether this item is supposed to have an image file.
      *
-     * @param aBool True if the item should have an image file; else, false
+     * @param aStructuralObj True if object is structural and doesn't have a source file
      * @return The item
      */
     @JsonIgnore
-    public Item hasFile(final boolean aBool) {
-        hasImageFile = aBool;
+    public Item isStructural(final boolean aStructuralObj) {
+        if (aStructuralObj) {
+            myWorkflowState = WorkflowState.STRUCTURAL.toString();
+        }
+
+        hasImageFile = !aStructuralObj;
         return this;
     }
 

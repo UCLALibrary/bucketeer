@@ -133,7 +133,7 @@
   <entry key="BUCKETEER-122">CSV is missing the 'File Name' header</entry>
   <entry key="BUCKETEER-123">CSV is missing the 'Item ARK' header</entry>
   <entry key="BUCKETEER-124">Unexpected workflow state: {}</entry>
-  <entry key="BUCKETEER-125">Item '{}' is missing a source file: {}</entry>
+  <entry key="BUCKETEER-125">Item '{}' [{}] is missing a source file</entry>
   <entry key="BUCKETEER-126">CSV input errors in '{}': {}</entry>
   <entry key="BUCKETEER-127">Didn't find a custom file path prefix deserializer, so using a generic one: {}</entry>
   <entry key="BUCKETEER-128">A IFilePathPrefix implementation is not configured, so we're using the default one</entry>
@@ -152,5 +152,18 @@
   <entry key="BUCKETEER-141">Successfully marked item '{}' as failed</entry>
   <entry key="BUCKETEER-142">Refused to delete '{}' job because it's still processing images</entry>
   <entry key="BUCKETEER-143">Test server for {} started...</entry>
+  <entry key="BUCKETEER-144">Successfully deleted batch job: {}</entry>
+  <entry key="BUCKETEER-145">Testing whether file exists: {}</entry>
+  <entry key="BUCKETEER-146">Item '{}' source file does not exist: {}</entry>
+  <entry key="BUCKETEER-147">Missing source file</entry>
+  <entry key="BUCKETEER-148">Job name found in jobs queue: {}</entry>
+  <entry key="BUCKETEER-149">Job name not found in jobs queue: {}</entry>
+  <entry key="BUCKETEER-150">Job '{}' for '{}' pulled from queue [items: {}]</entry>
+  <entry key="BUCKETEER-151">Added item ({} [{}]) to JSON response</entry>
+  <entry key="BUCKETEER-152">Viewing Hint header index: {}</entry>
+  <entry key="BUCKETEER-153">Bucketeer State index position found: {}</entry>
+  <entry key="BUCKETEER-154">IIIF Access URL index position found: {}</entry>
+  <entry key="BUCKETEER-155">Adding {} new header columns</entry>
+  <entry key="BUCKETEER-156">Error triggering S3 upload retry: {}</entry>
   <entry key="BUCKETEER-500">{}</entry>
 </properties>

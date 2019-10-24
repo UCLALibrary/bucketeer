@@ -1,8 +1,7 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import info.freelibrary.util.Logger;
@@ -49,46 +48,48 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
                         if (jobs.contains(jobName)) {
                             final JsonObject result = new JsonObject();
 
+                            LOGGER.debug(MessageCodes.BUCKETEER_148, jobName);
+
                             map.get(jobName, getJob -> {
                                 if (getJob.succeeded()) {
                                     final Job job = getJob.result();
                                     final JsonArray images = new JsonArray();
+                                    final String slackHandle = job.getSlackHandle();
+                                    final int count = job.size();
 
-                                    result.put(Constants.COUNT, job.size());
-                                    result.put(Constants.SLACK_HANDLE, job.getSlackHandle());
+                                    result.put(Constants.COUNT, count);
+                                    result.put(Constants.SLACK_HANDLE, slackHandle);
+                                    result.put(Constants.REMAINING, job.remaining());
 
-                                    try {
-                                        final List<Item> items = job.getItems();
+                                    LOGGER.debug(MessageCodes.BUCKETEER_150, jobName, slackHandle, count);
 
-                                        for (final Item item : items) {
-                                            final JsonObject image = new JsonObject();
-                                            final String filePath;
+                                    for (final Item item : job.getItems()) {
+                                        final Optional<String> filePath = item.getPrefixedFilePath();
+                                        final JsonObject image = new JsonObject();
 
-                                            if (item.hasFile()) {
-                                                filePath = item.getFile().getCanonicalPath();
-                                            } else {
-                                                filePath = "";
-                                            }
+                                        image.put(Constants.IMAGE_ID, item.getID());
+                                        image.put(Constants.STATUS, item.getWorkflowState().toString());
 
-                                            image.put(Constants.IMAGE_ID, item.getID());
-                                            image.put(Constants.STATUS, item.getWorkflowState().toString());
-                                            image.put(Constants.FILE_PATH, filePath);
-
-                                            images.add(image);
+                                        if (item.hasFile() && filePath.isPresent()) {
+                                            image.put(Constants.FILE_PATH, filePath.get());
+                                        } else {
+                                            image.put(Constants.FILE_PATH, Constants.EMPTY);
                                         }
 
-                                        result.put(Constants.JOBS, images);
-
-                                        response.setStatusCode(HTTP.OK);
-                                        response.end(result.encodePrettily());
-                                    } catch (final IOException details) {
-                                        returnError(response, details.getMessage());
+                                        images.add(image);
                                     }
+
+                                    result.put(Constants.JOBS, images);
+
+                                    response.setStatusCode(HTTP.OK);
+                                    response.end(result.encodePrettily());
                                 } else {
                                     returnError(response, MessageCodes.BUCKETEER_096);
                                 }
                             });
                         } else {
+                            LOGGER.debug(MessageCodes.BUCKETEER_149, jobName);
+
                             response.setStatusCode(HTTP.NOT_FOUND);
                             response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_098, jobName));
                             response.end();

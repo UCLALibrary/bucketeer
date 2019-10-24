@@ -22,6 +22,11 @@ public final class Constants {
     public static final String COUNT = "count";
 
     /**
+     * The number of items remaining in a batch job.
+     */
+    public static final String REMAINING = "remaining";
+
+    /**
      * Bucketeer jobs.
      */
     public static final String JOBS = "jobs";

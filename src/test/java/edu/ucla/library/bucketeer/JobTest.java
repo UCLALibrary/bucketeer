@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import info.freelibrary.util.StringUtils;
 
-import edu.ucla.library.bucketeer.utils.JobFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -39,7 +38,7 @@ public class JobTest {
      * Tests JSON serialization.
      */
     @Test
-    public final void testJsonSerialization() throws IOException, CsvParsingException {
+    public final void testJsonSerialization() throws IOException, ProcessingException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final JsonObject expected = new JsonObject(StringUtils.read(JSON_FILE));
         final JsonArray items = expected.getJsonArray(ITEMS);
@@ -48,9 +47,9 @@ public class JobTest {
             final JsonObject item = items.getJsonObject(index);
 
             if (index != 7) {
-                item.put(FILE_PATH, TEST_TIFF_FILE.getCanonicalPath());
+                item.put(FILE_PATH, TEST_TIFF_FILE.getPath());
             } else {
-                item.put(FILE_PATH, TEST_FAIL_FILE.getCanonicalPath());
+                item.put(FILE_PATH, TEST_FAIL_FILE.getPath());
             }
         }
 
@@ -82,7 +81,7 @@ public class JobTest {
      * Tests getting the batch items.
      */
     @Test
-    public final void testGetItems() throws IOException, CsvParsingException {
+    public final void testGetItems() throws IOException, ProcessingException {
         assertEquals(9, JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE).size());
     }
 
@@ -106,7 +105,7 @@ public class JobTest {
      * Tests getting the metadata header.
      */
     @Test
-    public final void testGetMetadataHeader() throws IOException, CsvParsingException {
+    public final void testGetMetadataHeader() throws IOException, ProcessingException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final String header = StringUtils.read(HEADER_FILE);
 

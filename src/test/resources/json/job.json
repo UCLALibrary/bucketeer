@@ -16,7 +16,7 @@
             "id": "ark:/13030/hb009n998t",
             "filePath": "",
             "accessURL": null,
-            "workflowState": "failed",
+            "workflowState": "",
             "filePathPrefix": {
                 "genericRootDir": "."
             }
@@ -34,7 +34,7 @@
             "id": "ark:/13030/hb0489n655",
             "filePath": "",
             "accessURL": null,
-            "workflowState": "failed",
+            "workflowState": "",
             "filePathPrefix": {
                 "genericRootDir": "."
             }
@@ -52,7 +52,7 @@
             "id": "ark:/13030/hb058002kj",
             "filePath": "",
             "accessURL": null,
-            "workflowState": "failed",
+            "workflowState": "",
             "filePathPrefix": {
                 "genericRootDir": "."
             }

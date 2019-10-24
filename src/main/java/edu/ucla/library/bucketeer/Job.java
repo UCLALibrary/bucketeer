@@ -69,54 +69,13 @@ public class Job implements Serializable {
     public int remaining() {
         int remaining = 0;
 
-        // If this is the first run, only process unprocessed items
-        if (!isSubsequentRun()) {
-            for (final Item item : myItems) {
-                if (WorkflowState.EMPTY.equals(item.getWorkflowState())) {
-                    remaining += 1;
-                }
-            }
-        } else {
-            // If this is a subsequent run, only process failures
-            for (final Item item : myItems) {
-                if (WorkflowState.FAILED.equals(item.getWorkflowState())) {
-                    remaining += 1;
-                }
+        for (final Item item : myItems) {
+            if (WorkflowState.EMPTY.equals(item.getWorkflowState())) {
+                remaining += 1;
             }
         }
 
         return remaining;
-    }
-
-    /**
-     * Mark anything that's previously been successfully processed as ingested.
-     */
-    @JsonIgnore
-    public void markIngestedItems() {
-        if (myItems != null) {
-            for (final Item item : myItems) {
-                if (WorkflowState.SUCCEEDED.equals(item.getWorkflowState())) {
-                    item.setWorkflowState(WorkflowState.INGESTED);
-                }
-            }
-        }
-    }
-
-    /**
-     * Sets whether this is an initial or subsequent run. If this is a subsequent run, it marks anything that has
-     * already been successfully processed as ingested so that newly processed items can be marked as successful.
-     *
-     * @param aBool True if subsequent run; else, false
-     */
-    @JsonProperty("isSubsequentRun")
-    public Job isSubsequentRun(final boolean aBool) {
-        myJobIsSubsequentRun = aBool;
-
-        if (myJobIsSubsequentRun) {
-            markIngestedItems();
-        }
-
-        return this;
     }
 
     /**
@@ -242,11 +201,23 @@ public class Job implements Serializable {
     }
 
     /**
+     * Sets whether this is an initial or subsequent run. If this is a subsequent run, it marks anything that has
+     * already been successfully processed as ingested so that newly processed items can be marked as successful.
+     *
+     * @param aBool True if subsequent run; else, false
+     */
+    @JsonProperty("isSubsequentRun")
+    Job isSubsequentRun(final boolean aBool) {
+        myJobIsSubsequentRun = aBool;
+        return this;
+    }
+
+    /**
      * Bucketeer workflow state representation.
      */
     @JsonIgnoreType
     public enum WorkflowState {
-        INGESTED, FAILED, SUCCEEDED, EMPTY;
+        INGESTED, FAILED, SUCCEEDED, EMPTY, MISSING, STRUCTURAL;
 
         /**
          * Creates a new WorkflowState from the supplied string.

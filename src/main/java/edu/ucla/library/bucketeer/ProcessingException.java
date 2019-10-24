@@ -4,80 +4,95 @@ package edu.ucla.library.bucketeer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 /**
- * An exception thrown when parsing a CSV file.
+ * An exception thrown when parsing a CSV file or converting an image.
  */
-public class CsvParsingException extends Exception {
+public class ProcessingException extends Exception {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CsvParsingException.class, Constants.MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingException.class, Constants.MESSAGES);
 
     /**
-     * The <code>serialVersionUID</code> for CsvException.
+     * The <code>serialVersionUID</code> for ProcessingException.
      */
     private static final long serialVersionUID = -4725879946862646567L;
 
-    private final List<String> myMessages;
+    private List<String> myMessages;
 
     /**
-     * Create a CSV exception.
+     * Create an exception.
      */
-    public CsvParsingException() {
+    public ProcessingException() {
         myMessages = new ArrayList<>();
     }
 
     /**
-     * Create a CSV exception.
+     * Create an exception.
      */
-    public CsvParsingException(final String aMessage) {
+    public ProcessingException(final String aMessage) {
         myMessages = new ArrayList<>();
         myMessages.add(LOGGER.getMessage(aMessage));
     }
 
     /**
-     * Adds message to the CsvException.
+     * Adds message to the exception.
      *
-     * @param aMessage A new message to add to the CsvException
+     * @param aMessage A new message to add to the exception
      */
     public void addMessage(final String aMessage) {
         myMessages.add(LOGGER.getMessage(aMessage));
     }
 
     /**
-     * Adds message with details to the CsvException.
+     * Adds message with details to the exception.
      *
-     * @param aMessage A new message to add to the CsvException
+     * @param aMessage A new message to add to the exception
      * @param aDetails Additional details about the added message
      */
     public void addMessage(final String aMessage, final Object... aDetails) {
         myMessages.add(LOGGER.getMessage(aMessage, aDetails));
     }
 
+    /**
+     * Gets the error messages formatted into a single string.
+     */
     @Override
+    @JsonIgnore
     public String getMessage() {
-        return getMessages();
+        return getMessages(System.lineSeparator());
     }
 
     /**
-     * Returns the parsing errors formatted with a system EOL as the delimiter.
+     * Returns the error messages in a list.
      *
-     * @param aDelimiter
-     * @return The parsing errors formatted with a system EOL as the delimiter
+     * @return The error messages
      */
-    public String getMessages() {
-        return String.join(System.lineSeparator(), myMessages);
+    public List<String> getMessages() {
+        return myMessages;
     }
 
     /**
      * Returns the parsing errors formatted with the supplied delimiter.
      *
-     * @param aDelimiter
+     * @param aDelimiter A delimiter used to join the messages into a single string
      * @return The parsing errors formatted with the supplied delimiter
      */
+    @JsonIgnore
     public String getMessages(final String aDelimiter) {
         return String.join(aDelimiter, myMessages);
+    }
+
+    /**
+     * Sets the messages for this exception.
+     *
+     * @param aMessageList A list of messages
+     */
+    public void setMessages(final List<String> aMessageList) {
+        myMessages = aMessageList;
     }
 
     /**
@@ -85,11 +100,13 @@ public class CsvParsingException extends Exception {
      *
      * @return The number of exception messages
      */
+    @JsonIgnore
     public int countMessages() {
         return myMessages.size();
     }
 
     @Override
+    @JsonIgnore
     public String getLocalizedMessage() {
         return getMessage();
     }
