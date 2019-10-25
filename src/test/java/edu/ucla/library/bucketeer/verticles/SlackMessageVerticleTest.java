@@ -154,7 +154,9 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
     public final void testSlackFileUpload(final TestContext aContext) throws FileNotFoundException,
             ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB, LIVE_TEST_CSV);
-        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle);
+        final String iiifURL = "unit.test.not.real.please.disregard.com";
+        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle, job.size(),
+                iiifURL);
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();
