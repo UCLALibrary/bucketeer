@@ -270,6 +270,15 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
                 // We might be skipping because there is no file to process or because it's already been done
                 LOGGER.debug(MessageCodes.BUCKETEER_054, item.getID(), aJob.getName(), filePath, state);
+
+                // We can't let an empty state go through without an S3 upload attempt
+                if (WorkflowState.EMPTY.equals(state)) {
+                    if (filePath.equals(missingFileMessage)) {
+                        item.setWorkflowState(WorkflowState.MISSING);
+                    } else {
+                        item.setWorkflowState(WorkflowState.FAILED);
+                    }
+                }
             }
         }
 

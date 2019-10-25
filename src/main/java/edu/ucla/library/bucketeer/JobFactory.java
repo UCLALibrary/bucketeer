@@ -175,7 +175,10 @@ public final class JobFactory {
                             item.setID(columns[columnIndex]);
                         } else if (bucketeerStateIndex == columnIndex) {
                             try {
-                                item.setWorkflowState(WorkflowState.fromString(columns[columnIndex]));
+                                // Structural state is new so let's not overwrite with older values
+                                if (!WorkflowState.STRUCTURAL.equals(item.getWorkflowState())) {
+                                    item.setWorkflowState(WorkflowState.fromString(columns[columnIndex]));
+                                }
                             } catch (final IllegalArgumentException details) {
                                 // Adding an error sets the workflow state to failed
                                 error.addMessage(MessageCodes.BUCKETEER_124, columns[columnIndex]);
