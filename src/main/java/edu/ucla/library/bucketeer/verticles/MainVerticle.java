@@ -228,6 +228,7 @@ public class MainVerticle extends AbstractVerticle {
         futures.add(deployVerticle(SlackMessageVerticle.class.getName(), basicOpts, Future.future()));
         futures.add(deployVerticle(ItemFailureVerticle.class.getName(), basicOpts, Future.future()));
         futures.add(deployVerticle(FinalizeJobVerticle.class.getName(), basicOpts, Future.future()));
+        futures.add(deployVerticle(FesterVerticle.class.getName(), basicOpts, Future.future()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).setHandler(handler -> {

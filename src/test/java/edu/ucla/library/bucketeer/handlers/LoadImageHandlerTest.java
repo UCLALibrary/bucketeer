@@ -93,7 +93,6 @@ public class LoadImageHandlerTest {
 
                     // grab our bucket name
                     s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
-
                 }
 
                 myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {

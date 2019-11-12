@@ -165,5 +165,9 @@
   <entry key="BUCKETEER-154">IIIF Access URL index position found: {}</entry>
   <entry key="BUCKETEER-155">Adding {} new header columns</entry>
   <entry key="BUCKETEER-156">Error triggering S3 upload retry: {}</entry>
+  <entry key="BUCKETEER-157">Failed to upload CSV file [{}] to Fester: {} [{}]</entry>
+  <entry key="BUCKETEER-158">Unable to write temporary CSV file: {}</entry>
+  <entry key="BUCKETEER-159">A URL for the Fester service was not supplied</entry>
+  <entry key="BUCKETEER-160">Shutting down test server...</entry>
   <entry key="BUCKETEER-500">{}</entry>
 </properties>
