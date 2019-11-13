@@ -14,7 +14,7 @@ import info.freelibrary.util.StringUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class JobTest {
+public class JobTest extends AbstractBucketeerTest {
 
     private static final String TEST_JOB_NAME = "test-job";
 

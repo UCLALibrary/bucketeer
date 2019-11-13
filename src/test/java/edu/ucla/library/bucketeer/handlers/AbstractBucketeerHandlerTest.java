@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import info.freelibrary.util.FileUtils;
 import info.freelibrary.util.Logger;
 
+import edu.ucla.library.bucketeer.AbstractBucketeerTest;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
@@ -42,7 +43,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.multipart.MultipartForm;
 
 @RunWith(VertxUnitRunner.class)
-public abstract class AbstractBucketeerHandlerTest {
+public abstract class AbstractBucketeerHandlerTest extends AbstractBucketeerTest {
 
     protected static final String JOB_FILE_NAME = "live-test.csv";
 
