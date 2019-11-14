@@ -21,7 +21,7 @@ import io.vertx.core.json.JsonObject;
 /**
  * Tests of the Item class.
  */
-public class ItemTest {
+public class ItemTest extends AbstractBucketeerTest {
 
     private static final String TEST_ID = "asdf001";
 

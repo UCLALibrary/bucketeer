@@ -53,14 +53,13 @@
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
     <beanutils.version>1.9.4</beanutils.version>
-    <jackson.version>2.9.9</jackson.version>
     <woodstox.version>5.1.0</woodstox.version>
     <freelib.utils.version>0.8.10</freelib.utils.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
     <oshi.version>4.0.0</oshi.version>
-    <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
+    <jackson.version>2.10.1</jackson.version>
 
     <!-- Build plug-in versions -->
     <clean.plugin.version>3.1.0</clean.plugin.version>
@@ -636,6 +635,8 @@
                   <exclude>io.vertx:vertx-web-api-contract</exclude>
                   <exclude>io.vertx:vertx-web-common</exclude>
                   <exclude>io.vertx:vertx-web</exclude>
+                  <exclude>jakarta.activation:jakarta.activation-api</exclude>
+                  <exclude>jakarta.xml.bind:jakarta.xml.bind-api</exclude>
                   <exclude>javax.activation:activation</exclude>
                   <exclude>javax.annotation:jsr250-api</exclude>
                   <exclude>javax.enterprise:cdi-api</exclude>

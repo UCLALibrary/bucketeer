@@ -43,8 +43,6 @@ public class Item implements Serializable {
 
     private boolean hasImageFile = true;
 
-    private ProcessingException myErrors;
-
     @JsonProperty("workflowState")
     private String myWorkflowState = WorkflowState.EMPTY.toString();
 
