@@ -74,6 +74,8 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
     public final void testPost(final TestContext aContext) throws IOException {
         final Async asyncTask = aContext.async();
         final Promise<Void> promise = Promise.promise();
+
+        // The handler that runs our test-specific checks
         final Handler<RoutingContext> handler = routingContext -> {
             final Set<FileUpload> uploads = routingContext.fileUploads();
             final FileUpload upload;
@@ -132,6 +134,7 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
         // Create a route that handles POSTs from our FesterVerticle
         router.post("/collections").handler(aHandler);
 
+        // Start the test server that's now configured with the test handler
         myServer = myVertx.createHttpServer().requestHandler(router).listen(myPort, listen -> {
             if (listen.succeeded()) {
                 // Configure our FesterVerticle to POST to our test server's port
