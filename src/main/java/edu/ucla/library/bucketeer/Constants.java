@@ -103,6 +103,11 @@ public final class Constants {
     public static final String JSON = "application/json";
 
     /**
+     * The content-type value for CSV.
+     */
+    public static final String CSV = "text/csv";
+
+    /**
      * The content-type value for XML.
      */
     public static final String XML = "application/xml";

@@ -24,6 +24,9 @@ public final class Config {
     // The IIIF server URL in which the JPEG 2000 images end up
     public static final String IIIF_URL = "bucketeer.iiif.url";
 
+    // The Fester manifestor URL (which includes the /collections endpoint)
+    public static final String FESTER_URL = "fester.url";
+
     // Thumbnail size for pre-caching thumbnails
     public static final String THUMBNAIL_SIZE = "bucketeer.thumbnail.size";
 

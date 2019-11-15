@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>bucketeer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.3-SNAPSHOT</version>
   <name>Bucketeer</name>
   <description>A TIFF to JP2 to S3 bucket microservice</description>
   <url>https://github.com/uclalibrary/bucketeer</url>
@@ -40,6 +40,13 @@
       <id>hardyoyo</id>
       <name>Hardy Pottinger</name>
       <email>hpottinger@library.ucla.edu</email>
+      <organization>UCLA Library</organization>
+      <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+    </developer>
+    <developer>
+      <id>cachemeoutside</id>
+      <name>Anthony Vuong</name>
+      <email>avuong@cachemeoutside.io</email>
       <organization>UCLA Library</organization>
       <organizationUrl>http://github.com/uclalibrary</organizationUrl>
     </developer>
@@ -105,6 +112,9 @@
     <!-- IIIF server URL (including the prefix, if there is one) -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
 
+    <!-- Fester manifestor collections endpoint -->
+    <fester.url>http://localhost:9999/collections</fester.url>
+
     <!-- Thumbnail size for images served by the IIIF server -->
     <bucketeer.thumbnail.size>!200,200</bucketeer.thumbnail.size>
 
@@ -126,12 +136,10 @@
       <artifactId>vertx-web</artifactId>
       <version>${vertx.version}</version>
     </dependency>
-
-    <!-- Used for generating V4 AWS signatures -->
     <dependency>
-      <groupId>uk.co.lucasweb</groupId>
-      <artifactId>aws-v4-signer-java</artifactId>
-      <version>${aws.v4.signer.version}</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+      <version>${vertx.version}</version>
     </dependency>
 
     <!-- OpenAPI for Vert.x - https://vertx.io/docs/vertx-web-api-contract/java/ -->
@@ -228,12 +236,6 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
-      <version>${vertx.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-web-client</artifactId>
       <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
@@ -633,6 +635,7 @@
                   <exclude>io.vertx:vertx-config</exclude>
                   <exclude>io.vertx:vertx-core</exclude>
                   <exclude>io.vertx:vertx-web-api-contract</exclude>
+                  <exclude>io.vertx:vertx-web-client</exclude>
                   <exclude>io.vertx:vertx-web-common</exclude>
                   <exclude>io.vertx:vertx-web</exclude>
                   <exclude>jakarta.activation:jakarta.activation-api</exclude>
