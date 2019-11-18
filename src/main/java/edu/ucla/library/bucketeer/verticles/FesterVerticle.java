@@ -57,7 +57,6 @@ public class FesterVerticle extends AbstractBucketeerVerticle {
 
         getJsonConsumer().handler(message -> {
             final JsonObject messageBody = message.body();
-            System.out.println(messageBody);
             final JsonObject json = messageBody.getJsonObject(Constants.BATCH_METADATA);
             final Job job = json.mapTo(Job.class);
 
