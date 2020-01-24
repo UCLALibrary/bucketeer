@@ -32,6 +32,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
@@ -50,6 +51,9 @@ public class LoadImageHandlerTest {
 
     @Rule
     public TestName myTestName = new TestName();
+
+    @Rule
+    public Timeout myTimeoutRule = Timeout.seconds(300);
 
     private Vertx myVertx;
 
