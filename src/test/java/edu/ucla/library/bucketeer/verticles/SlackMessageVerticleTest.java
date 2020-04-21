@@ -18,10 +18,10 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.ProcessingException;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -138,7 +138,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                     LOGGER.error(details, details.getMessage());
                 }
 
-                aContext.fail();
+                aContext.fail(send.cause());
             } else {
                 asyncTask.complete();
             }

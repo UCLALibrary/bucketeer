@@ -1,7 +1,9 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import org.junit.Before;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -11,11 +13,16 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.Item;
+import edu.ucla.library.bucketeer.Job;
+import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
-import io.vertx.core.http.RequestOptions;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 /**
  * Test class for the <code>DeleteJobHandler</code>.
@@ -28,47 +35,44 @@ public class DeleteJobHandlerTest extends AbstractBucketeerHandlerTest {
     private static final String TEST_URL = "/batch/jobs/" + JOB_NAME;
 
     /**
-     * Test set up.
-     *
-     * @param aContext A testing context
-     * @throws Exception When a problem occurs while trying to set up the test.
-     */
-    @Override
-    @Before
-    public void setUp(final TestContext aContext) throws Exception {
-        super.setUp(aContext);
-    }
-
-    /**
      * Tests deleting a job from the batch workflow.
      *
      * @param aContext A testing context
      */
     @Test
-    @SuppressWarnings("deprecation")
     public final void testDeleteJobHandler(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
-        final RequestOptions request = new RequestOptions();
+        final WebClient webClient = WebClient.create(myVertx);
 
-        request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(TEST_URL);
+        // Get our shared data store so we can insert a job we want to test against
+        myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
+            if (getMap.succeeded()) {
+                final List<Item> items = Arrays.asList(new Item().setWorkflowState(WorkflowState.SUCCEEDED));
 
-        myVertx.createHttpClient().delete(request, response -> {
-            final int statusCode = response.statusCode();
+                getMap.result().put(JOB_NAME, new Job(JOB_NAME).setItems(items), put -> {
+                    if (put.succeeded()) {
+                        // Once we've put the job into our shared data store, try to delete it
+                        webClient.delete(port, Constants.UNSPECIFIED_HOST, TEST_URL).send(deletion -> {
+                            if (deletion.succeeded()) {
+                                final HttpResponse<Buffer> response = deletion.result();
+                                final int statusCode = response.statusCode();
 
-            if (statusCode != HTTP.NO_CONTENT) {
-                final String statusMessage = response.statusMessage();
+                                aContext.assertEquals(HTTP.NO_CONTENT, statusCode, LOGGER.getMessage(
+                                        MessageCodes.BUCKETEER_114, statusCode, response.statusMessage()));
 
-                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, statusMessage));
+                                complete(asyncTask);
+                            } else {
+                                aContext.fail(deletion.cause());
+                            }
+                        });
+                    } else {
+                        aContext.fail(put.cause());
+                    }
+                });
             } else {
-                asyncTask.complete();
+                aContext.fail(getMap.cause());
             }
-        }).end();
+        });
     }
-
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
-    }
-
 }

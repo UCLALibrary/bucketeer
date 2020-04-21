@@ -70,6 +70,7 @@ public final class JobFactory {
      * @param aCsvFile A CSV file containing the job's metadata
      * @return A new batch job
      * @throws IOException If there is trouble reading the CSV file
+     * @throws ProcessingException If there is trouble processing the CSV file
      */
     public Job createJob(final String aName, final File aCsvFile) throws IOException, ProcessingException {
         return createJob(aName, aCsvFile, false);
@@ -83,6 +84,7 @@ public final class JobFactory {
      * @param aSubsequentRun If the job to be created is a subsequent run
      * @return A new batch job
      * @throws IOException If there is trouble reading the CSV file
+     * @throws ProcessingException If there is trouble processing the CSV file
      */
     @SuppressWarnings({ "PMD.ExcessiveMethodLength", "PMD.NcssCount" })
     public Job createJob(final String aName, final File aCsvFile, final boolean aSubsequentRun) throws IOException,

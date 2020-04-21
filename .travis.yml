@@ -4,6 +4,10 @@ branches:
   - master
   - /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
 
+cache:
+  directories:
+  - $HOME/.m2
+
 jobs:
   include:
     - stage: Build and Test on OpenJDK11
@@ -12,10 +16,10 @@ jobs:
       jdk:
         - openjdk11
       install:
-        - mvn package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
+        - mvn help:active-profiles package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
       script:
         - >
-          mvn help:active-profiles verify \
+          travis_retry mvn verify \
             -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" \
             -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}" \
             -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}" \
