@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -92,7 +93,7 @@ public class LoadImageHandlerTest {
 
                         myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(provider).withRegion(REGION)
                                 .build();
-                    } catch (final Exception details) {
+                    } catch (final SdkClientException details) {
                         aContext.fail(details);
                     }
 
