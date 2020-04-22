@@ -8,6 +8,8 @@ cache:
   directories:
   - $HOME/.m2
 
+bundler_args: --retry 5
+
 jobs:
   include:
     - stage: Build and Test on OpenJDK11
