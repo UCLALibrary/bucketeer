@@ -13,7 +13,6 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -42,9 +41,6 @@ public class GetJobsHandlerTest extends AbstractBucketeerHandlerTest {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final WebClient webClient = WebClient.create(myVertx);
-        final RequestOptions request = new RequestOptions();
-
-        request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(TEST_URL);
 
         myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {

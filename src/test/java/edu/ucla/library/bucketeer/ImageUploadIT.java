@@ -206,8 +206,8 @@ public class ImageUploadIT {
                 try {
                     TimeUnit.SECONDS.sleep(5);
                 } catch (final InterruptedException details) {
-                    // this is just here so we can interrupt our way out of this loop
-                    details.printStackTrace(); // we might consider using a logger instead of this?
+                    aContext.fail(details);
+                    break;
                 }
 
                 LOGGER.debug(MessageCodes.BUCKETEER_037, counter);
