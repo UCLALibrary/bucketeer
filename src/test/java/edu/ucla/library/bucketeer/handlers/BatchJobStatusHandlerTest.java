@@ -122,22 +122,26 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                 final Job job = new Job(JOB_NAME).setItems(Arrays.asList(new Item().setID(id)));
 
                 // Put the job in our jobs queue so we can test against it
-                getMap.result().put(JOB_NAME, job, handler -> {
-                    webClient.patch(port, UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
-                        if (sendPatch.succeeded()) {
-                            final HttpResponse<Buffer> patchResponse = sendPatch.result();
-                            final int statusCode = patchResponse.statusCode();
-                            final String message = patchResponse.statusMessage();
+                getMap.result().put(JOB_NAME, job, put -> {
+                    if (put.succeeded()) {
+                        webClient.patch(port, UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
+                            if (sendPatch.succeeded()) {
+                                final HttpResponse<Buffer> patchResponse = sendPatch.result();
+                                final int statusCode = patchResponse.statusCode();
+                                final String message = patchResponse.statusMessage();
 
-                            if (statusCode == HTTP.NO_CONTENT) {
-                                asyncTask.complete();
+                                if (statusCode == HTTP.NO_CONTENT) {
+                                    asyncTask.complete();
+                                } else {
+                                    aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));
+                                }
                             } else {
-                                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));
+                                aContext.fail(sendPatch.cause());
                             }
-                        } else {
-                            aContext.fail(sendPatch.cause());
-                        }
-                    });
+                        });
+                    } else {
+                        aContext.fail(put.cause());
+                    }
                 });
             } else {
                 aContext.fail(getMap.cause());
