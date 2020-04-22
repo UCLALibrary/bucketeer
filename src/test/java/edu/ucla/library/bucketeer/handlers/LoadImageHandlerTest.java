@@ -11,6 +11,8 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -82,8 +84,14 @@ public class LoadImageHandlerTest {
                     final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
                     final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
 
-                    myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(
-                            new BasicAWSCredentials(s3AccessKey, s3SecretKey))).build();
+                    try {
+                        final AWSCredentials credentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+                        final AWSCredentialsProvider provider = new AWSStaticCredentialsProvider(credentials);
+
+                        myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(provider).build();
+                    } catch (final Exception details) {
+                        aContext.fail(details);
+                    }
 
                     // grab our bucket name
                     s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
