@@ -45,6 +45,8 @@ public class LoadImageHandlerTest {
 
     private static final String DOT_JPX = ".jpx";
 
+    private static final String REGION = "us-east-1";
+
     @Rule
     public RunTestOnContext myTestContext = new RunTestOnContext();
 
@@ -88,7 +90,8 @@ public class LoadImageHandlerTest {
                         final AWSCredentials credentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
                         final AWSCredentialsProvider provider = new AWSStaticCredentialsProvider(credentials);
 
-                        myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(provider).build();
+                        myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(provider).withRegion(REGION)
+                                .build();
                     } catch (final Exception details) {
                         aContext.fail(details);
                     }
