@@ -30,6 +30,9 @@ public final class Config {
     // Thumbnail size for pre-caching thumbnails
     public static final String THUMBNAIL_SIZE = "bucketeer.thumbnail.size";
 
+    // The maximum size TIFF image we'll attempt to process
+    public static final String MAX_SOURCE_SIZE = "bucketeer.max.source.file.size";
+
     // Configuration options for the S3 upload verticle(s)
     public static final String S3_MAX_REQUESTS = "s3.max.requests";
 

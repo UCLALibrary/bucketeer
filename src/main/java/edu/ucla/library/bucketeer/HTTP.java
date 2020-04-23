@@ -21,6 +21,9 @@ public final class HTTP {
     /** Not found response */
     public static final int NOT_FOUND = 404;
 
+    /** Method not allowed */
+    public static final int METHOD_NOT_ALLOWED = 405;
+
     /** Generic internal server error */
     public static final int INTERNAL_SERVER_ERROR = 500;
 

@@ -1,17 +1,16 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
 import info.freelibrary.util.FileUtils;
+import info.freelibrary.util.IOUtils;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
@@ -46,6 +45,11 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadCsvHandler.class, Constants.MESSAGES);
 
+    private static final String JOB_FINALIZER = FinalizeJobVerticle.class.getName();
+
+    /* Default maximum number of bytes in a source image file that we can process on AWS Lambda */
+    private static final int DEFAULT_MAX_FILE_SIZE = 300000000; // 300 MB
+
     /* Default delay for requeuing, measured in seconds */
     private static final long DEFAULT_REQUEUE_DELAY = 1;
 
@@ -63,35 +67,15 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
      * Creates a handler to ingest CSV files.
      *
      * @param aConfig An application configuration
+     * @throws IOException If there is trouble reading the CSV upload
      */
     public LoadCsvHandler(final JsonObject aConfig) throws IOException {
-        final StringBuilder templateBuilder = new StringBuilder();
+        myExceptionPage = new String(IOUtils.readBytes(getClass().getResourceAsStream("/webroot/error.html")),
+                StandardCharsets.UTF_8);
+        mySuccessPage = new String(IOUtils.readBytes(getClass().getResourceAsStream("/webroot/success.html")),
+                StandardCharsets.UTF_8);
 
-        // Load a template used for returning the error page
-        InputStream templateStream = getClass().getResourceAsStream("/webroot/error.html");
-        BufferedReader templateReader = new BufferedReader(new InputStreamReader(templateStream));
-        String line;
-
-        while ((line = templateReader.readLine()) != null) {
-            templateBuilder.append(line);
-        }
-
-        templateReader.close();
-        myExceptionPage = templateBuilder.toString();
-
-        // Load a template used for returning the success page
-        templateBuilder.delete(0, templateBuilder.length());
-        templateStream = getClass().getResourceAsStream("/webroot/success.html");
-        templateReader = new BufferedReader(new InputStreamReader(templateStream));
-
-        while ((line = templateReader.readLine()) != null) {
-            templateBuilder.append(line);
-        }
-
-        templateReader.close();
-        mySuccessPage = templateBuilder.toString();
-        myConfig = aConfig;
-        myRequeueDelay = myConfig.getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
+        myRequeueDelay = (myConfig = aConfig).getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
     }
 
     /**
@@ -249,20 +233,27 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
             final Optional<File> file = item.getFile();
             final WorkflowState state = item.getWorkflowState();
 
-            // For normal runs only process empty states and for failure runs only processes failures
+            // Check that file is present so it can be processed
             if (item.hasFile() && file.isPresent() && WorkflowState.EMPTY.equals(state)) {
                 final File source = file.get();
-                final String ext = FileUtils.getExt(source.getName());
 
-                s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + ext);
-                s3UploadMessage.put(Constants.FILE_PATH, source.getAbsolutePath());
-                s3UploadMessage.put(Constants.JOB_NAME, aJob.getName());
-                s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
+                // Check that the image is not too large for us to process on AWS Lambda
+                if (source.length() < myConfig.getInteger(Config.MAX_SOURCE_SIZE, DEFAULT_MAX_FILE_SIZE)) {
+                    final String ext = FileUtils.getExt(source.getName());
 
-                sendS3UploadMessage(s3UploadMessage);
+                    s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + ext);
+                    s3UploadMessage.put(Constants.FILE_PATH, source.getAbsolutePath());
+                    s3UploadMessage.put(Constants.JOB_NAME, aJob.getName());
+                    s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
 
-                if (!processing) {
-                    processing = true;
+                    sendS3UploadMessage(s3UploadMessage);
+
+                    // If we've sent a upload message, note that we're processing files
+                    if (!processing) {
+                        processing = true;
+                    }
+                } else {
+                    item.setWorkflowState(WorkflowState.FAILED);
                 }
             } else {
                 final String missingFileMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_147);
@@ -284,10 +275,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         // If we don't have any records to process, let's finalize the job and send the CSV back as submitted
         if (!processing) {
-            final JsonObject message = new JsonObject().put(Constants.JOB_NAME, aJob.getName());
-
-            // We send the name of the job to finalize to the appropriate verticle
-            sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
+            sendMessage(myVertx, new JsonObject().put(Constants.JOB_NAME, aJob.getName()), JOB_FINALIZER);
         }
     }
 

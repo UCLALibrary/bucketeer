@@ -53,7 +53,7 @@ public class Item implements Serializable {
      * Creates new item.
      */
     public Item() {
-        // Used in deserialization
+        // Used in deserialization and testing
     }
 
     /**
@@ -169,7 +169,6 @@ public class Item implements Serializable {
                 filePath = myFilePath.get();
                 file = Paths.get(myFilePathPrefix.getPrefix(new File(filePath)), filePath).toFile();
             } else {
-                LOGGER.warn(MessageCodes.BUCKETEER_128);
                 file = new File(myFilePath.get());
             }
 
@@ -191,7 +190,7 @@ public class Item implements Serializable {
             if (file.isEmpty()) {
                 myPrefixedFilePath = Optional.empty();
             } else {
-                myPrefixedFilePath = Optional.of(file.get().getAbsolutePath());
+                myPrefixedFilePath = Optional.of(Paths.get(file.get().getAbsolutePath()).normalize().toString());
             }
         }
 
@@ -203,7 +202,7 @@ public class Item implements Serializable {
      *
      * @return The file path
      */
-    public Optional<String> getFilePath() throws IOException {
+    public Optional<String> getFilePath() {
         return myFilePath;
     }
 

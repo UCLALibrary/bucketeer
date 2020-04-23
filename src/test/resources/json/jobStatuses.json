@@ -1,6 +1,7 @@
 {
     "count": 9,
     "slack-handle": "ksclarke",
+    "remaining": 8,
     "jobs": [
         {
             "image-id": "ark:/13030/hb000003n9",
@@ -9,7 +10,7 @@
         },
         {
             "image-id": "ark:/13030/hb009n998t",
-            "status": "failed",
+            "status": "",
             "file-path": ""
         },
         {
@@ -19,7 +20,7 @@
         },
         {
             "image-id": "ark:/13030/hb0489n655",
-            "status": "failed",
+            "status": "",
             "file-path": ""
         },
         {
@@ -29,7 +30,7 @@
         },
         {
             "image-id": "ark:/13030/hb058002kj",
-            "status": "failed",
+            "status": "",
             "file-path": ""
         },
         {

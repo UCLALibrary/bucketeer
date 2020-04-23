@@ -116,6 +116,9 @@
     <!-- Thumbnail size for images served by the IIIF server -->
     <bucketeer.thumbnail.size>!200,200</bucketeer.thumbnail.size>
 
+    <!-- The maximum size TIFF image we'll attempt to process; default: 300 MB -->
+    <bucketeer.max.source.file.size>300000000</bucketeer.max.source.file.size>
+
     <!-- Where the source images are mounted on the local file system -->
     <bucketeer.fs.mount>.</bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
@@ -463,11 +466,10 @@
         <configuration>
           <excludes>
             <exclude>**/*IT.java</exclude>
-            <exclude>**/*IntegrationTest.java</exclude>
-            <!-- Temporarily disable problematic test -->
-            <exclude>**/BatchJobStatusHandlerTest.java</exclude>
           </excludes>
-          <forkCount>2</forkCount>
+          <forkCount>0</forkCount>
+          <useSystemClassLoader>false</useSystemClassLoader>
+          <skipAfterFailureCount>1</skipAfterFailureCount>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>

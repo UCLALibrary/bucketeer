@@ -1,12 +1,12 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -17,13 +17,21 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.Item;
+import edu.ucla.library.bucketeer.Job;
+import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
-import io.vertx.core.http.RequestOptions;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 /**
  * Test class for the <code>GetJobStatusesHandler</code>.
@@ -42,70 +50,122 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
     private static final File JSON_STATUSES = new File("src/test/resources/json/jobStatuses.json");
 
     /**
-     * Test set up.
-     *
-     * @param aContext A testing context
-     * @throws Exception When a problem occurs while trying to set up the test.
-     */
-    @Override
-    @Before
-    public void setUp(final TestContext aContext) throws Exception {
-        super.setUp(aContext);
-    }
-
-    /**
      * Tests getting job statuses.
      *
      * @param aContext A testing context
      */
     @Test
-    @SuppressWarnings("deprecation")
     public final void testGetJobStatusesHandler(final TestContext aContext) {
         final Async asyncTask = aContext.async();
-        final int port = aContext.get(Config.HTTP_PORT);
-        final RequestOptions request = new RequestOptions();
 
-        request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(TEST_URL);
+        // Get the jobs map so we can put our test job in there
+        myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
+            if (getMap.succeeded()) {
+                try {
+                    final JsonObject statuses = new JsonObject(StringUtils.read(JSON_STATUSES));
+                    final JsonArray items = statuses.getJsonArray(Constants.JOBS);
+                    final AsyncMap<String, Job> map = getMap.result();
 
-        myVertx.createHttpClient().getNow(request, response -> {
-            final int statusCode = response.statusCode();
-
-            if (statusCode == HTTP.OK) {
-                response.bodyHandler(body -> {
-                    try {
-                        final String json = StringUtils.read(JSON_STATUSES);
-                        final JsonObject expected = new JsonObject(json);
-                        final JsonArray jobs = expected.getJsonArray(Constants.JOBS);
-
-                        // Update files' paths for the machine that's running the test
-                        for (int index = 0; index < jobs.size(); index++) {
-                            if (index != 7) {
-                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getAbsolutePath());
-                            } else {
-                                jobs.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getAbsolutePath());
-                            }
-                        }
-
-                        assertEquals(expected, body.toJsonObject());
-                    } catch (final IOException details) {
-                        aContext.fail(details);
-                    }
-                });
-
-                if (!asyncTask.isCompleted()) {
-                    asyncTask.complete();
+                    map.put(JOB_NAME, getJob(items), new TestHandler(aContext, asyncTask, statuses));
+                } catch (final IOException details) {
+                    aContext.fail(details);
                 }
             } else {
-                final String statusMessage = response.statusMessage();
-
-                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, statusMessage));
+                aContext.fail(getMap.cause());
             }
         });
     }
 
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+    /**
+     * Gets a fake job build from our test fixture.
+     *
+     * @param aItemArray An array of fake items
+     * @return A fake job for testing against
+     */
+    private Job getJob(final JsonArray aItemArray) {
+        final List<Item> items = new ArrayList<>();
+        final Job job = new Job(JOB_NAME);
+
+        job.setItems(items).setSlackHandle("ksclarke");
+
+        // Populate our pretend in-process job
+        for (int index = 0; index < aItemArray.size(); index++) {
+            final Item item = new Item().setID(aItemArray.getJsonObject(index).getString(Constants.IMAGE_ID));
+
+            if (index != 7) {
+                item.setFilePath(Optional.of(FILE_PATH.getAbsolutePath()));
+            } else {
+                item.setFilePath(Optional.of(FAIL_PATH.getAbsolutePath()));
+                item.setWorkflowState(WorkflowState.FAILED);
+            }
+
+            items.add(item);
+        }
+
+        return job;
     }
 
+    /**
+     * TestHandler handles the result of a test of our job statuses.
+     */
+    private final class TestHandler implements Handler<AsyncResult<Void>> {
+
+        private final TestContext myContext;
+
+        private final Async myAsyncTask;
+
+        private final JsonObject myExpectedObj;
+
+        private final JsonArray myJob;
+
+        /**
+         * Creates a new TestHandler to handle the results of our test.
+         *
+         * @param aContext A test context
+         * @param aAsyncTask A asynchronous task
+         * @param aExpectedObj The JSON object test fixture
+         * @param aJob
+         */
+        private TestHandler(final TestContext aContext, final Async aAsyncTask, final JsonObject aExpectedObj) {
+            myJob = aExpectedObj.getJsonArray(Constants.JOBS);
+            myExpectedObj = aExpectedObj;
+            myAsyncTask = aAsyncTask;
+            myContext = aContext;
+        }
+
+        @Override
+        public void handle(final AsyncResult<Void> aEvent) {
+            final int port = myContext.get(Config.HTTP_PORT);
+            final WebClient webClient = WebClient.create(myVertx);
+
+            if (aEvent.succeeded()) {
+                webClient.get(port, Constants.UNSPECIFIED_HOST, TEST_URL).send(get -> {
+                    final HttpResponse<Buffer> response = get.result();
+                    final int statusCode = response.statusCode();
+                    final String message = response.statusMessage();
+
+                    if (response.statusCode() == HTTP.OK) {
+                        // Update file paths to match the absolute paths on the machine that's running the test
+                        for (int index = 0; index < myJob.size(); index++) {
+                            if (index != 7) {
+                                myJob.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getAbsolutePath());
+                            } else {
+                                myJob.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getAbsolutePath());
+                            }
+                        }
+
+                        myContext.assertEquals(myExpectedObj, response.bodyAsJsonObject());
+
+                        if (!myAsyncTask.isCompleted()) {
+                            myAsyncTask.complete();
+                        }
+                    } else {
+                        myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
+                    }
+                });
+            } else {
+                myContext.fail(aEvent.cause());
+            }
+        }
+    }
 }

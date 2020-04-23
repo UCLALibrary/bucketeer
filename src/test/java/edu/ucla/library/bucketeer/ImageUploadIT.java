@@ -1,10 +1,6 @@
 
 package edu.ucla.library.bucketeer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -93,16 +89,17 @@ public class ImageUploadIT {
      */
     @BeforeClass
     public static void configureS3(final TestContext aContext) {
+        final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
         final Async asyncTask = aContext.async();
 
         LOGGER.debug(MessageCodes.BUCKETEER_021, ImageUploadIT.class.getSimpleName(), PORT);
 
-        final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
-
         configRetriever.getConfig(config -> {
             if (config.succeeded()) {
-                LOGGER.debug(MessageCodes.BUCKETEER_038);
                 final JsonObject jsonConfig = config.result();
+
+                LOGGER.debug(MessageCodes.BUCKETEER_038);
+
                 myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
                 myS3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY, DEFAULT_ACCESS_KEY);
                 myS3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY, DEFAULT_SECRET_KEY);
@@ -127,15 +124,16 @@ public class ImageUploadIT {
     @Test
     public final void checkThatServiceIsUp(final TestContext aContext) {
         final Async asyncTask = aContext.async();
-        // first, let's sanity-check our service status check endpoint before we do anything real
+
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, STATUS_CHECK, response -> {
-            // validate the response
-            myStatusCode = response.statusCode();
-            aContext.assertEquals(HTTP.OK, myStatusCode);
+            aContext.assertEquals(HTTP.OK, response.statusCode());
+
             response.bodyHandler(body -> {
                 aContext.assertEquals(body.getString(0, body.length()), HELLO);
-                LOGGER.debug("Bucketeer service confirmed to be available.");
-                asyncTask.complete();
+
+                if (!asyncTask.isCompleted()) {
+                    asyncTask.complete();
+                }
             });
         });
     }
@@ -143,20 +141,22 @@ public class ImageUploadIT {
     /**
      * check that we can load an image
      *
-     * @throws UnsupportedEncodingException
-     * @throws ConfigurationException
+     * @throws UnsupportedEncodingException If the encoding isn't supported by the JVM
+     * @throws SdkClientException If there is trouble using the AWS SDK
+     * @throws AmazonServiceException If there is trouble interacting with the AWS service
      */
     @SuppressWarnings("deprecation")
     @Test
-    public final void checkThatWeCanLoadAnImage() throws UnsupportedEncodingException, SdkClientException,
-            AmazonServiceException {
+    public final void checkThatWeCanLoadAnImage(final TestContext aContext) throws UnsupportedEncodingException,
+            SdkClientException, AmazonServiceException {
+        final String defaultTestFileName;
 
         // if we don't Have Kakadu installed, we *should* fail, but we will instead be crafty
         canRunKakadu = ConverterFactory.hasSystemKakadu();
 
         // let's use our 熵.tif file
         myTIFF = new File(TEST_FILE_PATH);
-        final String defaultTestFileName = myTIFF.getName();
+        defaultTestFileName = myTIFF.getName();
         LOGGER.debug(MessageCodes.BUCKETEER_035, defaultTestFileName);
 
         if (canRunKakadu) {
@@ -175,13 +175,14 @@ public class ImageUploadIT {
 
         // attempt to load our image and verify the response is OK
         vertx.createHttpClient().getNow(PORT, Constants.UNSPECIFIED_HOST, myImageLoadRequest, response -> {
-            // validate the response
             myStatusCode = response.statusCode();
-            assertEquals(myStatusCode, HTTP.OK);
+            aContext.assertEquals(myStatusCode, HTTP.OK);
+
             response.bodyHandler(body -> {
                 final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
-                assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), myUUID);
-                assertFalse(jsonConfirm.getString(Constants.IMAGE_ID).equals("pickles"));
+
+                aContext.assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), myUUID);
+                aContext.assertFalse(jsonConfirm.getString(Constants.IMAGE_ID).equals("pickles"));
             });
 
             // get myAWSCredentials ready
@@ -193,28 +194,34 @@ public class ImageUploadIT {
             // check the S3 bucket to which we are sending JP2s, do they exist?
             boolean doesBucketExist = false;
             boolean doesObjectExist = false;
+
             doesBucketExist = myAmazonS3.doesBucketExistV2(myS3Bucket);
             doesObjectExist = myAmazonS3.doesObjectExist(myS3Bucket, myDerivativeJP2);
 
             // try again every 5 seconds, for a minute
             int counter = 0;
+
             while (doesBucketExist && !doesObjectExist && counter++ < 12) {
                 // wait 5 seconds before we check again
                 try {
                     TimeUnit.SECONDS.sleep(5);
-                } catch (final InterruptedException e) {
-                    // this is just here so we can interrupt our way out of this loop
-                    e.printStackTrace(); // we might consider using a logger instead of this?
+                } catch (final InterruptedException details) {
+                    aContext.fail(details);
+                    break;
                 }
+
                 LOGGER.debug(MessageCodes.BUCKETEER_037, counter);
+
                 // check for our object again
                 doesObjectExist = myAmazonS3.doesObjectExist(myS3Bucket, myDerivativeJP2);
             }
+
             final ObjectMetadata myObjectMetadata = myAmazonS3.getObjectMetadata(myS3Bucket, myDerivativeJP2);
-            final boolean objectLengthIsNonZero = myObjectMetadata.getContentLength() < 0;
-            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_040, myS3Bucket), doesBucketExist);
-            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_041, myDerivativeJP2), doesObjectExist);
-            assertTrue(LOGGER.getMessage(MessageCodes.BUCKETEER_042, myDerivativeJP2), objectLengthIsNonZero);
+            final boolean objLengthIsNonZero = myObjectMetadata.getContentLength() < 0;
+
+            aContext.assertTrue(doesBucketExist, LOGGER.getMessage(MessageCodes.BUCKETEER_040, myS3Bucket));
+            aContext.assertTrue(doesObjectExist, LOGGER.getMessage(MessageCodes.BUCKETEER_041, myDerivativeJP2));
+            aContext.assertTrue(objLengthIsNonZero, LOGGER.getMessage(MessageCodes.BUCKETEER_042, myDerivativeJP2));
 
             // clean up the test JP2 file
             myAmazonS3.deleteObject(myS3Bucket, myDerivativeJP2);

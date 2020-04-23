@@ -3,7 +3,6 @@ package edu.ucla.library.bucketeer.handlers;
 
 import static edu.ucla.library.bucketeer.Constants.EMPTY;
 
-import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -48,7 +47,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      *
      * @param aConfig An application configuration
      */
-    public BatchJobStatusHandler(final JsonObject aConfig) throws IOException {
+    public BatchJobStatusHandler(final JsonObject aConfig) {
         myConfig = aConfig;
     }
 

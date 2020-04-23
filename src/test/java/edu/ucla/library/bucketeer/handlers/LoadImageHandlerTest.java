@@ -11,10 +11,13 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -32,7 +35,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
-import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
@@ -44,16 +46,13 @@ public class LoadImageHandlerTest {
 
     private static final String DOT_JPX = ".jpx";
 
-    private static AWSCredentials myAWSCredentials;
+    private static final String REGION = "us-east-1";
 
     @Rule
-    public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
+    public RunTestOnContext myTestContext = new RunTestOnContext();
 
     @Rule
     public TestName myTestName = new TestName();
-
-    @Rule
-    public Timeout myTimeoutRule = Timeout.seconds(300);
 
     private Vertx myVertx;
 
@@ -63,8 +62,8 @@ public class LoadImageHandlerTest {
      * Test set up.
      *
      * @param aContext A testing context
+     * @throws IOException If there is trouble reading or writing data
      */
-    @SuppressWarnings("deprecation")
     @Before
     public void setUp(final TestContext aContext) throws IOException {
         final DeploymentOptions options = new DeploymentOptions();
@@ -78,22 +77,25 @@ public class LoadImageHandlerTest {
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
         socket.close();
 
-        myVertx = myRunTestOnContextRule.vertx();
+        myVertx = myTestContext.vertx();
 
-        // grab some configs
         ConfigRetriever.create(myVertx).getConfig(config -> {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
-                // set up our Amazon S3 client
+
                 if (myAmazonS3 == null) {
                     final String s3AccessKey = jsonConfig.getString(Config.S3_ACCESS_KEY);
                     final String s3SecretKey = jsonConfig.getString(Config.S3_SECRET_KEY);
 
-                    // get myAWSCredentials ready
-                    myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+                    try {
+                        final AWSCredentials credentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+                        final AWSCredentialsProvider provider = new AWSStaticCredentialsProvider(credentials);
 
-                    // instantiate the myAmazonS3 client
-                    myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+                        myAmazonS3 = AmazonS3ClientBuilder.standard().withCredentials(provider).withRegion(REGION)
+                                .build();
+                    } catch (final SdkClientException details) {
+                        aContext.fail(details);
+                    }
 
                     // grab our bucket name
                     s3Bucket = jsonConfig.getString(Config.S3_BUCKET);
@@ -147,9 +149,9 @@ public class LoadImageHandlerTest {
                     final JsonObject jsonConfirm = new JsonObject(body.getString(0, body.length()));
                     final String id = "test";
 
-                    aContext.assertEquals(jsonConfirm.getString(Constants.IMAGE_ID), id);
-                    aContext.assertEquals(jsonConfirm.getString(Constants.FILE_PATH),
-                            "src/test/resources/images/熵.tif");
+                    aContext.assertEquals(id, jsonConfirm.getString(Constants.IMAGE_ID));
+                    aContext.assertEquals("src/test/resources/images/熵.tif", jsonConfirm.getString(
+                            Constants.FILE_PATH));
 
                     jsonConfirm.put(Constants.WAIT_COUNT, 0);
 
@@ -188,14 +190,15 @@ public class LoadImageHandlerTest {
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
-        final Async async = aContext.async();
+        final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 
-        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
-        // incomplete data
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, "/12345/", response -> {
             aContext.assertNotEquals(response.statusCode(), HTTP.OK);
-            async.complete();
+
+            if (!asyncTask.isCompleted()) {
+                asyncTask.complete();
+            }
         });
     }
 
@@ -211,11 +214,13 @@ public class LoadImageHandlerTest {
         final int port = aContext.get(Config.HTTP_PORT);
         final String path = "/12345/this-file-does-not-exist.tiff";
 
-        // Testing the main loadImage path defined in our OpenAPI YAML file returns an error response when given
-        // incomplete data
+        // Tests loadImage path from our OpenAPI YAML file returns an error response when given incomplete data
         myVertx.createHttpClient().getNow(port, Constants.UNSPECIFIED_HOST, path, response -> {
             aContext.assertNotEquals(response.statusCode(), HTTP.OK);
-            async.complete();
+
+            if (!async.isCompleted()) {
+                async.complete();
+            }
         });
     }
 

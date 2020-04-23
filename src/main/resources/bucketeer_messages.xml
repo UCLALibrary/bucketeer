@@ -91,7 +91,7 @@
   <entry key="BUCKETEER-080">Unable to decrement job counter for: {}</entry>
   <entry key="BUCKETEER-081">Finished processing the batch job for '{}'</entry>
   <entry key="BUCKETEER-082">Failed to removed completed batch job from the queue: {}</entry>
-  <entry key="BUCKETEER-083">BatchJobStatusHandlerTest should have failed with a GET request</entry>
+  <entry key="BUCKETEER-083">BatchJobStatusHandlerTest failed with unexpected response code: {} [{}]</entry>
   <entry key="BUCKETEER-084">FakeS3BucketVerticle received a storage request: {}</entry>
   <entry key="BUCKETEER-085">Setting up the Slack client</entry>
   <entry key="BUCKETEER-086">Preparing to send '{}' to Slack channel: {}</entry>
