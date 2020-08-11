@@ -48,7 +48,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
     private static final String JOB_FINALIZER = FinalizeJobVerticle.class.getName();
 
     /* Default maximum number of bytes in a source image file that we can process on AWS Lambda */
-    private static final int DEFAULT_MAX_FILE_SIZE = 300000000; // 300 MB
+    private static final long DEFAULT_MAX_FILE_SIZE = 300000000L; // 300 MB
 
     /* Default delay for requeuing, measured in seconds */
     private static final long DEFAULT_REQUEUE_DELAY = 1;
@@ -235,10 +235,12 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
             // Check that file is present so it can be processed
             if (item.hasFile() && file.isPresent() && WorkflowState.EMPTY.equals(state)) {
+                final long maxFileSize = myConfig.getLong(Config.MAX_SOURCE_SIZE, DEFAULT_MAX_FILE_SIZE);
                 final File source = file.get();
+                final long sourceFileSize = source.length();
 
                 // Check that the image is not too large for us to process on AWS Lambda
-                if (source.length() < myConfig.getInteger(Config.MAX_SOURCE_SIZE, DEFAULT_MAX_FILE_SIZE)) {
+                if (sourceFileSize < maxFileSize) {
                     final String ext = FileUtils.getExt(source.getName());
 
                     s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + ext);
@@ -253,6 +255,14 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                         processing = true;
                     }
                 } else {
+                    if (LOGGER.isWarnEnabled()) {
+                        // Format our file/max sizes in human friendly forms
+                        final String fileSize = FileUtils.sizeFromBytes(sourceFileSize, true);
+                        final String maxSize = FileUtils.sizeFromBytes(maxFileSize, true);
+
+                        LOGGER.warn(MessageCodes.BUCKETEER_501, source, fileSize, maxSize);
+                    }
+
                     item.setWorkflowState(WorkflowState.FAILED);
                 }
             } else {

@@ -170,4 +170,5 @@
   <entry key="BUCKETEER-159">A URL for the Fester service was not supplied</entry>
   <entry key="BUCKETEER-160">Shutting down test server...</entry>
   <entry key="BUCKETEER-500">{}</entry>
+  <entry key="BUCKETEER-501">Large image ({} [{}]) skipped; maximum allowed size set for: {}</entry>
 </properties>
