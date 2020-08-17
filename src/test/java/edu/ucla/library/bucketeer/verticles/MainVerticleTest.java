@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -15,17 +16,22 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class MainVerticleTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticleTest.class, Constants.MESSAGES);
+
+    @Rule
+    public RunTestOnContext myTestContext = new RunTestOnContext();
 
     private Vertx myVertx;
 
@@ -45,8 +51,7 @@ public class MainVerticleTest {
         options.setConfig(new JsonObject().put(Config.HTTP_PORT, port));
         socket.close();
 
-        // Initialize the Vert.x environment and start our main verticle
-        myVertx = Vertx.vertx();
+        myVertx = myTestContext.vertx();
 
         // Confirm our verticle has loaded before we attempt to test it
         myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
@@ -66,7 +71,15 @@ public class MainVerticleTest {
      */
     @After
     public void tearDown(final TestContext aContext) {
-        myVertx.close(aContext.asyncAssertSuccess());
+        final Async asyncTask = aContext.async();
+
+        myVertx.close(close -> {
+            if (close.succeeded()) {
+                asyncTask.complete();
+            } else {
+                aContext.fail(close.cause());
+            }
+        });
     }
 
     /**

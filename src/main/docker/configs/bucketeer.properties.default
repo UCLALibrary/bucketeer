@@ -1,0 +1,28 @@
+###########################################################################
+# Default values configuration file for Bucketeer. It's supplied to the
+# template file to provide default values. The default values can still be
+# overriden by environmental variables using these same variable names.
+###########################################################################
+
+## The location of the OpenAPI spec file.
+OPENAPI_SPEC_PATH = bucketeer.yaml
+
+## Configures the port on which the microservice listens.
+HTTP_PORT = 8888
+
+LAMBDA_S3_BUCKET=lambdabucket
+BUCKETEER_S3_BUCKET=srcbucket
+BUCKETEER_S3_REGION=us-west-2
+BUCKETEER_S3_SECRET_KEY=secretkey
+BUCKETEER_S3_ACCESS_KEY=accesskey
+BUCKETEER_FS_MOUNT=path
+BUCKETEER_FS_PREFIX=UCLAFilePathPrefix
+BUCKETEER_SLACK_OAUTH_TOKEN=slackoauthtoken
+BUCKETEER_SLACK_ERROR_CHANNEL_ID=errorchannel
+BUCKETEER_SLACK_CHANNEL_ID=mainchannel
+BUCKETEER_IIIF_URL=weburl
+HTTP_MAX_QUEUE_SIZE=5
+S3_UPLOADER_INSTANCES=1
+S3_UPLOADER_THREADS=20
+SOURCE_MAX_FILE_SIZE=300000000
+FESTER_URL=http://localhost:9999

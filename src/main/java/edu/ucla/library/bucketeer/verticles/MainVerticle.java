@@ -3,7 +3,6 @@ package edu.ucla.library.bucketeer.verticles;
 
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +10,8 @@ import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Config;
+import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
@@ -23,8 +24,10 @@ import edu.ucla.library.bucketeer.handlers.GetJobsHandler;
 import edu.ucla.library.bucketeer.handlers.GetStatusHandler;
 import edu.ucla.library.bucketeer.handlers.LoadCsvHandler;
 import edu.ucla.library.bucketeer.handlers.LoadImageHandler;
+import edu.ucla.library.bucketeer.handlers.MatchingOpNotFoundHandler;
 import edu.ucla.library.bucketeer.utils.FilePathPrefixFactory;
 import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
+
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -32,6 +35,7 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
@@ -59,8 +63,6 @@ public class MainVerticle extends AbstractVerticle {
 
     private static final int S3_UPLOADER_THREADS = getAvailableProcessors();
 
-    private static final String EMPTY = "";
-
     /**
      * Gets the available logical processors on the system minus one.
      *
@@ -78,13 +80,13 @@ public class MainVerticle extends AbstractVerticle {
      * Starts a Web server.
      */
     @Override
-    public void start(final Future<Void> aFuture) {
+    public void start(final Promise<Void> aPromise) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(vertx);
 
         // We pull our application's configuration before configuring the server
         configRetriever.getConfig(configuration -> {
             if (configuration.failed()) {
-                aFuture.fail(configuration.cause());
+                aPromise.fail(configuration.cause());
             } else {
                 final JsonObject config = configuration.result();
                 final String fsMount = config.getString(Config.FILESYSTEM_MOUNT);
@@ -100,12 +102,12 @@ public class MainVerticle extends AbstractVerticle {
                 }
 
                 // Build the router that will respond to all traffic
-                buildRouter(config, aFuture);
+                buildRouter(config, aPromise);
             }
         });
     }
 
-    private void buildRouter(final JsonObject aConfig, final Future<Void> aFuture) {
+    private void buildRouter(final JsonObject aConfig, final Promise<Void> aPromise) {
         final String apiSpec = aConfig.getString(Config.OPENAPI_SPEC_PATH, DEFAULT_SPEC);
         final HttpServer server = vertx.createHttpServer(getHttpServerOptions());
 
@@ -120,6 +122,7 @@ public class MainVerticle extends AbstractVerticle {
                     final FailureHandler failureHandler = new FailureHandler();
                     final LoadCsvHandler loadCsvHandler = new LoadCsvHandler(aConfig);
                     final BatchJobStatusHandler batchJobStatusHandler = new BatchJobStatusHandler(aConfig);
+                    final StaticHandler staticHandler = StaticHandler.create();
 
                     // Next, we associate handlers with routes from our specification
                     routerFactory.addHandlerByOperationId(Op.GET_STATUS, new GetStatusHandler());
@@ -136,30 +139,46 @@ public class MainVerticle extends AbstractVerticle {
                     // After that, we can get a router that's been configured by our OpenAPI spec
                     router = routerFactory.getRouter();
 
-                    // Serve our static pages (docs, CSV submission form, etc.)
-                    router.get("/*").order(0).blockingHandler(StaticHandler.create("webroot"));
+                    // Match all GETs, except GETs for paths that are API endpoints
+                    router.getWithRegex("^/(?!(batch|status|config|images)).*").order(0).handler(event -> {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(MessageCodes.BUCKETEER_506, event.request().path());
+                        }
+
+                        staticHandler.setWebRoot("webroot").setIndexPage("index.html").handle(event);
+                    });
 
                     // Add an /upload redirect; we may want different options in the future, but not now
-                    router.routeWithRegex("/upload(/?)").order(1).handler(context -> {
-                        context.response().putHeader("location", "/upload/csv").setStatusCode(307).end();
+                    router.routeWithRegex("/upload(/?)").order(1).handler(event -> {
+                        event.response().putHeader("location", "/upload/csv").setStatusCode(HTTP.TEMP_REDIRECT).end();
                     });
+
+                    // If an incoming request doesn't match one of our spec operations, it's treated as a 404;
+                    // catch these generic 404s with the handler below and return more specific response codes
+                    router.errorHandler(HTTP.NOT_FOUND, new MatchingOpNotFoundHandler());
 
                     // Start our server
-                    server.requestHandler(router).listen(port);
+                    server.requestHandler(router).listen(port, listening -> {
+                        if (listening.succeeded()) {
+                            LOGGER.info(MessageCodes.BUCKETEER_502, port);
 
-                    // Deploy our verticles that convert and upload images to S3
-                    deployVerticles(aConfig, deployment -> {
-                        if (deployment.succeeded()) {
-                            aFuture.complete();
+                            // Deploy our verticles that convert and upload images to S3
+                            deployVerticles(aConfig, deployment -> {
+                                if (deployment.succeeded()) {
+                                    aPromise.complete();
+                                } else {
+                                    aPromise.fail(deployment.cause());
+                                }
+                            });
                         } else {
-                            aFuture.fail(deployment.cause());
+                            aPromise.fail(listening.cause());
                         }
                     });
-                } catch (final IOException details) {
-                    aFuture.fail(details);
+                } catch (final Exception details) { // turn back to IOException
+                    aPromise.fail(details);
                 }
             } else {
-                aFuture.fail(creation.cause());
+                aPromise.fail(creation.cause());
             }
         });
     }
@@ -171,12 +190,14 @@ public class MainVerticle extends AbstractVerticle {
      */
     private HttpServerOptions getHttpServerOptions() {
         final HttpServerOptions options = new HttpServerOptions();
-        final String osName = System.getProperty("os.name", EMPTY);
-        final String osArch = System.getProperty("os.arch", EMPTY);
+        final String osName = System.getProperty("os.name", Constants.EMPTY);
+        final String osArch = System.getProperty("os.arch", Constants.EMPTY);
 
         // Set Linux options if we're running on a Linux machine
-        if ("unix".equals(osName) && "amd64".equals(osArch)) {
+        if (("unix".equalsIgnoreCase(osName) || "linux".equalsIgnoreCase(osName)) && "amd64".equals(osArch)) {
             options.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
+        } else {
+            LOGGER.warn(MessageCodes.BUCKETEER_035, osName, osArch);
         }
 
         return options;
@@ -195,7 +216,7 @@ public class MainVerticle extends AbstractVerticle {
         final DeploymentOptions workerOpts = new DeploymentOptions().setWorker(true);
         final DeploymentOptions basicOpts = new DeploymentOptions();
         final List<Future> futures = new ArrayList<>();
-        final Future<Void> future = Future.future();
+        final Promise<Void> promise = Promise.promise();
 
         // Set configuration values for our verticles to use
         uploaderOpts.setConfig(aConfig);
@@ -203,7 +224,7 @@ public class MainVerticle extends AbstractVerticle {
         basicOpts.setConfig(aConfig);
 
         // Set the deployVerticles handler to handle our verticles deploy future
-        future.setHandler(aHandler);
+        promise.future().onComplete(aHandler);
 
         workerOpts.setInstances(1);
         workerOpts.setWorkerPoolSize(1);
@@ -223,19 +244,19 @@ public class MainVerticle extends AbstractVerticle {
         LOGGER.debug(MessageCodes.BUCKETEER_112, uploaderInstances, uploaderOpts.getWorkerPoolSize());
 
         // We initiate the various verticles that Bucketeer uses
-        futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Future.future()));
-        futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Future.future()));
-        futures.add(deployVerticle(SlackMessageVerticle.class.getName(), basicOpts, Future.future()));
-        futures.add(deployVerticle(ItemFailureVerticle.class.getName(), basicOpts, Future.future()));
-        futures.add(deployVerticle(FinalizeJobVerticle.class.getName(), basicOpts, Future.future()));
-        futures.add(deployVerticle(FesterVerticle.class.getName(), basicOpts, Future.future()));
+        futures.add(deployVerticle(ImageWorkerVerticle.class.getName(), workerOpts, Promise.promise()));
+        futures.add(deployVerticle(S3BucketVerticle.class.getName(), uploaderOpts, Promise.promise()));
+        futures.add(deployVerticle(SlackMessageVerticle.class.getName(), basicOpts, Promise.promise()));
+        futures.add(deployVerticle(ItemFailureVerticle.class.getName(), basicOpts, Promise.promise()));
+        futures.add(deployVerticle(FinalizeJobVerticle.class.getName(), basicOpts, Promise.promise()));
+        futures.add(deployVerticle(FesterVerticle.class.getName(), basicOpts, Promise.promise()));
 
         // Confirm all our verticles were successfully deployed
-        CompositeFuture.all(futures).setHandler(handler -> {
+        CompositeFuture.all(futures).onComplete(handler -> {
             if (handler.succeeded()) {
-                future.complete();
+                promise.complete();
             } else {
-                future.fail(handler.cause());
+                promise.fail(handler.cause());
             }
         });
     }
@@ -247,23 +268,23 @@ public class MainVerticle extends AbstractVerticle {
      * @param aOptions Any deployment options that should be considered
      */
     private Future<Void> deployVerticle(final String aVerticleName, final DeploymentOptions aOptions,
-            final Future<Void> aFuture) {
+            final Promise<Void> aPromise) {
         vertx.deployVerticle(aVerticleName, aOptions, response -> {
             try {
                 final String verticleName = Class.forName(aVerticleName).getSimpleName();
 
                 if (response.succeeded()) {
                     LOGGER.debug(MessageCodes.BUCKETEER_007, verticleName, response.result());
-                    aFuture.complete();
+                    aPromise.complete();
                 } else {
                     LOGGER.error(MessageCodes.BUCKETEER_008, verticleName, response.cause());
-                    aFuture.fail(response.cause());
+                    aPromise.fail(response.cause());
                 }
             } catch (final ClassNotFoundException details) {
-                aFuture.fail(details);
+                aPromise.fail(details);
             }
         });
 
-        return aFuture;
+        return aPromise.future();
     }
 }

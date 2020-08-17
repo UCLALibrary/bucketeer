@@ -47,38 +47,82 @@
       <email>avuong@cachemeoutside.io</email>
       <organization>UCLA Library</organization>
       <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+      <timezone>America/Los_Angeles</timezone>
+    </developer>
+    <developer>
+      <id>markmatney</id>
+      <name>Mark A. Matney, Jr.</name>
+      <email>mmatney@library.ucla.edu</email>
+      <organization>UCLA Library</organization>
+      <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+      <timezone>America/Los_Angeles</timezone>
+    </developer>
+    <developer>
+      <id>DRickard</id>
+      <name>David Rickard</name>
+      <email>drickard1967@library.ucla.edu</email>
+      <organization>UCLA Library</organization>
+      <organizationUrl>http://github.com/uclalibrary</organizationUrl>
+      <timezone>America/Los_Angeles</timezone>
     </developer>
   </developers>
 
   <properties>
-    <vertx.version>3.8.2</vertx.version>
+    <!-- What version of Kakadu are we using, if any? -->
+    <kakadu.version></kakadu.version>
+
+    <!-- If we want to build something other than HEAD -->
+    <bucketeer.version>latest</bucketeer.version>
+
+    <!-- Git repo with Kakadu source code (ours is private; override with yours) -->
+    <kakadu.git.repo>scm:git:git@github.com:uclalibrary/kakadu.git</kakadu.git.repo>
+
+    <!-- Git repo with Kakadu source code (ours is private; override with yours) -->
+    <kakadu.git.repo>scm:git:git@github.com:uclalibrary/kakadu.git</kakadu.git.repo>
+
+    <vertx.version>3.9.1</vertx.version>
     <vertx.super.s3.version>1.2.0</vertx.super.s3.version>
     <slf4j.ext.version>1.7.26</slf4j.ext.version>
-    <aws.sdk.version>1.11.478</aws.sdk.version>
+    <aws.sdk.version>1.11.846</aws.sdk.version>
+    <commons.codec.version>1.14</commons.codec.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
-    <freelib.utils.version>0.8.10</freelib.utils.version>
+    <freelib.utils.version>1.1.0</freelib.utils.version>
+    <freelib.maven.version>0.1.0</freelib.maven.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
+    <snakeyaml.version>1.26</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
     <jackson.version>2.10.1</jackson.version>
+    <jsoup.version>1.13.1</jsoup.version>
 
     <!-- Build plug-in versions -->
+    <scm.plugin.version>1.11.2</scm.plugin.version>
     <clean.plugin.version>3.1.0</clean.plugin.version>
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
-    <codacy.plugin.version>1.0.2</codacy.plugin.version>
+    <deploy.plugin.version>2.8.2</deploy.plugin.version>
+    <codacy.plugin.version>1.2.0</codacy.plugin.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
     <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
+    <docker.maven.plugin.version>0.33.0</docker.maven.plugin.version>
+    <maven.download.plugin.version>1.3.0</maven.download.plugin.version>
 
     <!-- Whether auto-reloading should be turned on for the live test profile -->
     <live.test.reloads>false</live.test.reloads>
 
+    <!-- What level of logging we want to see, by default, in our tests and default container config -->
+    <logLevel>ERROR</logLevel>
+    <testLogLevel>ERROR</testLogLevel>
+
     <!-- Name of the main Vert.x verticle -->
     <main.verticle>edu.ucla.library.bucketeer.verticles.MainVerticle</main.verticle>
+
+    <!-- The location of images used for testing -->
+    <image.root>src/test/resources/images</image.root>
 
     <!-- AWS configuration properties -->
     <bucketeer.s3.region>us-east-1</bucketeer.s3.region>
@@ -122,6 +166,20 @@
     <!-- Where the source images are mounted on the local file system -->
     <bucketeer.fs.mount>.</bucketeer.fs.mount>
     <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
+
+    <!-- The Docker registry user and password used for publishing images -->
+    <docker.registry.username />
+    <docker.registry.password />
+
+    <!-- The registry account, if supplied, must end with a slash (e.g. "account/") -->
+    <docker.registry.account />
+
+    <!-- The artifact is qualified if it's built with Kakadu -->
+    <artifact.qualifier></artifact.qualifier>
+
+    <!-- Additional Docker configurations -->
+    <docker.cleanup>remove</docker.cleanup>
+    <docker.showLogs>true</docker.showLogs>
   </properties>
 
   <dependencies>
@@ -148,6 +206,11 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-api-contract</artifactId>
       <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>${snakeyaml.version}</version>
     </dependency>
     <!-- Below is a dependency that needs updating due to security issue (may be able to remove in future) -->
     <dependency>
@@ -210,6 +273,11 @@
       <artifactId>aws-java-sdk-s3</artifactId>
       <version>${aws.sdk.version}</version>
     </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons.codec.version}</version>
+    </dependency>
     <!-- S3 library for the Vert.x toolkit -->
     <dependency>
       <groupId>info.freelibrary</groupId>
@@ -240,6 +308,12 @@
       <version>${vertx.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>${jsoup.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -248,9 +322,17 @@
         <directory>src/main/resources</directory>
         <filtering>true</filtering>
         <excludes>
-          <exclude>logback.xml</exclude>
           <exclude>checkstyle.xml</exclude>
+          <exclude>docker/logback.xml</exclude>
         </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources/docker</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>logback.xml</include>
+        </includes>
+        <targetPath>${project.basedir}/src/main/docker/configs</targetPath>
       </resource>
     </resources>
     <testResources>
@@ -261,6 +343,16 @@
     </testResources>
 
     <plugins>
+      <!-- Deploying Docker image instead of a Jar file so skip this -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>${deploy.plugin.version}</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+
       <!-- Clean the logback.xml file before running the shade plugin to package the Jar -->
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
@@ -297,13 +389,12 @@
 
       <!-- Generate the MessageCodes class from the message codes resource file -->
       <!--<![CDATA[
-        To run the generate-codes plugin outside of a full build, run:
-          mvn info.freelibrary:freelib-utils:generate-codes -DmessageFiles=src/main/resources/bucketeer_messages.xml
+        To run generate-codes plugin outside of a full build: mvn info.freelibrary:freelib-utils:generate-codes
       ]]>-->
       <plugin>
         <groupId>info.freelibrary</groupId>
-        <artifactId>freelib-utils</artifactId>
-        <version>${freelib.utils.version}</version>
+        <artifactId>freelib-maven-plugins</artifactId>
+        <version>${freelib.maven.version}</version>
         <executions>
           <execution>
             <phase>process-resources</phase>
@@ -460,6 +551,100 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>${docker.maven.plugin.version}</version>
+        <configuration>
+          <logStdout>true</logStdout>
+          <verbose>true</verbose>
+          <images>
+            <image>
+              <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
+              <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
+              <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
+              <build>
+                <dockerFile>${project.basedir}/src/main/docker/Dockerfile</dockerFile>
+                <assembly>
+                  <inline>
+                    <fileSets>
+                      <fileSet>
+                        <!-- The directory where we can find our Maven-built artifact -->
+                        <directory>${project.basedir}/target/</directory>
+                        <!-- We don't want directory structure on output, just the artifact -->
+                        <outputDirectory>.</outputDirectory>
+                        <includes>
+                          <include>${project.artifactId}-${project.version}.jar</include>
+                        </includes>
+                      </fileSet>
+                    </fileSets>
+                  </inline>
+                </assembly>
+              </build>
+              <run>
+                <ports>
+                  <port>${http.port}:8888</port> <!-- Start test container on an available host port -->
+                </ports>
+                <volumes>
+                  <bind>
+                    <volume>${image.root}:/images/</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
+                  <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
+                  <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
+                  <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
+                  <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                  <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
+                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
+                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
+                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
+                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
+                </env>
+                <wait>
+                  <http>
+                    <url>http://localhost:${http.port}</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                </wait>
+              </run>
+            </image>
+          </images>
+        </configuration>
+        <executions>
+
+          <!-- Builds the Docker image -->
+          <execution>
+            <id>docker-build</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+
+          <!-- Starts the Docker container for integration testing -->
+          <execution>
+            <id>docker-start</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>start</goal>
+            </goals>
+          </execution>
+
+          <!-- Stops the integration tests' Docker container -->
+          <execution>
+            <id>docker-stop</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Surefire runs the project's unit tests -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -467,8 +652,8 @@
           <excludes>
             <exclude>**/*IT.java</exclude>
           </excludes>
-          <forkCount>0</forkCount>
-          <useSystemClassLoader>false</useSystemClassLoader>
+          <forkCount>1</forkCount><!-- Multiple forks result in multiple containers -->
+          <useSystemClassLoader>false</useSystemClassLoader> <!-- Override parent project setting -->
           <skipAfterFailureCount>1</skipAfterFailureCount>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
@@ -478,36 +663,6 @@
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
-      </plugin>
-
-      <!-- Failsafe runs the project's integration tests -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <includes>
-            <include>**/*IT.java</include>
-            <include>**/*IntegrationTest.java</include>
-          </includes>
-          <excludes>
-            <exclude>**/*.xml</exclude>
-            <exclude>**/*.md</exclude>
-          </excludes>
-          <systemPropertyVariables>
-            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
-            <http.port>${http.port}</http.port>
-            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
-          </systemPropertyVariables>
-          <argLine>${jacoco.agent.arg}</argLine>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>integration-test</goal>
-              <goal>verify</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- The Vert.x plug-in enables running the application from within Maven for development -->
@@ -574,6 +729,7 @@
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-xml</exclude>
                   <exclude>com.fasterxml.jackson.dataformat:jackson-dataformat-yaml</exclude>
                   <exclude>com.fasterxml.jackson.datatype:jackson-datatype-jdk8</exclude>
+                  <exclude>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</exclude>
                   <exclude>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</exclude>
                   <exclude>com.github.dblock:oshi-core</exclude>
                   <exclude>com.github.fge:btf</exclude>
@@ -700,44 +856,6 @@
           </execution>
         </executions>
       </plugin>
-
-      <!-- Start and stop the bucketeer jar before and after the integration tests run -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>start-bucketeer</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>${project.basedir}/src/test/scripts/pre-it-startup.sh</executable>
-              <workingDirectory>${project.basedir}/target</workingDirectory>
-              <arguments>
-                <argument>java</argument>
-                <argument>-Dvertx-config-path=${project.build.directory}/test-classes/test-config.properties</argument>
-                <!-- http.port is set in the parent project, freelib-build-tools -->
-                <argument>-Dhttp.port=${http.port}</argument>
-                <argument>-jar</argument>
-                <argument>${project.build.directory}/build-artifact/${project.artifactId}-${project.version}.jar</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>stop-bucketeer</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-            <configuration>
-              <executable>${project.basedir}/src/test/scripts/post-it-shutdown.sh</executable>
-              <workingDirectory>${project.basedir}/target</workingDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
@@ -842,112 +960,142 @@
         </plugins>
       </build>
     </profile>
+    <!--A profile that builds Kakadu's proprietary source code -->
     <profile>
-      <id>java8</id>
+      <id>kakadu</id>
       <activation>
-        <jdk>1.8</jdk>
+        <property>
+          <name>kakadu.version</name>
+        </property>
       </activation>
       <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <javadocs.jdk.url>https://docs.oracle.com/javase/8/docs/api/</javadocs.jdk.url>
+        <artifact.qualifier>-ucla</artifact.qualifier>
       </properties>
       <build>
         <plugins>
-          <!-- Enforcer enforces some basic characteristics of the project -->
           <plugin>
-            <artifactId>maven-enforcer-plugin</artifactId>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>${scm.plugin.version}</version>
             <executions>
               <execution>
-                <id>enforce-java</id>
+                <id>kakadu-checkout</id>
+                <phase>generate-sources</phase>
                 <goals>
-                  <goal>enforce</goal>
+                  <goal>checkout</goal>
                 </goals>
                 <configuration>
-                  <rules>
-                    <requireJavaVersion>
-                      <version>[1.11.0,)</version>
-                    </requireJavaVersion>
-                  </rules>
+                  <checkoutDirectory>${basedir}/src/main/docker/kakadu</checkoutDirectory>
+                  <connectionUrl>${kakadu.git.repo}</connectionUrl>
                 </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- Failsafe runs the project's integration tests -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/*KakaduIT.java</include>
+              </includes>
+              <systemPropertyVariables>
+                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+                <http.port>${http.port}</http.port>
+                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+              </systemPropertyVariables>
+              <argLine>${jacoco.agent.arg}</argLine>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
         </plugins>
       </build>
     </profile>
+    <!-- The default build profile that we use, contains pinned versions of container dependencies -->
     <profile>
-      <id>java9</id>
+      <id>default</id>
       <activation>
-        <jdk>9</jdk>
+        <activeByDefault>true</activeByDefault>
+        <property>
+          <name>!unpinned</name>
+        </property>
       </activation>
       <properties>
-        <maven.compiler.release>9</maven.compiler.release>
-        <javadocs.jdk.url>https://docs.oracle.com/javase/9/docs/api/</javadocs.jdk.url>
+        <openjdk.version>=11.0.8+10-0ubuntu1~20.04</openjdk.version>
+        <gcc.version>=4:9.3.0-1ubuntu2</gcc.version>
+        <make.version>=4.2.1-1.2</make.version>
+        <libtiff.version>=4.1.0+git191117-2build1</libtiff.version>
+        <build.essential.version>=12.8ubuntu1</build.essential.version>
+        <libopenjp2.version>=2.3.1-1ubuntu4</libopenjp2.version>
+        <git.version>=1:2.20.1-2+deb10u3</git.version>
+        <python2.version>=2.7.17-2ubuntu4</python2.version>
       </properties>
+
       <build>
         <plugins>
-          <!-- Enforcer enforces some basic characteristics of the project -->
           <plugin>
-            <artifactId>maven-enforcer-plugin</artifactId>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <version>${docker.maven.plugin.version}</version>
+            <configuration>
+              <images>
+                <image>
+                  <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
+                  <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
+                  <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
+                </image>
+              </images>
+              <authConfig>
+                <username>${docker.registry.username}</username>
+                <password>${docker.registry.password}</password>
+              </authConfig>
+            </configuration>
             <executions>
               <execution>
-                <id>enforce-java</id>
+                <id>docker-deploy</id>
+                <phase>deploy</phase>
                 <goals>
-                  <goal>enforce</goal>
+                  <goal>push</goal>
                 </goals>
-                <configuration>
-                  <rules>
-                    <requireJavaVersion>
-                      <version>[1.11.0,)</version>
-                    </requireJavaVersion>
-                  </rules>
-                </configuration>
               </execution>
             </executions>
           </plugin>
         </plugins>
       </build>
     </profile>
+
+    <!-- A profile that builds an unpinned versions of the Bucketeer container's dependencies -->
     <profile>
-      <id>java10</id>
+      <id>unpinned</id>
       <activation>
-        <jdk>10</jdk>
+        <property>
+          <name>unpinned</name>
+        </property>
       </activation>
       <properties>
-        <maven.compiler.release>10</maven.compiler.release>
-        <javadocs.jdk.url>https://docs.oracle.com/javase/10/docs/api/</javadocs.jdk.url>
+        <openjdk.version></openjdk.version>
+        <gcc.version></gcc.version>
+        <make.version></make.version>
+        <libtiff.version></libtiff.version>
+        <build.essential.version></build.essential.version>
+        <libopenjp2.version></libopenjp2.version>
+        <git.version></git.version>
+        <python2.version></python2.version>
       </properties>
-      <build>
-        <plugins>
-          <!-- Enforcer enforces some basic characteristics of the project -->
-          <plugin>
-            <artifactId>maven-enforcer-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>enforce-java</id>
-                <goals>
-                  <goal>enforce</goal>
-                </goals>
-                <configuration>
-                  <rules>
-                    <requireJavaVersion>
-                      <version>[1.11.0,)</version>
-                    </requireJavaVersion>
-                  </rules>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
   </profiles>
 
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>3.7.6</version>
+    <version>4.0.0</version>
   </parent>
 
 </project>

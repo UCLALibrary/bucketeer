@@ -1,8 +1,7 @@
 
 package edu.ucla.library.bucketeer.converters;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -52,6 +51,9 @@ public class KakaduConverterTest {
 
         // Remember our KAKADU_HOME location, if any, so we can set it again after the test
         myKakaduHome = System.getProperty(KakaduConverter.KAKADU_HOME);
+
+        // This sets a flag for whether or not we have kakadu installed
+        ConverterFactory.checkSystemKakadu();
     }
 
     /**
@@ -65,9 +67,6 @@ public class KakaduConverterTest {
         if (myKakaduHome != null) {
             System.setProperty(KakaduConverter.KAKADU_HOME, myKakaduHome);
         }
-
-        // Reset the assumption that Kakadu is installed just to be safe
-        ConverterFactory.hasSystemKakadu(false);
     }
 
     /**
@@ -76,8 +75,7 @@ public class KakaduConverterTest {
     @Test
     public final void testGetExecutable() {
         // We can test this without having Kakadu actually installed
-        ConverterFactory.hasSystemKakadu(true);
-        final KakaduConverter converter = (KakaduConverter) ConverterFactory.getConverter();
+        final KakaduConverter converter = new KakaduConverter();
 
         System.clearProperty(KakaduConverter.KAKADU_HOME);
         assertEquals(EXEC, converter.getExecutable());
@@ -87,15 +85,14 @@ public class KakaduConverterTest {
     }
 
     /**
-     * Tests being able to convert to JP2.
+     * Tests being able to convert to JP2. This depends on Kakadu being installed, so the test is skipped if that isn't
+     * the case.
      *
      * @throws IOException If there is trouble reading the image
      * @throws InterruptedException If the process gets interrupted
      */
     @Test
     public final void testConvert() throws IOException, InterruptedException {
-        ConverterFactory.checkSystemKakadu();
-
         if (ConverterFactory.hasSystemKakadu()) {
             final KakaduConverter converter = (KakaduConverter) ConverterFactory.getConverter();
             final File jpx = new File(TMP_DIR, myUUID + ".jpx");
@@ -111,7 +108,7 @@ public class KakaduConverterTest {
             }
         } else {
             LOGGER.warn(MessageCodes.BUCKETEER_003);
-            assumeTrue(false);
+            assumeTrue(false); // Ignore this test
         }
     }
 
@@ -123,12 +120,7 @@ public class KakaduConverterTest {
     @Test
     public final void testGetPath() throws IOException {
         final File file = new File(TMP_DIR, myUUID);
-
-        // We can test this without having Kakadu actually installed
-        ConverterFactory.hasSystemKakadu(true);
-        final KakaduConverter converter = (KakaduConverter) ConverterFactory.getConverter();
-
-        assertEquals(file.getAbsolutePath(), converter.getPath(file));
+        assertEquals(file.getAbsolutePath(), new KakaduConverter().getPath(file));
     }
 
     /**

@@ -1,54 +1,49 @@
-# We want all PRs built but only merges on master branch and tags under semantic version scheme
+language: java
+
+env:
+- BUILD_TYPE=""
+- BUILD_TYPE="" ADDED_LIBS="-Dkakadu.version=${KAKADU_VERSION}"
+- BUILD_TYPE="-Dunpinned"
+- BUILD_TYPE="-Dunpinned" ADDED_LIBS="-Dkakadu.version=${KAKADU_VERSION}"
+
+services:
+- docker
+
+before_install:
+- >-
+  openssl aes-256-cbc -K $encrypted_3fc12ce230ac_key -iv $encrypted_3fc12ce230ac_iv
+  -in src/test/resources/kakadu_github_key.enc -out kakadu_github_key -d
+- chmod 600 kakadu_github_key
+- eval $(ssh-agent -s)
+- ssh-add kakadu_github_key
+
+install: true
+
+script:
+- >-
+  mvn -DlogLevel=DEBUG -DtestLogLevel=DEBUG deploy $BUILD_TYPE $ADDED_LIBS
+  -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}"
+  -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}"
+  -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}"
+  -Dbucketeer.s3.bucket="${BUCKETEER_S3_BUCKET}"
+  -Dbucketeer.iiif.url="${BUCKETEER_IIIF_URL}"
+  -Dbucketeer.slack.test_user_handle="${SLACK_TEST_USER_HANDLE}"
+  -Dbucketeer.slack.oauth_token="${SLACK_OAUTH_TOKEN}"
+  -Dbucketeer.slack.channel_id="${SLACK_CHANNEL_ID}"
+  -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}"
+  -Ddocker.registry.username="${DOCKER_USERNAME}"
+  -Ddocker.registry.password="${DOCKER_PASSWORD}"
+  -Ddocker.registry.account="${DOCKER_REGISTRY_ACCOUNT}"
+  -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error
+
+# We want all PRs built but only merges on master branch
 branches:
   only:
   - master
-  - /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
 
 cache:
   directories:
   - $HOME/.m2
-
-jobs:
-  include:
-    - stage: Build and Test on OpenJDK11
-      name: Build and Test on OpenJDK11
-      language: java
-      jdk:
-        - openjdk11
-      install:
-        - mvn help:active-profiles package -q -Dmaven.test.skip -Dmaven.javadoc.skip -B -V
-      script:
-        - >
-          travis_retry mvn verify \
-            -Dbucketeer.s3.access_key="${AWS_ACCESS_KEY_ID}" \
-            -Dbucketeer.s3.secret_key="${AWS_SECRET_ACCESS_KEY}" \
-            -Dbucketeer.s3.region="${BUCKETEER_S3_REGION}" \
-            -Dbucketeer.s3.bucket="${BUCKETEER_S3_BUCKET}" \
-            -Dbucketeer.iiif.url="${BUCKETEER_IIIF_URL}" \
-            -Dbucketeer.slack.test_user_handle="${SLACK_TEST_USER_HANDLE}" \
-            -Dbucketeer.slack.oauth_token="${SLACK_OAUTH_TOKEN}" \
-            -Dbucketeer.slack.channel_id="${SLACK_CHANNEL_ID}" \
-            -Dbucketeer.slack.error_channel_id="${SLACK_ERROR_CHANNEL_ID}" \
-            -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error
-
-    - stage: Trigger Jenkins for Containerization
-      name: Trigger Jenkins for Containerization
-      language: minimal
-      deploy:
-        - provider: script
-          script: .travis/trigger-docker-build.sh
-          on:
-            branch: master
-      if: (NOT type IN (pull_request)) AND (branch = master)
-    - stage: Trigger Jenkins with Tag for Containerization
-      name: Trigger Jenkins with Tag for Containerization
-      language: minimal
-      deploy:
-        - provider: script
-          script: .travis/trigger-docker-build.sh
-          on:
-            tags: true
-      if: (NOT type IN (pull_request)) AND (branch =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/)
 
 notifications:
   email:

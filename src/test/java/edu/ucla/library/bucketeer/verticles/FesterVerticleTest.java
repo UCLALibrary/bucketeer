@@ -20,6 +20,7 @@ import edu.ucla.library.bucketeer.AbstractBucketeerTest;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -45,7 +46,7 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
     private static final String TEST_JOB = "src/test/resources/json/job.json";
 
     @Rule
-    public RunTestOnContext myRule = new RunTestOnContext();
+    public RunTestOnContext myTestContext = new RunTestOnContext();
 
     private Vertx myVertx;
 
@@ -58,7 +59,7 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
     @Before
     public void setUp(final TestContext aContext) throws Exception {
         myPort = getFreePort();
-        myVertx = myRule.vertx();
+        myVertx = myTestContext.vertx();
         myConfig = new JsonObject().put(Config.FESTER_URL, StringUtils.format(FESTER_URL, myPort));
     }
 
@@ -103,7 +104,7 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
      * @param aContext A testing context
      */
     private void configurePromise(final Promise<Void> aPromise, final TestContext aContext) {
-        aPromise.future().setHandler(future -> {
+        aPromise.future().onComplete(future -> {
             try {
                 final JsonObject job = new JsonObject(StringUtils.read(new File(TEST_JOB)));
                 final JsonObject message = new JsonObject().put(Constants.BATCH_METADATA, job);

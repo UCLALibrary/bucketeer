@@ -72,6 +72,7 @@ public class Item implements Serializable {
      * Sets a file path prefix to use with the metadata's file path.
      *
      * @param aFilePathPrefix A file path prefix
+     * @return The item
      */
     @JsonIgnore
     public Item setFilePathPrefix(final IFilePathPrefix aFilePathPrefix) {
@@ -105,6 +106,7 @@ public class Item implements Serializable {
      * Sets if the ingest has failed or not.
      *
      * @param aState An ingest workflow state
+     * @return The item
      */
     @JsonIgnore
     public Item setWorkflowState(final WorkflowState aState) {
@@ -125,7 +127,7 @@ public class Item implements Serializable {
      * Sets the item ID.
      *
      * @param aID
-     * @return
+     * @return The item
      */
     public Item setID(final String aID) {
         myID = aID;
@@ -210,6 +212,7 @@ public class Item implements Serializable {
      * Sets the non-prefixed file path.
      *
      * @param aFilePath A file path
+     * @return The item
      */
     public Item setFilePath(final Optional<String> aFilePath) {
         myPrefixedFilePath = null;

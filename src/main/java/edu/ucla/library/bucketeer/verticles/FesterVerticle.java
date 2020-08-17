@@ -20,6 +20,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystem;
 import io.vertx.core.json.JsonObject;
@@ -74,17 +75,23 @@ public class FesterVerticle extends AbstractBucketeerVerticle {
                         form.textFileUpload("csv-file", job.getName(), csvFilePath, Constants.CSV);
 
                         postRequest.sendMultipartForm(form, sendMultipartForm -> {
-                            final HttpResponse<Buffer> postResponse = sendMultipartForm.result();
-                            final String postStatusMessage = postResponse.statusMessage();
-                            final int postStatusCode = postResponse.statusCode();
+                            if (sendMultipartForm.succeeded()) {
+                                final HttpResponse<Buffer> postResponse = sendMultipartForm.result();
+                                final String postStatusMessage = postResponse.statusMessage();
+                                final int postStatusCode = postResponse.statusCode();
 
-                            if (postStatusCode == HTTP.OK) {
-                                message.reply(message);
+                                if (postStatusCode == HTTP.OK) {
+                                    message.reply(message);
+                                } else {
+                                    final String details = LOGGER.getMessage(MessageCodes.BUCKETEER_157, csvFilePath,
+                                            postStatusCode, postStatusMessage);
+
+                                    message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_157), details);
+                                }
                             } else {
-                                final String details = LOGGER.getMessage(MessageCodes.BUCKETEER_157, csvFilePath,
-                                        postStatusCode, postStatusMessage);
+                                final Throwable throwable = sendMultipartForm.cause();
 
-                                message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_157), details);
+                                message.fail(500, throwable.getMessage());
                             }
                         });
                     } else {

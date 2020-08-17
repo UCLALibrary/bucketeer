@@ -25,7 +25,7 @@
   <entry key="BUCKETEER-014">S3 bucket upload failed: {} -&gt; {}</entry>
   <entry key="BUCKETEER-015">Failed to close Vert.x test instance</entry>
   <entry key="BUCKETEER-016">Unable to find kdu_compress installed on the system</entry>
-  <entry key="BUCKETEER-017">--> Entering '{}' method</entry>
+  <entry key="BUCKETEER-017">Running test method: '{}'</entry>
   <entry key="BUCKETEER-018">Validation error: {}</entry>
   <entry key="BUCKETEER-019">Error: {}</entry>
   <entry key="BUCKETEER-020">400 Bad Request: imageId and filePath required</entry>
@@ -42,15 +42,15 @@
   <entry key="BUCKETEER-031">Failed to deploy main verticle for testing</entry>
   <entry key="BUCKETEER-032">No known converter</entry>
   <entry key="BUCKETEER-033">Using test image for kakadu conversion: {}</entry>
-  <entry key="BUCKETEER-034">Image Load Request: {}</entry>
-  <entry key="BUCKETEER-035">defaultTestFilename: {}</entry>
-  <entry key="BUCKETEER-036">myDerivativeJP2: {}</entry>
-  <entry key="BUCKETEER-037">checking for JP2, attempt number {}</entry>
-  <entry key="BUCKETEER-038">S3 config successfully retrieved</entry>
-  <entry key="BUCKETEER-039">Configuration not found: S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY are required.</entry>
-  <entry key="BUCKETEER-040"> --> Bucket ({}) does not exist!</entry>
-  <entry key="BUCKETEER-041"> --> JP2 ({}) does not exist!</entry>
-  <entry key="BUCKETEER-042"> --> JP2 ({}) has a length of zero!</entry>
+  <entry key="BUCKETEER-034">Only the PATCH method is supported for status updates; received: {}</entry>
+  <entry key="BUCKETEER-035">Couldn't optimize for Linux performance; running on: {}|{}</entry>
+  <entry key="BUCKETEER-036">Sending test image upload request: {}</entry>
+  <entry key="BUCKETEER-037">Checking for JP2, attempt number: {}</entry>
+  <entry key="BUCKETEER-038">Failed to create S3 resource: {}</entry>
+  <entry key="BUCKETEER-039">Test object '{}' removed from '{}' S3 bucket</entry>
+  <entry key="BUCKETEER-040">Bucket does not exist: {}</entry>
+  <entry key="BUCKETEER-041">JP2 does not exist: {}</entry>
+  <entry key="BUCKETEER-042">JP2 has a length of zero: {}</entry>
   <entry key="BUCKETEER-043">Failed to read file: {}</entry>
   <entry key="BUCKETEER-044">Sending '{}' [{}] to S3 bucket: {}</entry>
   <entry key="BUCKETEER-045">AWS S3 access / secret keys: {} / {}</entry>
@@ -119,7 +119,8 @@
   <entry key="BUCKETEER-108">Mapping bean field to CSV value: &quot;{}&quot; = &quot;{}&quot;</entry>
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
-  <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached. A total of {} images were processed for this job. These images are available for viewing on: {}</entry>
+  <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached. A total of {} images were
+    processed for this job. These images are available for viewing on: {}</entry>
   <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
   <entry key="BUCKETEER-113">Failed to find job keys in shared lambda map</entry>
   <entry key="BUCKETEER-114">Unexpected response code: {} [{}]</entry>
@@ -171,4 +172,10 @@
   <entry key="BUCKETEER-160">Shutting down test server...</entry>
   <entry key="BUCKETEER-500">{}</entry>
   <entry key="BUCKETEER-501">Large image ({} [{}]) skipped; maximum allowed size set for: {}</entry>
+  <entry key="BUCKETEER-502">Bucketeer is now listening on port: {}</entry>
+  <entry key="BUCKETEER-503">Resource not found: {}</entry>
+  <entry key="BUCKETEER-504">Missing media type; expected: application/json</entry>
+  <entry key="BUCKETEER-505">Incorrect media type; expected: application/json, found: {}</entry>
+  <entry key="BUCKETEER-506">The main verticle was started, but the port ({}) is not ready!</entry>
+  <entry key="BUCKETEER-506">Serving static page request: {}</entry>
 </properties>
