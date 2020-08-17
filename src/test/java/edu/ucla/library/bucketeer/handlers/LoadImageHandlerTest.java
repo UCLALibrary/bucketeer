@@ -3,12 +3,15 @@ package edu.ucla.library.bucketeer.handlers;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 import com.amazonaws.SdkClientException;
@@ -53,6 +56,9 @@ public class LoadImageHandlerTest {
 
     @Rule
     public TestName myTestName = new TestName();
+
+    @Rule
+    public Timeout myTimeout = new Timeout(5, TimeUnit.MINUTES);
 
     private Vertx myVertx;
 
@@ -130,6 +136,7 @@ public class LoadImageHandlerTest {
      *
      * @param aContext A testing context
      */
+    @Ignore
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerResponseMatchesSpec(final TestContext aContext) {
