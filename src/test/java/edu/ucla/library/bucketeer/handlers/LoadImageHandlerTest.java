@@ -51,8 +51,6 @@ public class LoadImageHandlerTest {
 
     private static final String REGION = "us-east-1";
 
-    private static final int FIVE = 5;
-
     @Rule
     public RunTestOnContext myTestContext = new RunTestOnContext();
 
@@ -60,7 +58,7 @@ public class LoadImageHandlerTest {
     public TestName myTestName = new TestName();
 
     @Rule
-    public Timeout myTimeout = new Timeout(FIVE, TimeUnit.MINUTES);
+    public Timeout myTimeout = new Timeout(5, TimeUnit.MINUTES);
 
     private Vertx myVertx;
 
