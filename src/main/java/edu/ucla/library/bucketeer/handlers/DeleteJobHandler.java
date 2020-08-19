@@ -47,19 +47,22 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
                         if (jobs.contains(jobName)) {
                             removeJob(jobName, map, removal -> {
                                 if (removal.succeeded()) {
+                                    final String success = LOGGER.getMessage(MessageCodes.BUCKETEER_144, jobName);
                                     response.setStatusCode(HTTP.NO_CONTENT);
-                                    response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_144, jobName));
-                                    response.end();
+                                    response.setStatusMessage(success);
+                                    response.end(success);
                                 } else {
+                                    final String badRequest = LOGGER.getMessage(MessageCodes.BUCKETEER_142, jobName);
                                     response.setStatusCode(HTTP.BAD_REQUEST);
-                                    response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_142, jobName));
-                                    response.end();
+                                    response.setStatusMessage(badRequest);
+                                    response.end(badRequest);
                                 }
                             });
                         } else {
+                            final String notFound = LOGGER.getMessage(MessageCodes.BUCKETEER_098, jobName);
                             response.setStatusCode(HTTP.NOT_FOUND);
-                            response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_098, jobName));
-                            response.end();
+                            response.setStatusMessage(notFound);
+                            response.end(notFound);
                         }
                     } else {
                         returnError(response, MessageCodes.BUCKETEER_113);

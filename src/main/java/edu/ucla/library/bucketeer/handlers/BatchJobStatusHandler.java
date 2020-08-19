@@ -192,10 +192,10 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
 
                     // Let the submitter know we're done
-                    returnSuccess(response);
+                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
                 } else {
                     // If not finished, return an acknowledgement to the image processor
-                    returnSuccess(response);
+                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
                 }
             } else {
                 aLock.release();
@@ -247,7 +247,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
         aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);
         aResponse.setStatusMessage(errorDetails);
-        aResponse.end();
+        aResponse.end(errorDetails);
     }
 
     /**
@@ -255,8 +255,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      *
      * @param aResponse A HTTP server response
      */
-    private void returnSuccess(final HttpServerResponse aResponse) {
+    private void returnSuccess(final HttpServerResponse aResponse, final String aMessage) {
         aResponse.setStatusCode(HTTP.NO_CONTENT);
-        aResponse.end();
+        aResponse.end(aMessage);
     }
 }

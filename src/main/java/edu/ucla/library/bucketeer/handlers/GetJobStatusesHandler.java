@@ -88,11 +88,12 @@ public class GetJobStatusesHandler extends AbstractBucketeerHandler {
                                 }
                             });
                         } else {
+                            final String notFound = LOGGER.getMessage(MessageCodes.BUCKETEER_098, jobName);
                             LOGGER.debug(MessageCodes.BUCKETEER_149, jobName);
 
                             response.setStatusCode(HTTP.NOT_FOUND);
-                            response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_098, jobName));
-                            response.end();
+                            response.setStatusMessage(notFound);
+                            response.end(notFound);
                         }
                     } else {
                         returnError(response, MessageCodes.BUCKETEER_113);
