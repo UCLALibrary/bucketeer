@@ -86,12 +86,17 @@ public class FesterVerticle extends AbstractBucketeerVerticle {
                                     final String details = LOGGER.getMessage(MessageCodes.BUCKETEER_157, csvFilePath,
                                             postStatusCode, postStatusMessage);
 
+                                    LOGGER.error(details);
                                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_157), details);
                                 }
                             } else {
                                 final Throwable throwable = sendMultipartForm.cause();
+                                final String log = throwable.getMessage();
+                                final String jobName = job.getName();
+                                final String details = LOGGER.getMessage(MessageCodes.BUCKETEER_507, jobName, log);
 
-                                message.fail(500, throwable.getMessage());
+                                LOGGER.error(throwable, details);
+                                message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_507), details);
                             }
                         });
                     } else {

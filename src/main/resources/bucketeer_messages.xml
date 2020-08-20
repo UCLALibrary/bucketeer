@@ -178,4 +178,5 @@
   <entry key="BUCKETEER-505">Incorrect media type; expected: application/json, found: {}</entry>
   <entry key="BUCKETEER-506">The main verticle was started, but the port ({}) is not ready!</entry>
   <entry key="BUCKETEER-506">Serving static page request: {}</entry>
+  <entry key="BUCKETEER-507">Fester request for '{}' failed to be sent: {}</entry>
 </properties>
