@@ -48,7 +48,7 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
                             removeJob(jobName, map, removal -> {
                                 if (removal.succeeded()) {
                                     final String success = LOGGER.getMessage(MessageCodes.BUCKETEER_144, jobName);
-                                    response.setStatusCode(HTTP.NO_CONTENT);
+                                    response.setStatusCode(HTTP.OK);
                                     response.setStatusMessage(success);
                                     response.end(success);
                                 } else {

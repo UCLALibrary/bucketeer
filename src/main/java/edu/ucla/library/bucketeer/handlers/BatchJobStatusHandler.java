@@ -256,7 +256,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aResponse A HTTP server response
      */
     private void returnSuccess(final HttpServerResponse aResponse, final String aMessage) {
-        aResponse.setStatusCode(HTTP.NO_CONTENT);
+        aResponse.setStatusCode(HTTP.OK);
         aResponse.end(aMessage);
     }
 }
