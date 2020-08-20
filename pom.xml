@@ -77,9 +77,6 @@
     <!-- Git repo with Kakadu source code (ours is private; override with yours) -->
     <kakadu.git.repo>scm:git:git@github.com:uclalibrary/kakadu.git</kakadu.git.repo>
 
-    <!-- Git repo with Kakadu source code (ours is private; override with yours) -->
-    <kakadu.git.repo>scm:git:git@github.com:uclalibrary/kakadu.git</kakadu.git.repo>
-
     <vertx.version>3.9.1</vertx.version>
     <vertx.super.s3.version>1.2.0</vertx.super.s3.version>
     <slf4j.ext.version>1.7.26</slf4j.ext.version>
