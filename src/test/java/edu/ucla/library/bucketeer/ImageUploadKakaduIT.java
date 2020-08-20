@@ -146,7 +146,7 @@ public class ImageUploadKakaduIT {
     public final void testImageUpload(final TestContext aContext)
             throws UnsupportedEncodingException, SdkClientException, AmazonServiceException {
         final String filePath = URLEncoder.encode(TEST_FILE_PATH, StandardCharsets.UTF_8);
-        final String request = StringUtils.format("/{}/{}", myUUID, filePath);
+        final String request = StringUtils.format("/images/{}/{}", myUUID, filePath);
         final WebClient client = WebClient.create(myVertx);
         final Async asyncTask = aContext.async();
 
