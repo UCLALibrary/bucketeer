@@ -656,6 +656,7 @@
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx.test.port>${http.port}</vertx.test.port>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+            <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
             <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
@@ -999,6 +1000,7 @@
               <systemPropertyVariables>
                 <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
                 <http.port>${http.port}</http.port>
+                <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
               </systemPropertyVariables>
               <argLine>${jacoco.agent.arg}</argLine>
