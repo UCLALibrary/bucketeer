@@ -142,7 +142,7 @@ public class MainVerticle extends AbstractVerticle {
                     // Match all GETs, except GETs for paths that are API endpoints
                     router.getWithRegex("^/(?!(batch|status|config|images)).*").order(0).handler(event -> {
                         if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug(MessageCodes.BUCKETEER_506, event.request().path());
+                            LOGGER.debug(MessageCodes.BUCKETEER_503, event.request().path());
                         }
 
                         staticHandler.setWebRoot("webroot").setIndexPage("index.html").handle(event);

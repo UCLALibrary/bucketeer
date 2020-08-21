@@ -129,8 +129,8 @@ public class ImageUploadKakaduIT {
     @After
     public void tearDown(final TestContext aContext) {
         if (myS3Client.doesBucketExistV2(myS3Bucket) && myJP2 != null) {
-            LOGGER.debug(MessageCodes.BUCKETEER_039, myJP2, myS3Bucket);
             myS3Client.deleteObject(myS3Bucket, myJP2);
+            LOGGER.debug(MessageCodes.BUCKETEER_039, myJP2, myS3Bucket);
         }
     }
 

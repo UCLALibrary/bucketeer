@@ -173,10 +173,9 @@
   <entry key="BUCKETEER-500">{}</entry>
   <entry key="BUCKETEER-501">Large image ({} [{}]) skipped; maximum allowed size set for: {}</entry>
   <entry key="BUCKETEER-502">Bucketeer is now listening on port: {}</entry>
-  <entry key="BUCKETEER-503">Resource not found: {}</entry>
+  <entry key="BUCKETEER-503">Serving static page request: {}</entry>
   <entry key="BUCKETEER-504">Missing media type; expected: application/json</entry>
   <entry key="BUCKETEER-505">Incorrect media type; expected: application/json, found: {}</entry>
   <entry key="BUCKETEER-506">The main verticle was started, but the port ({}) is not ready!</entry>
-  <entry key="BUCKETEER-506">Serving static page request: {}</entry>
   <entry key="BUCKETEER-507">Fester request for '{}' failed to be sent: {}</entry>
 </properties>
