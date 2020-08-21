@@ -254,6 +254,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * Return a successful response to the browser.
      *
      * @param aResponse A HTTP server response
+     * @param aMessage A response message
      */
     private void returnSuccess(final HttpServerResponse aResponse, final String aMessage) {
         aResponse.setStatusCode(HTTP.OK);

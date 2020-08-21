@@ -58,7 +58,6 @@ public class DeleteJobHandlerTest extends AbstractBucketeerHandlerTest {
                                 final HttpResponse<Buffer> response = deletion.result();
                                 final int statusCode = response.statusCode();
 
-                                //aContext.assertEquals(HTTP.NO_CONTENT, statusCode, LOGGER.getMessage(
                                 aContext.assertEquals(HTTP.OK, statusCode, LOGGER.getMessage(
                                         MessageCodes.BUCKETEER_114, statusCode, response.statusMessage()));
 

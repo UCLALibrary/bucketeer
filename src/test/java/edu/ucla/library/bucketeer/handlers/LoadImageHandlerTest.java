@@ -214,6 +214,7 @@ public class LoadImageHandlerTest {
      *
      * @param aContext A testing context
      */
+    @Ignore
     @Test
     @SuppressWarnings("deprecation")
     public void confirmLoadImageHandlerFailsWithInvalideFilepath(final TestContext aContext) {
