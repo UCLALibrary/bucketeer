@@ -246,7 +246,7 @@ paths:
               schema:
                 type: string
                 format: binary
-  /{image-id}/{file-path}:
+  /images/{image-id}/{file-path}:
     get:
       summary: Convert Single TIFF
       description: Requests a new image be loaded into Bucketeer's ingest workflow so that Cantaloupe can access it

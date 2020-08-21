@@ -12,9 +12,11 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -37,22 +39,25 @@ public class GetJobsHandlerTest extends AbstractBucketeerHandlerTest {
      * @param aContext A testing context
      */
     @Test
-    public final void testGetJobsHandler(final TestContext aContext) {
+    public final void testGetJobsRequest(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
-        final WebClient webClient = WebClient.create(myVertx);
 
         myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
-                getMap.result().put(JOB_NAME, new Job(JOB_NAME), put -> {
+                final AsyncMap<String, Job> jobMap = getMap.result();
+
+                jobMap.put(JOB_NAME, new Job(JOB_NAME), put -> {
                     if (put.succeeded()) {
+                        final WebClient webClient = WebClient.create(myVertx);
+
                         webClient.get(port, Constants.UNSPECIFIED_HOST, TEST_URL).send(get -> {
                             if (get.succeeded()) {
                                 final HttpResponse<Buffer> response = get.result();
                                 final int statusCode = response.statusCode();
                                 final String message = response.statusMessage();
 
-                                if (response.statusCode() == HTTP.OK) {
+                                if (statusCode == HTTP.OK) {
                                     final JsonObject found = response.bodyAsJsonObject();
                                     final JsonObject expected = new JsonObject();
 

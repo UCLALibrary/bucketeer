@@ -17,6 +17,7 @@ import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -58,8 +59,8 @@ public class DeleteJobHandlerTest extends AbstractBucketeerHandlerTest {
                                 final HttpResponse<Buffer> response = deletion.result();
                                 final int statusCode = response.statusCode();
 
-                                aContext.assertEquals(HTTP.NO_CONTENT, statusCode, LOGGER.getMessage(
-                                        MessageCodes.BUCKETEER_114, statusCode, response.statusMessage()));
+                                aContext.assertEquals(HTTP.NO_CONTENT, statusCode, LOGGER
+                                        .getMessage(MessageCodes.BUCKETEER_114, statusCode, response.statusMessage()));
 
                                 complete(asyncTask);
                             } else {

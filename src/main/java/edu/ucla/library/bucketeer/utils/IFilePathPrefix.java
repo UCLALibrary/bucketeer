@@ -15,6 +15,7 @@ public interface IFilePathPrefix extends Serializable {
     /**
      * Get the prefix to use with the supplied file.
      *
+     * @param aFile A file from which to get a prefix
      * @return The supplied file's prefix
      */
     String getPrefix(File aFile);

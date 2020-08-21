@@ -1,4 +1,5 @@
 <configuration>
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
   <timestamp key="byDay" datePattern="yyyy-MM-dd" />
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -16,16 +17,36 @@
   </appender>
 
   <logger name="io.netty" level="ERROR" additivity="false">
+    <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
-  </logger>
+  </logger> 
   <logger name="io.vertx" level="ERROR" additivity="false">
+  <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
   </logger>
-  <logger name="edu.ucla.library.bucketeer" level="DEBUG" additivity="false">
+  <logger name="io.swagger.v3.parser" level="INFO" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="oshi.hardware.platform" level="ERROR" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="oshi.util" level="WARN" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="com.github.seratch.jslack" level="WARN" additivity="false">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+  <logger name="edu.ucla.library.bucketeer" level="${testLogLevel}" additivity="false">
+    <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <root level="INFO">
+  <root level="${testLogLevel}">
+    <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
   </root>
 

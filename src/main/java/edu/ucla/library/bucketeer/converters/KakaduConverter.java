@@ -8,11 +8,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.KakaduNotFoundException;
 import edu.ucla.library.bucketeer.MessageCodes;
 
 /**
@@ -45,10 +47,10 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     }
 
     @Override
-    public File convert(final String aID, final File aTIFF, final Conversion aConversion) throws IOException,
-            InterruptedException {
+    public File convert(final String aID, final File aTIFF, final Conversion aConversion)
+            throws IOException, InterruptedException {
         final File jpx = new File(TMP_DIR, URLEncoder.encode(aID, StandardCharsets.UTF_8.toString()) + ".jpx");
-        final List<String> command = new ArrayList<String>();
+        final List<String> command = new ArrayList<>();
         final String conversion = aConversion.name();
 
         command.addAll(Arrays.asList(getExecutable(), "-i", getPath(aTIFF), "-o", getPath(jpx)));
@@ -60,19 +62,10 @@ public class KakaduConverter extends AbstractConverter implements Converter {
             command.addAll(LOSSY_OPTION);
         }
 
-        // Check to see if we're running a test on a system without Kakadu (e.g. Travis)
         if (ConverterFactory.hasSystemKakadu()) {
             run(new ProcessBuilder(command), aID, LOGGER);
         } else {
-            final File testJpx = new File("src/test/resources/images", jpx.getName());
-
-            // If test image exists, use the test image, but warn that we're doing that
-            if (testJpx.exists()) {
-                LOGGER.warn(MessageCodes.BUCKETEER_033, testJpx);
-                return testJpx;
-            } else {
-                run(new ProcessBuilder(command), aID, LOGGER);
-            }
+            throw new KakaduNotFoundException();
         }
 
         return jpx;
@@ -80,16 +73,13 @@ public class KakaduConverter extends AbstractConverter implements Converter {
 
     @Override
     public String getExecutable() {
-        final String kakaduHome = getKakaduHome();
-        final String executable;
+        final StringBuilder executable = new StringBuilder();
 
-        if (kakaduHome != null) {
-            executable = new File(kakaduHome, KAKADU_COMMAND).getAbsolutePath();
-        } else {
-            executable = KAKADU_COMMAND;
-        }
+        getKakaduHome().ifPresentOrElse(kakaduHome -> {
+            executable.append(new File(kakaduHome, KAKADU_COMMAND));
+        }, () -> executable.append(KAKADU_COMMAND));
 
-        return executable;
+        return executable.toString();
     }
 
     /**
@@ -107,13 +97,13 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     }
 
     /**
-     * Returns whether KAKADU_HOME is configured, indicating that Kakadu is available. KAKADU_HOME can be configured
-     * in the system environment or in Java properties. Properties takes precedence.
+     * Returns whether KAKADU_HOME is configured, indicating that Kakadu is available. KAKADU_HOME can be configured in
+     * the system environment or in Java properties. Properties takes precedence.
      *
      * @return True if Kakadu is configured correctly; else, false
      */
     public static final boolean hasKakaduHome() {
-        return getKakaduHome() != null;
+        return getKakaduHome().isPresent();
     }
 
     /**
@@ -121,14 +111,14 @@ public class KakaduConverter extends AbstractConverter implements Converter {
      *
      * @return The location of the Kakadu binaries
      */
-    private static String getKakaduHome() {
+    private static Optional<String> getKakaduHome() {
         String kakaduHome = System.getProperty(KAKADU_HOME);
 
         if (kakaduHome == null) {
             kakaduHome = System.getenv(KAKADU_HOME);
         }
 
-        return kakaduHome;
+        return Optional.ofNullable(kakaduHome);
     }
 
 }
