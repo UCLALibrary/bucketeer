@@ -36,6 +36,9 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
+/**
+ * Tests of the Fester verticle.
+ */
 @RunWith(VertxUnitRunner.class)
 public class FesterVerticleTest extends AbstractBucketeerTest {
 
@@ -45,6 +48,9 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
 
     private static final String TEST_JOB = "src/test/resources/json/job.json";
 
+    /**
+     * A test context from which references to Vert.x can be retrieved.
+     */
     @Rule
     public RunTestOnContext myTestContext = new RunTestOnContext();
 
@@ -56,21 +62,38 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
 
     private JsonObject myConfig;
 
+    /**
+     * Sets up the testing environment.
+     *
+     * @param aContext A test context
+     * @throws EIOxception The exception thrown if an available port cannot be claimed
+     */
     @Before
-    public void setUp(final TestContext aContext) throws Exception {
+    public void setUp(final TestContext aContext) throws IOException {
         myPort = getFreePort();
         myVertx = myTestContext.vertx();
         myConfig = new JsonObject().put(Config.FESTER_URL, StringUtils.format(FESTER_URL, myPort));
     }
 
+    /**
+     * Tears down the testing environment.
+     *
+     * @param aContext A test context
+     */
     @After
-    public void tearDown(final TestContext aContext) throws Exception {
+    public void tearDown(final TestContext aContext) {
         if (myServer != null) {
             LOGGER.debug(LOGGER.getMessage(MessageCodes.BUCKETEER_160));
             myServer.close();
         }
     }
 
+    /**
+     * Tests posting to the Fester verticle.
+     *
+     * @param aContext A test context
+     * @throws IOException If there is an exception during the post
+     */
     @Test
     public final void testPost(final TestContext aContext) throws IOException {
         final Async asyncTask = aContext.async();
