@@ -22,6 +22,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -113,7 +114,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     private void getLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
         final Promise<Lock> promise = Promise.<Lock>promise();
 
-        promise.future().setHandler(aHandler);
+        promise.future().onComplete(aHandler);
 
         aSharedData.getLocalLockWithTimeout(Constants.JOB_LOCK, Constants.JOB_LOCK_TIMEOUT, getLock -> {
             if (getLock.succeeded()) {

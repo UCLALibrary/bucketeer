@@ -1,12 +1,12 @@
 # Bucketeer  &nbsp;[![Build Status](https://travis-ci.com/UCLALibrary/bucketeer.svg?branch=master)](https://travis-ci.com/UCLALibrary/bucketeer) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
-
-A TIFF to JPX to S3 bucket microservice. It will turn TIFF images into JPEG 2000 images in two ways:
+ 
+A TIFF to JP2/JPX to S3 bucket microservice. It will turn TIFF images into JPEG 2000 images in two ways:
 
 1) The first way is to convert individual TIFF images into JPEG 2000 images on the local machine. To do this Bucketeer receives individual requests, accesses the TIFFs from a mounted directory, converts TIFFs into JPEG 2000 images, and then uploads them to S3. This method is triggered by a RESTful API.
 
 2) The second way is to convert TIFF images into JPEG 2000 images in batch. With this method, a CSV file is uploaded to Bucketeer and TIFF images from the CSV file, available to Bucketeer from a locally mounted directory, are uploaded to an S3 bucket. An AWS Lambda function picks up on that event and converts the TIFFs into JPEG 2000s. Lastly, the Bucketeer Lambda function stores the JPEG 2000 images in another S3 bucket. This method is triggered by uploading a CSV file through a Web page on the Bucketeer site.
 
-Currently, the CSV upload method is hard-coded for UCLA's particular metadata model. This will be changed to make the process more generic.
+Currently, the CSV upload method is hard-coded for UCLA's particular metadata model. This will be changed to make the process more generic. Examples of UCLA's metadata fields can be found in CSVs in the project's test resources. In the future, there will be actual documentation describing the more generic approach.
 
 ## Requirements
 
@@ -16,8 +16,8 @@ Currently, the CSV upload method is hard-coded for UCLA's particular metadata mo
 * An [AWS](https://docs.aws.amazon.com/index.html?nc2=h_ql_doc) account with [S3 buckets](https://docs.aws.amazon.com/s3/?id=docs_gateway) created.
     * In order to run tests that use S3, you should copy the `bucketeer.s3.*` settings out of the sample settings.xml file in `src/test/resources` and copy them into your own settings.xml file (perhaps at `/etc/maven/settings.xml`), supplying the values from your own S3 account.
 
-* A valid license for [Kakadu](https://kakadusoftware.com/) and the Kakadu binaries installed (to use local conversion)
-    * In order to run tests that use Kakadu, you should install Kakadu on your system and the tests should pick it up. If you have several copies of Kakadu and you'd like to tell the tests which one to use you can set the `KAKADU_HOME` environmental variable and point it to the Kakadu binaries you want to use.
+* A valid license for [Kakadu](https://kakadusoftware.com/)
+    * In order to make your copy of Kakadu available to the build, it needs to be placed in its own GitHub repository with the name of the version you've licensed in the root directory (i.e., the root directory will contain a directory named something like `v7_A_7-01642E`). Our current build has only been tested with Kakadu v7. We don't yet support v8. For more details, see the Kakadu section below.
 
 * An installation of [kakadu-lambda-converter](https://github.com/UCLALibrary/kakadu-lambda-converter/) (to use the batch conversion)
     * See that project's GitHub page for information about how to install it.
@@ -40,7 +40,29 @@ To generate the site's Javadocs documentation, run:
 
 This will generate the documentation in the `target/site` directory.
 
-If you'd like to run Bucketeer in a Docker container, a [repository to build a Docker image](https://github.com/uclalibrary/docker-bucketeer) is available. Using it requires you to supply your own AWS credentials and to have a licensed copy of the Kakadu source code.
+If you'd like to run Bucketeer in a Docker container, you need to have Docker installed and working on your system. To run the version of the build that creates a Docker container and runs tests against that, type:
+
+    mvn verify
+
+_Hint: If you want to run a build without a Docker cache, add -Ddocker.noCache to your mvn command; for instance: `mvn verify -Ddocker.noCache`_
+
+## Running the Bucketeer container
+
+The simplest way to run the newly built Bucketeer container (for development purposes) is to use the Maven Docker plugin. To do that, run:
+
+    mvn docker:start
+
+This will output logging that will tell you what random port Bucketeer has been started on (e.g. http://localhost:32772). If you visit the URL found in the logging output in your browser, you will see the Bucketeer landing page. If you haven't changed the `image.root` location, `src/test/resources/images` will be the source of your images. There are some sample images there used for testing.
+
+If you'd like to change the location where Bucketeer will look for images (to your own test images), you can start the container with a custom `image.root` location:
+
+    mvn docker:start -Dimage.root=/path/to/your/imageroot
+
+To stop the Bucketeer container, when you are done testing, you should run:
+
+    mvn docker:stop
+
+You can always see which containers are running by using Docker's `docker ps` command.
 
 ## Running the Application for Development
 
@@ -55,6 +77,45 @@ If you want to run the application with a different mount point (for image sourc
     mvn -Plive test -Dbucketeer.fs.mount=/opt/data -Dbucketeer.fs.prefix=UCLAFilePathPrefix
 
 If you leave off the `bucketeer.fs.prefix` Bucketeer will treat the `bucketeer.fs.mount` as the default directory.
+
+## Including Kakadu
+
+To build an image that includes Kakadu, supply two additional build parameters: the repository and the version number; this should look something like:
+
+    mvn verify -Dkakadu.git.repo=scm:git:git@github.com:uclalibrary/kakadu.git -Dkakadu.version=v7_A_7-01642E
+
+Once you've done this, you'll get the following warning:
+
+    warning: adding embedded git repository: src/main/docker/kakadu
+    hint: You've added another git repository inside your current repository.
+    hint: Clones of the outer repository will not contain the contents of
+    hint: the embedded repository and will not know how to obtain it.
+    hint: If you meant to add a submodule, use:
+    hint: 
+    hint:   git submodule add <url> src/main/docker/kakadu
+    hint: 
+    hint: If you added this path by mistake, you can remove it from the
+    hint: index with:
+    hint: 
+    hint:   git rm --cached src/main/docker/kakadu
+    hint: 
+    hint: See "git help submodule" for more information.
+
+This is what you want. You do not want to add your Kakadu code as a submodule since the repository is private and should not be linked to this project's code.
+
+UCLA developers only need to supply the correct `kakadu.version` v7 value. The build is set up to use our private Kakadu GitHub repository by default. Non-UCLA developers should not supply `kakadu.version` without also supplying `kakadu.git.repo`, since the UCLA Kakadu repository is a private repository that cannot be accessed by others.
+
+It's important to remember that if you build a Docker container with `kakadu.version`, you must also supply that same argument when you run the `mvn docker:start` and `mvn docker:stop` commands. They will look something like:
+
+    mvn docker:start -Dkakadu.version=v7_A_7-01642E
+
+and
+
+    mvn docker:stop -Dkakadu.version=v7_A_7-01642E
+
+You do not need to supply the `kakadu.git.repo` argument when just starting or stopping your previously built Kakadu-enabled containers. That's only needed at the point of building them.
+
+Kakadu is only needed if you want to do Kakadu in Bucketeer, instead of using Bucketeer to send TIFFs to AWS Lambda to process.
 
 ## Tweaking the Batch Upload
 
@@ -77,4 +138,4 @@ We're still experimenting with different configurations, so we don't have a reco
 
 ## Contact
 
-We use an internal ticketing system, but we've left the GitHub [issues](https://github.com/UCLALibrary/bucketeer/issues) open in case you'd like to file a ticket or make a suggestion. You can also contact Kevin S. Clarke at <a href="mailto:ksclarke@ksclarke.io">ksclarke@ksclarke.io</a> if you have a question about the project.
+We use an internal ticketing system, but we've left the GitHub [issues](https://github.com/UCLALibrary/bucketeer/issues) open in case you'd like to file a ticket or make a suggestion.

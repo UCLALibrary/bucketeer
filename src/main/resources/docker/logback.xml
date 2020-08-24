@@ -4,12 +4,12 @@
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>[%level] %logger{0}:%X{line} %d{yyyy-MM-dd_HH:mm:ss.SSS} | %msg%n</pattern>
+      <pattern>[%level] %logger{0}:%X{line} [%d{yyyy-MM-dd HH:mm:ss.SSS}] | %msg%n</pattern>
     </encoder>
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>target/${project.artifactId}-${byDay}.log</file>
+    <file>/var/log/bucketeer/bucketeer-${byDay}.log</file>
     <append>false</append>
     <encoder>
       <pattern>[%level] %logger{0}:%X{line} [%d{yyyy-MM-dd HH:mm:ss.SSS}] | %msg%n</pattern>
@@ -17,17 +17,12 @@
   </appender>
 
   <logger name="io.netty" level="ERROR" additivity="false">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </logger>
   <logger name="io.vertx" level="ERROR" additivity="false">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
-  </logger>
-  <!-- We handle this exception so don't need it logged as SEVERE -->
-  <logger name="io.vertx.core.http.ConnectionPoolTooBusyException" level="OFF" additivity="false">
     <appender-ref ref="STDOUT" />
-    <appender-ref ref="FILE" />
   </logger>
   <logger name="io.swagger.v3.parser" level="ERROR" additivity="false">
     <appender-ref ref="FILE" />
@@ -46,13 +41,15 @@
     <appender-ref ref="STDOUT" />
   </logger>
   <logger name="edu.ucla.library.bucketeer" level="${logLevel}" additivity="false">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </logger>
 
+  <!-- WARNING: Using TRACE will expose the AWS S3 access and secret keys in the logs !! -->
+
   <root level="${logLevel}">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </root>
 
 </configuration>

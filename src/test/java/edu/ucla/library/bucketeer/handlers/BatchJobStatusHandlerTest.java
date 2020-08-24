@@ -1,26 +1,27 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
-import static edu.ucla.library.bucketeer.Constants.UNSPECIFIED_HOST;
-
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
-import ch.qos.logback.classic.Level;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
+
+import ch.qos.logback.classic.Level;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpMethod;
@@ -46,28 +47,38 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
 
     private static final String TRUE = "true";
 
+    @Rule
+    public TestName myTestName = new TestName();
+
     /**
      * Tests the <code>BatchJobStatusHandler</code>.
      *
      * @param aContext A testing context
      */
     @Test
-    @SuppressWarnings("deprecation")
-    public final void testGetHandle(final TestContext aContext) {
+    public final void testMethodNotAllowedResponse(final TestContext aContext) {
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final RequestOptions request = new RequestOptions();
+        final WebClient webClient = WebClient.create(myVertx);
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
 
         request.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
-        myVertx.createHttpClient().getNow(request, response -> {
-            final int statusCode = response.statusCode();
+        webClient.get(port, Constants.UNSPECIFIED_HOST, uri).send(get -> {
+            if (get.succeeded()) {
+                final HttpResponse<Buffer> response = get.result();
+                final int statusCode = response.statusCode();
 
-            if (statusCode == HTTP.METHOD_NOT_ALLOWED) {
-                asyncTask.complete();
+                if (statusCode == HTTP.METHOD_NOT_ALLOWED) {
+                    asyncTask.complete();
+                } else {
+                    aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_083, statusCode, response.statusMessage()));
+                }
             } else {
-                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_083, statusCode, response.statusMessage()));
+                aContext.fail(get.cause());
             }
         });
     }
@@ -80,7 +91,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
 
     @Test
     @SuppressWarnings("deprecation")
-    public final void testPatchHandle500(final TestContext aContext) {
+    public final void testInternalServerErrorResponse(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final RequestOptions options = new RequestOptions();
@@ -88,6 +99,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
         final HttpClient client = myVertx.createHttpClient();
         final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
 
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
         options.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
         client.request(HttpMethod.PATCH, options, response -> {
@@ -110,11 +122,13 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
      * @param aContext A testing context
      */
     @Test
-    public final void testPatchHandle(final TestContext aContext) {
+    public final void testSuccessfulStatusUpdate(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
         final WebClient webClient = WebClient.create(myVertx);
         final String patchUri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
 
         myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
@@ -124,7 +138,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                 // Put the job in our jobs queue so we can test against it
                 getMap.result().put(JOB_NAME, job, put -> {
                     if (put.succeeded()) {
-                        webClient.patch(port, UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
+                        webClient.patch(port, Constants.UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
                             if (sendPatch.succeeded()) {
                                 final HttpResponse<Buffer> patchResponse = sendPatch.result();
                                 final int statusCode = patchResponse.statusCode();
@@ -158,8 +172,8 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
      * @return The logger's previous log level
      */
     private Level setLogLevel(final Class<?> aLogClass, final Level aLogLevel) {
-        final ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(
-                aLogClass, Constants.MESSAGES).getLoggerImpl();
+        final ch.qos.logback.classic.Logger logger =
+                (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(aLogClass, Constants.MESSAGES).getLoggerImpl();
         final Level level = logger.getEffectiveLevel();
 
         logger.setLevel(aLogLevel);

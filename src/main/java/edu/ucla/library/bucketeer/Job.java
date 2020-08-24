@@ -54,6 +54,8 @@ public class Job implements Serializable {
 
     /**
      * Gets the size of the job.
+     *
+     * @return The job size
      */
     @JsonIgnore
     public int size() {
@@ -102,6 +104,7 @@ public class Job implements Serializable {
      * Sets the job name.
      *
      * @param aJobName The job name
+     * @return The job
      */
     @JsonProperty("jobName")
     public Job setName(final String aJobName) {
@@ -112,7 +115,7 @@ public class Job implements Serializable {
     /**
      * Gets the items in the job.
      *
-     * @return
+     * @return The list of items
      */
     public List<Item> getItems() {
         return myItems;
@@ -217,6 +220,7 @@ public class Job implements Serializable {
      */
     @JsonIgnoreType
     public enum WorkflowState {
+
         INGESTED, FAILED, SUCCEEDED, EMPTY, MISSING, STRUCTURAL;
 
         /**

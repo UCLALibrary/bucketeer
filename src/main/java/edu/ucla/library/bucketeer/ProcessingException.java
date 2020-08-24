@@ -32,6 +32,8 @@ public class ProcessingException extends Exception {
 
     /**
      * Create an exception.
+     *
+     * @param aMessage A message with details about the processing exception
      */
     public ProcessingException(final String aMessage) {
         myMessages = new ArrayList<>();

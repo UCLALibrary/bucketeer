@@ -15,6 +15,9 @@ public final class HTTP {
     /** Success, no content */
     public static final int NO_CONTENT = 204;
 
+    /** Temporary redirect */
+    public static final int TEMP_REDIRECT = 307;
+
     /** Too many requests */
     public static final int TOO_MANY_REQUESTS = 429;
 
@@ -23,6 +26,9 @@ public final class HTTP {
 
     /** Method not allowed */
     public static final int METHOD_NOT_ALLOWED = 405;
+
+    /** An empty or other unsupported media type */
+    public static final int UNSUPPORTED_MEDIA_TYPE = 415;
 
     /** Generic internal server error */
     public static final int INTERNAL_SERVER_ERROR = 500;
