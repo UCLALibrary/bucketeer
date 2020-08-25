@@ -84,6 +84,7 @@
     <commons.codec.version>1.14</commons.codec.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
+    <moirai.version>2.0.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
     <freelib.utils.version>1.1.0</freelib.utils.version>
@@ -107,6 +108,12 @@
     <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
     <docker.maven.plugin.version>0.33.0</docker.maven.plugin.version>
     <maven.download.plugin.version>1.3.0</maven.download.plugin.version>
+
+    <!-- These properties provide the ability to override the running of any type of test -->
+    <skipITs>false</skipITs>
+    <skipFTs>false</skipFTs>
+    <skipUTs>false</skipUTs>
+    <skipFfTs>false</skipFfTs>
 
     <!-- Whether auto-reloading should be turned on for the live test profile -->
     <live.test.reloads>false</live.test.reloads>
@@ -177,6 +184,7 @@
     <!-- Additional Docker configurations -->
     <docker.cleanup>remove</docker.cleanup>
     <docker.showLogs>true</docker.showLogs>
+    <docker.allContainers>true</docker.allContainers>
   </properties>
 
   <dependencies>
@@ -228,6 +236,19 @@
       <artifactId>logback-classic</artifactId>
       <scope>compile</scope>
     </dependency>
+
+    <!-- Feature flag library -->
+    <dependency>
+      <groupId>com.nike.moirai</groupId>
+      <artifactId>moirai-core</artifactId>
+      <version>${moirai.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.nike.moirai</groupId>
+      <artifactId>moirai-typesafeconfig</artifactId>
+      <version>${moirai.version}</version>
+    </dependency>
+
     <!-- Some basic utility classes -->
     <dependency>
       <groupId>info.freelibrary</groupId>
@@ -382,6 +403,22 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
+        <configuration>
+          <portNames>
+            <portName>http.port</portName>
+            <portName>ff.on.http.port</portName>
+            <portName>ff.off.http.port</portName>
+          </portNames>
+        </configuration>
+        <executions>
+          <execution>
+            <id>reserve-port</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- Generate the MessageCodes class from the message codes resource file -->
@@ -438,6 +475,7 @@
               <resources>
                 <resource>
                   <directory>${basedir}/src/main/resources</directory>
+                  <filtering>true</filtering>
                   <includes>
                     <include>bucketeer.yaml</include>
                   </includes>
@@ -501,13 +539,6 @@
         </configuration>
       </plugin>
 
-      <!-- Codacy runs automated code reviews and code analytics -->
-      <plugin>
-        <groupId>com.gavinmogan</groupId>
-        <artifactId>codacy-maven-plugin</artifactId>
-        <version>${codacy.plugin.version}</version>
-      </plugin>
-
       <!-- Maven dependency helps freelib-resources copy files into the project -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -555,8 +586,8 @@
         <configuration>
           <logStdout>true</logStdout>
           <verbose>true</verbose>
-          <images>
-            <image>
+          <imagesMap>
+            <bucketeer>
               <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
               <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
               <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
@@ -579,6 +610,7 @@
                 </assembly>
               </build>
               <run>
+                <containerNamePattern>bucketeer</containerNamePattern>
                 <ports>
                   <port>${http.port}:8888</port> <!-- Start test container on an available host port -->
                 </ports>
@@ -599,6 +631,7 @@
                   <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
                   <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
                   <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
+                  <HEAP_SIZE>1g</HEAP_SIZE>
                 </env>
                 <wait>
                   <http>
@@ -608,8 +641,80 @@
                   </http>
                 </wait>
               </run>
-            </image>
-          </images>
+            </bucketeer>
+            <bucketeer-ff-off>
+              <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
+              <run>
+                <containerNamePattern>bucketeer-ff-off</containerNamePattern>
+                <ports>
+                  <port>${ff.off.http.port}:8888</port> <!-- Start test container on an available host port -->
+                </ports>
+                <volumes>
+                  <bind>
+                    <volume>${image.root}:/images/</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
+                  <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
+                  <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
+                  <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
+                  <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                  <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
+                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
+                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
+                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
+                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
+                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/bucketeer-features-off.conf</FEATURE_FLAGS>
+                  <HEAP_SIZE>300m</HEAP_SIZE>
+                </env>
+                <wait>
+                  <http>
+                    <url>http://localhost:${ff.off.http.port}</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                </wait>
+              </run>
+            </bucketeer-ff-off>
+            <bucketeer-ff-on>
+              <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
+              <run>
+                <containerNamePattern>bucketeer-ff-on</containerNamePattern>
+                <ports>
+                  <port>${ff.on.http.port}:8888</port> <!-- Start test container on an available host port -->
+                </ports>
+                <volumes>
+                  <bind>
+                    <volume>${image.root}:/images/</volume>
+                  </bind>
+                </volumes>
+                <env>
+                  <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
+                  <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
+                  <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
+                  <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
+                  <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                  <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
+                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
+                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
+                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
+                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
+                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/bucketeer-features-on.conf</FEATURE_FLAGS>
+                  <HEAP_SIZE>300m</HEAP_SIZE>
+                </env>
+                <wait>
+                  <http>
+                    <url>http://localhost:${ff.on.http.port}</url>
+                    <method>GET</method>
+                    <status>200</status>
+                  </http>
+                </wait>
+              </run>
+            </bucketeer-ff-on>
+          </imagesMap>
         </configuration>
         <executions>
 
@@ -648,6 +753,8 @@
         <configuration>
           <excludes>
             <exclude>**/*IT.java</exclude>
+            <exclude>**/*FfOnT.java</exclude>
+            <exclude>**/*FfOffT.java</exclude>
           </excludes>
           <forkCount>1</forkCount><!-- Multiple forks result in multiple containers -->
           <useSystemClassLoader>false</useSystemClassLoader> <!-- Override parent project setting -->
@@ -659,8 +766,68 @@
             <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
             <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
           </systemPropertyVariables>
+          <skipTests>${skipUTs}</skipTests>
           <argLine>${jacoco.agent.arg}</argLine>
         </configuration>
+      </plugin>
+
+      <!-- This incantation of Failsafe runs the non-Kakadu integration and feature-flag tests -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/*Test.java</exclude>
+            <exclude>**/*KakaduIT.java</exclude>
+          </excludes>
+          <systemPropertyVariables>
+            <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+            <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+            <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
+            <jdwp.client.config>${jdwp.client.config}</jdwp.client.config>
+            <jdwp.host.port>${jdwp.host.port}</jdwp.host.port>
+            <http.port>${http.port}</http.port>
+          </systemPropertyVariables>
+          <argLine>${jacoco.agent.arg}</argLine>
+        </configuration>
+        <executions>
+          <execution>
+            <id>feature-flags-off</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/*FfOffT.java</include>
+              </includes>
+              <argLine>${jacoco.agent.arg}</argLine>
+              <skipTests>${skipFfTs}</skipTests>
+              <systemPropertyVariables>
+                <http.port>${ff.off.http.port}</http.port>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>feature-flags-on</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/*FfOnT.java</include>
+              </includes>
+              <argLine>${jacoco.agent.arg}</argLine>
+              <skipTests>${skipFfTs}</skipTests>
+              <systemPropertyVariables>
+                <http.port>${ff.on.http.port}</http.port>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- The Vert.x plug-in enables running the application from within Maven for development -->
@@ -747,9 +914,12 @@
                   <exclude>com.googlecode.libphonenumber:libphonenumber</exclude>
                   <exclude>com.google.code.gson:gson</exclude>
                   <exclude>com.networknt:json-schema-validator</exclude>
+                  <exclude>com.nike.moirai:moirai-core</exclude>
+                  <exclude>com.nike.moirai:moirai-typesafeconfig</exclude>
                   <exclude>com.opencsv:opencsv</exclude>
                   <exclude>com.squareup.okhttp3:okhttp</exclude>
                   <exclude>com.squareup.okio:okio</exclude>
+                  <exclude>com.typesafe:config</exclude>
                   <exclude>commons-codec:commons-codec</exclude>
                   <exclude>commons-collections:commons-collections</exclude>
                   <exclude>commons-io:commons-io</exclude>
@@ -1004,6 +1174,7 @@
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
               </systemPropertyVariables>
               <argLine>${jacoco.agent.arg}</argLine>
+              <skipTests>${skipITs}</skipTests>
             </configuration>
             <executions>
               <execution>
@@ -1034,6 +1205,7 @@
         <build.essential.version>=12.8ubuntu1</build.essential.version>
         <libopenjp2.version>=2.3.1-1ubuntu4</libopenjp2.version>
         <git.version>=1:2.20.1-2+deb10u3</git.version>
+        <curl.version>=7.68.0-1ubuntu2.2</curl.version>
         <python2.version>=2.7.17-2ubuntu4</python2.version>
       </properties>
 
@@ -1043,19 +1215,6 @@
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
             <version>${docker.maven.plugin.version}</version>
-            <configuration>
-              <images>
-                <image>
-                  <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
-                  <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
-                  <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
-                </image>
-              </images>
-              <authConfig>
-                <username>${docker.registry.username}</username>
-                <password>${docker.registry.password}</password>
-              </authConfig>
-            </configuration>
             <executions>
               <execution>
                 <id>docker-deploy</id>
@@ -1063,6 +1222,19 @@
                 <goals>
                   <goal>push</goal>
                 </goals>
+                <configuration>
+                  <images>
+                    <image>
+                      <!-- Registry account, if supplied, must end in a slash (e.g. "account/") -->
+                      <!-- The %l at the end translates to "latest" if version ends in "-SNAPSHOT" -->
+                      <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
+                    </image>
+                  </images>
+                  <authConfig>
+                    <username>${docker.registry.username}</username>
+                    <password>${docker.registry.password}</password>
+                  </authConfig>
+                </configuration>
               </execution>
             </executions>
           </plugin>
@@ -1086,6 +1258,7 @@
         <build.essential.version></build.essential.version>
         <libopenjp2.version></libopenjp2.version>
         <git.version></git.version>
+        <curl.version></curl.version>
         <python2.version></python2.version>
       </properties>
     </profile>

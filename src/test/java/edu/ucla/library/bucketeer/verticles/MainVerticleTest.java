@@ -59,7 +59,7 @@ public class MainVerticleTest {
                 LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
                 asyncTask.complete();
             } else {
-                aContext.fail();
+                aContext.fail(deployment.cause());
             }
         });
     }
@@ -90,7 +90,7 @@ public class MainVerticleTest {
     @Test
     @SuppressWarnings("deprecation")
     public void testThatTheServerIsStarted(final TestContext aContext) {
-        final Async async = aContext.async();
+        final Async asyncTask = aContext.async();
         final int port = aContext.get(Config.HTTP_PORT);
 
         // Testing the path defined in our OpenAPI YAML file
@@ -99,12 +99,16 @@ public class MainVerticleTest {
 
             if (statusCode == 200) {
                 response.bodyHandler(body -> {
-                    aContext.assertEquals("Hello", body.getString(0, body.length()));
-                    async.complete();
+                    final JsonObject status = new JsonObject(body.getString(0, body.length()));
+
+                    aContext.assertEquals("ok", status.getString(Constants.STATUS));
+
+                    if (!asyncTask.isCompleted()) {
+                        asyncTask.complete();
+                    }
                 });
             } else {
                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_069, statusCode));
-                async.complete();
             }
         });
     }
