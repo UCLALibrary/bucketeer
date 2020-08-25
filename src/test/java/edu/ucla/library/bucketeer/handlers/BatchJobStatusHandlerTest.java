@@ -144,7 +144,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                                 final int statusCode = patchResponse.statusCode();
                                 final String message = patchResponse.statusMessage();
 
-                                if (statusCode == HTTP.NO_CONTENT) {
+                                if (statusCode == HTTP.OK) {
                                     asyncTask.complete();
                                 } else {
                                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));

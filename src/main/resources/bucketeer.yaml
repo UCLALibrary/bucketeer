@@ -15,7 +15,7 @@ info:
     name: UCLA Library Services Team
     email: lib_softwaredev-services@library.ucla.edu
 servers:
-  - url: http://bucketeer.library.ucla.edu
+  - url: https://bucketeer.library.ucla.edu
 paths:
   /status:
     get:
@@ -137,6 +137,11 @@ paths:
                         file-path: /usr/local/data/tiffs/ladailynews/image/000005.tif
         '404':
           description: The requested job and/or item was not found
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Not found: arabic_0003"
         '500':
           description: There was an internal server error
     delete:
@@ -145,12 +150,29 @@ paths:
         images. If it's still processing images, a 400 (Bad Request) is returned."
       operationId: deleteJob
       responses:
-        '204':
+        '200':
           description: No content, the job has been deleted
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Successfully deleted batch job: arabic_0003"
         '400':
           description: Bad request, the job is still processing images
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Refused to delete 'arabic_0003' job because it's still processing images"
         '403':
           description: Deleting the specified job was forbidden
+        '404':
+          description: The specified job was not found
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Not Found: arabic_0003"
         '500':
           description: There was an internal server error
     parameters:
@@ -166,8 +188,13 @@ paths:
       description: Updates the status of an item in the specified job.
       operationId: updateBatchJob
       responses:
-        '204':
+        '200':
           description: The item's status was successfully updated
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "Finished processing the batch job for 'arabic_0003'"
         '404':
           description: The item's status was not found
         '500':
