@@ -8,7 +8,8 @@ ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 WORKDIR /build/kakadu/
 COPY kakadu /build/kakadu/
 RUN if [ -n "${kakadu.version}" ]; then \
-      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
+      apt-get update -qq && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
       openjdk-11-jdk-headless${openjdk.version} \
       gcc${gcc.version} \
       make${make.version} \
@@ -48,7 +49,7 @@ EXPOSE 8888
 # Update packages and install tools
 #  Removing /var/lib/apt/lists/* prevents using `apt` unless you do `apt update` first
 RUN apt-get update -qq && \
-    apt-get install --reinstall -y locales && \
+    apt-get install --no-install-recommends --reinstall -y locales && \
     apt-get install -qq --no-install-recommends \
     libtiff-tools${libtiff.version} \
     libtiff5${libtiff.version} \

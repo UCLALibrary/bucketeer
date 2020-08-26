@@ -13,6 +13,7 @@ import com.nike.moirai.typesafeconfig.TypesafeConfigReader;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Features;
+import edu.ucla.library.bucketeer.HTTP;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -33,7 +34,7 @@ public class GetStatusHandler implements Handler<RoutingContext> {
         status.put(Constants.STATUS, "ok");
         status.put(Features.FEATURES, getFeaturesConfigStatus(aContext.vertx()));
 
-        response.setStatusCode(200);
+        response.setStatusCode(HTTP.OK);
         response.putHeader(Constants.CONTENT_TYPE, Constants.JSON).end(status.encodePrettily());
     }
 
