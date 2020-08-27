@@ -141,27 +141,29 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
 
             if (aEvent.succeeded()) {
                 webClient.get(port, Constants.UNSPECIFIED_HOST, TEST_URL).send(get -> {
-                    final HttpResponse<Buffer> response = get.result();
-                    final int statusCode = response.statusCode();
-                    final String message = response.statusMessage();
+                    if (get.succeeded()) {
+                        final HttpResponse<Buffer> response = get.result();
+                        final int statusCode = response.statusCode();
+                        final String message = response.statusMessage();
 
-                    if (response.statusCode() == HTTP.OK) {
-                        // Update file paths to match the absolute paths on the machine that's running the test
-                        for (int index = 0; index < myJob.size(); index++) {
-                            if (index != 7) {
-                                myJob.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getAbsolutePath());
-                            } else {
-                                myJob.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getAbsolutePath());
+                        if (response.statusCode() == HTTP.OK) {
+                            // Update file paths to match the absolute paths on the machine that's running the test
+                            for (int index = 0; index < myJob.size(); index++) {
+                                if (index != 7) {
+                                    myJob.getJsonObject(index).put(Constants.FILE_PATH, FILE_PATH.getAbsolutePath());
+                                } else {
+                                    myJob.getJsonObject(index).put(Constants.FILE_PATH, FAIL_PATH.getAbsolutePath());
+                                }
                             }
-                        }
 
-                        myContext.assertEquals(myExpectedObj, response.bodyAsJsonObject());
+                            myContext.assertEquals(myExpectedObj, response.bodyAsJsonObject());
 
-                        if (!myAsyncTask.isCompleted()) {
-                            myAsyncTask.complete();
+                            if (!myAsyncTask.isCompleted()) {
+                                myAsyncTask.complete();
+                            }
+                        } else {
+                            myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
                         }
-                    } else {
-                        myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
                     }
                 });
             } else {
