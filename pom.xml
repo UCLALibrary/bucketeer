@@ -784,8 +784,6 @@
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
             <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
             <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
-            <jdwp.client.config>${jdwp.client.config}</jdwp.client.config>
-            <jdwp.host.port>${jdwp.host.port}</jdwp.host.port>
             <http.port>${http.port}</http.port>
           </systemPropertyVariables>
           <argLine>${jacoco.agent.arg}</argLine>
