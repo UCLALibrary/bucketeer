@@ -164,6 +164,8 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
                         } else {
                             myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
                         }
+                    } else {
+                        myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_508, get.cause().getMessage()));
                     }
                 });
             } else {
