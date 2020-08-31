@@ -46,6 +46,19 @@ If you'd like to run Bucketeer in a Docker container, you need to have Docker in
 
 _Hint: If you want to run a build without a Docker cache, add -Ddocker.noCache to your mvn command; for instance: `mvn verify -Ddocker.noCache`_
 
+You can also specify that only a certain set of tests be run against the test containers. To do this, supply a runtime argument that excludes a set of tests:
+
+    -DskipUTs
+    -DskipITs
+    -DskipFTs
+    -DskipFfTs
+
+The first will skip the unit tests; the second will skip the integration tests; the third will skip the functional tests; and, the fourth will skip the feature flag tests. They can also be combined so that two types of tests are skipped. For instance, only the feature flag tests will be run if the following is typed:
+
+    mvn verify -DskipUTs -DskipITs -DskipFTs
+
+To see logging from the containers that are being run for the tests, consult the docker-maven-plugin [documentation](https://dmp.fabric8.io/#docker:logs). This is also useful when running the containers for manual testing, which is described below.
+
 ## Running the Bucketeer container
 
 The simplest way to run the newly built Bucketeer container (for development purposes) is to use the Maven Docker plugin. To do that, run:

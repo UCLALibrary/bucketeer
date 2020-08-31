@@ -62,6 +62,9 @@ public final class Config {
     // A Slack user handle that tests use as the recipient of test messages
     public static final String SLACK_TEST_USER_HANDLE = "bucketeer.slack.test_user_handle";
 
+    // A configuration option for turning on or off feature flags
+    public static final String FEATURE_FLAGS = "feature.flags";
+
     /**
      * Private constructor for the Constants class.
      */

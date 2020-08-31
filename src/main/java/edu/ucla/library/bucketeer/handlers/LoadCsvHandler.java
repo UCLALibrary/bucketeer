@@ -9,6 +9,13 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
+import com.nike.moirai.ConfigFeatureFlagChecker;
+import com.nike.moirai.FeatureFlagChecker;
+import com.nike.moirai.Suppliers;
+import com.nike.moirai.resource.FileResourceLoaders;
+import com.nike.moirai.typesafeconfig.TypesafeConfigDecider;
+import com.nike.moirai.typesafeconfig.TypesafeConfigReader;
+
 import info.freelibrary.util.FileUtils;
 import info.freelibrary.util.IOUtils;
 import info.freelibrary.util.Logger;
@@ -17,6 +24,7 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
@@ -28,7 +36,9 @@ import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.ItemFailureVerticle;
+import edu.ucla.library.bucketeer.verticles.LargeImageVerticle;
 import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
+
 import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -229,41 +239,49 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         while (iterator.hasNext()) {
             final Item item = iterator.next();
-            final JsonObject s3UploadMessage = new JsonObject();
             final Optional<File> file = item.getFile();
             final WorkflowState state = item.getWorkflowState();
 
             // Check that file is present so it can be processed
             if (item.hasFile() && file.isPresent() && WorkflowState.EMPTY.equals(state)) {
                 final long maxFileSize = myConfig.getLong(Config.MAX_SOURCE_SIZE, DEFAULT_MAX_FILE_SIZE);
+                final JsonObject imageRequest = new JsonObject();
                 final File source = file.get();
                 final long sourceFileSize = source.length();
+                final String ext = FileUtils.getExt(source.getName());
+
+                imageRequest.put(Constants.IMAGE_ID, item.getID() + "." + ext);
+                imageRequest.put(Constants.FILE_PATH, source.getAbsolutePath());
+                imageRequest.put(Constants.JOB_NAME, aJob.getName());
+                imageRequest.put(Config.S3_BUCKET, s3Bucket);
 
                 // Check that the image is not too large for us to process on AWS Lambda
                 if (sourceFileSize < maxFileSize) {
-                    final String ext = FileUtils.getExt(source.getName());
-
-                    s3UploadMessage.put(Constants.IMAGE_ID, item.getID() + "." + ext);
-                    s3UploadMessage.put(Constants.FILE_PATH, source.getAbsolutePath());
-                    s3UploadMessage.put(Constants.JOB_NAME, aJob.getName());
-                    s3UploadMessage.put(Config.S3_BUCKET, s3Bucket);
-
-                    sendS3UploadMessage(s3UploadMessage);
+                    sendImageRequest(S3BucketVerticle.class.getName(), imageRequest);
 
                     // If we've sent a upload message, note that we're processing files
                     if (!processing) {
                         processing = true;
                     }
                 } else {
-                    if (LOGGER.isWarnEnabled()) {
-                        // Format our file/max sizes in human friendly forms
-                        final String fileSize = FileUtils.sizeFromBytes(sourceFileSize, true);
-                        final String maxSize = FileUtils.sizeFromBytes(maxFileSize, true);
+                    final Optional<FeatureFlagChecker> featureFlagChecker = getFeatureFlagChecker();
 
-                        LOGGER.warn(MessageCodes.BUCKETEER_501, source, fileSize, maxSize);
+                    // Check if we have a feature flag for processing large images
+                    if (featureFlagChecker.isPresent()) {
+                        // If we do, check that it's enabled...
+                        if (featureFlagChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)) {
+                            sendImageRequest(LargeImageVerticle.class.getName(), imageRequest);
+
+                            // If we've send a large image, note that we're processing files
+                            if (!processing) {
+                                processing = true;
+                            }
+                        } else { // Feature isn't enabled
+                            markItemFailed(item, source);
+                        }
+                    } else { // Feature flag isn't available
+                        markItemFailed(item, source);
                     }
-
-                    item.setWorkflowState(WorkflowState.FAILED);
                 }
             } else {
                 final String missingFileMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_147);
@@ -291,18 +309,35 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
     }
 
     /**
-     * This message sender is specifically for item processing requests; it behaves differently from the default
-     * message sender that our other handlers use.
+     * Marks an item as failed because we do not have enough information to do something with it.
+     *
+     * @param aItem An item in the job being processed
+     * @param aSource A source file that's being converted
+     */
+    private void markItemFailed(final Item aItem, final File aSource) {
+        if (LOGGER.isWarnEnabled()) {
+            final long maxFileSize = myConfig.getLong(Config.MAX_SOURCE_SIZE, DEFAULT_MAX_FILE_SIZE);
+            final String fileSize = FileUtils.sizeFromBytes(aSource.length(), true);
+            final String maxSize = FileUtils.sizeFromBytes(maxFileSize, true);
+
+            LOGGER.warn(MessageCodes.BUCKETEER_501, aSource, fileSize, maxSize);
+        }
+
+        aItem.setWorkflowState(WorkflowState.FAILED);
+    }
+
+    /**
+     * This message sender is specifically for item processing requests; it behaves differently from the default message
+     * sender that our other handlers use.
      *
      * @param aJsonObject A message
-     * @param aVerticleName The destination of the message
+     * @param aListener The destination of the message
      * @param aTimeout A timeout period before the send is considered a failure
      */
-    private void sendS3UploadMessage(final JsonObject aJsonObject) {
+    private void sendImageRequest(final String aListener, final JsonObject aJsonObject) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(Integer.MAX_VALUE);
-        final String listener = S3BucketVerticle.class.getName();
 
-        myVertx.eventBus().request(listener, aJsonObject, options, response -> {
+        myVertx.eventBus().request(aListener, aJsonObject, options, response -> {
             if (response.failed()) {
                 final Throwable exception = response.cause();
 
@@ -312,22 +347,38 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                         final String messageCode = CodeUtils.getCode(replyException.failureCode());
                         final String details = replyException.getMessage();
 
-                        LOGGER.error(MessageCodes.BUCKETEER_005, listener, LOGGER.getMessage(messageCode, details));
+                        LOGGER.error(MessageCodes.BUCKETEER_005, aListener, LOGGER.getMessage(messageCode, details));
                     } else {
-                        LOGGER.error(MessageCodes.BUCKETEER_005, listener, exception.getMessage());
+                        LOGGER.error(MessageCodes.BUCKETEER_005, aListener, exception.getMessage());
                     }
                 } else {
-                    LOGGER.error(MessageCodes.BUCKETEER_005, listener, LOGGER.getMessage(MessageCodes.BUCKETEER_136));
+                    LOGGER.error(MessageCodes.BUCKETEER_005, aListener, LOGGER.getMessage(MessageCodes.BUCKETEER_136));
                 }
 
                 // If we have a failure in processing this item, mark it as a failure
                 sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName());
             } else if (response.result().body().equals(Op.RETRY)) {
                 myVertx.setTimer(myRequeueDelay, timer -> {
-                    sendS3UploadMessage(aJsonObject);
+                    sendImageRequest(aListener, aJsonObject);
                 });
             }
         });
+    }
+
+    /**
+     * Gets a feature flag checker.
+     *
+     * @return An optional feature flag checker
+     */
+    private Optional<FeatureFlagChecker> getFeatureFlagChecker() {
+        if (myVertx.fileSystem().existsBlocking(Features.FEATURE_FLAGS_FILE)) {
+            return Optional.of(ConfigFeatureFlagChecker.forConfigSupplier(
+                    Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
+                            TypesafeConfigReader.FROM_STRING),
+                    TypesafeConfigDecider.FEATURE_ENABLED));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**

@@ -9,6 +9,7 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -54,6 +55,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             imageWorkJson.put(Constants.IMAGE_ID, imageId);
             imageWorkJson.put(Constants.FILE_PATH, filePath);
 
+            // TODO in IIIF-929 -> have this do the work and respond immediately so we can send a real HTTP response
             eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
 
             // We also want to acknowledge that we've received the request
