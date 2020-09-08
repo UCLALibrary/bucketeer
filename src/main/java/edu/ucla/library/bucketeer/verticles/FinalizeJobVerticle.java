@@ -1,6 +1,8 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Optional;
 import java.util.Set;
 
@@ -47,9 +49,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
                     // If we have someone waiting on this result, let them know
                     if (slackHandle.isPresent()) {
-                        final String baseURL = myConfig.getString(Config.IIIF_URL);
-                        final String iiifURL = baseURL.substring(0, baseURL.lastIndexOf("iiif"));
-                        //final String iiifURL = myConfig.getString(Config.IIIF_URL);
+                        final String iiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
                         final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
                                 job.size(), iiifURL);
 
@@ -67,6 +67,23 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     @Override
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    /**
+     * Extract a simple URL, throwing out extra path/query/etc elements.
+     *
+     * @param aLongURL The source URL to be stripped dowwn
+     */
+    private String getSimpleURL(final String aLongURL) {
+        try {
+            final URL url = new URL(aLongURL);
+            final StringBuffer buffer = new StringBuffer().append(url.getProtocol()).append("://")
+                .append(url.getHost()).append("/");
+            return buffer.toString();
+        } catch (MalformedURLException details) {
+            LOGGER.error(details,LOGGER.getMessage(MessageCodes.BUCKETEER_509, aLongURL, details.getMessage()));
+            return "";
+        }
     }
 
     /**

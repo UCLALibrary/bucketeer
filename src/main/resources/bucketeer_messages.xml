@@ -179,4 +179,5 @@
   <entry key="BUCKETEER-506">The main verticle was started, but the port ({}) is not ready!</entry>
   <entry key="BUCKETEER-507">Fester request for '{}' failed to be sent: {}</entry>
   <entry key="BUCKETEER-508">GET in GetJobStatusesHandlerTest failed: {}</entry>
+  <entry key="BUCKETEER-509">URL extraction from {} in FinalizeJobVerticle failed: {}</entry>
 </properties>
