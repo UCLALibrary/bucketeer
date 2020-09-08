@@ -1,8 +1,7 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.Optional;
 import java.util.Set;
 
@@ -77,15 +76,10 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     private String getSimpleURL(final String aLongURL) {
         final String colon = ":";
         final String slash = "/";
-        try {
-            final URL url = new URL(aLongURL);
-            final StringBuilder builder = new StringBuilder().append(url.getProtocol()).append(colon)
-                .append(slash).append(slash).append(url.getHost()).append(slash);
-            return builder.toString();
-        } catch (MalformedURLException details) {
-            LOGGER.error(details,LOGGER.getMessage(MessageCodes.BUCKETEER_509, aLongURL, details.getMessage()));
-            return aLongURL;
-        }
+        final URI uri = URI.create(aLongURL);
+        final StringBuilder builder = new StringBuilder().append(uri.getScheme()).append(colon)
+            .append(slash).append(slash).append(uri.getHost()).append(slash);
+        return builder.toString();
     }
 
     /**
