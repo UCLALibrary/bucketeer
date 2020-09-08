@@ -75,14 +75,16 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
      * @param aLongURL The source URL to be stripped dowwn
      */
     private String getSimpleURL(final String aLongURL) {
+        final String colon = ":";
+        final String slash = "/";
         try {
             final URL url = new URL(aLongURL);
-            final StringBuffer buffer = new StringBuffer().append(url.getProtocol()).append("://")
-                .append(url.getHost()).append("/");
-            return buffer.toString();
+            final StringBuilder builder = new StringBuilder().append(url.getProtocol()).append(colon)
+                .append(slash).append(slash).append(url.getHost()).append(slash);
+            return builder.toString();
         } catch (MalformedURLException details) {
             LOGGER.error(details,LOGGER.getMessage(MessageCodes.BUCKETEER_509, aLongURL, details.getMessage()));
-            return "";
+            return aLongURL;
         }
     }
 
