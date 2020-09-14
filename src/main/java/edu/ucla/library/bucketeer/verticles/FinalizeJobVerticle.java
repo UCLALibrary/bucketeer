@@ -48,18 +48,17 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
                     // If we have someone waiting on this result, let them know
                     if (slackHandle.isPresent()) {
-                        if (json.containsKey(Constants.NOTHING_PROCESSED)) {
-                            final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(),
-                                job.getName());
+                        final String slackMessage;
 
-                            sendSlackMessage(slackChannelID, slackMessage, job);
+                        if (json.containsKey(Constants.NOTHING_PROCESSED)) {
+                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(),
+                                job.getName());
                         } else {
                             final String iiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
-                            final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
+                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
                                 job.size(), iiifURL);
-
-                            sendSlackMessage(slackChannelID, slackMessage, job);
                         }
+                        sendSlackMessage(slackChannelID, slackMessage, job);
                     }
 
                     message.reply(Op.SUCCESS);
