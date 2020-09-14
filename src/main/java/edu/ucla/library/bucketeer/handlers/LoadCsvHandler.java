@@ -285,7 +285,8 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         // If we don't have any records to process, let's finalize the job and send the CSV back as submitted
         if (!processing) {
-            sendMessage(myVertx, new JsonObject().put(Constants.JOB_NAME, aJob.getName()), JOB_FINALIZER);
+            sendMessage(myVertx, new JsonObject().put(Constants.JOB_NAME, aJob.getName())
+                .put(Constants.NOTHING_PROCESSED, true), JOB_FINALIZER);
         }
     }
 
