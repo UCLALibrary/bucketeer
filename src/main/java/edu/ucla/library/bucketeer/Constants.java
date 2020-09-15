@@ -168,6 +168,11 @@ public final class Constants {
     public static final char SLASH = '/';
 
     /**
+     * Nothing processed in job.
+     */
+    public static final String NOTHING_PROCESSED = "nothing-processed";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {

@@ -180,4 +180,5 @@
   <entry key="BUCKETEER-507">Fester request for '{}' failed to be sent: {}</entry>
   <entry key="BUCKETEER-508">GET in GetJobStatusesHandlerTest failed: {}</entry>
   <entry key="BUCKETEER-509">URL extraction from {} in FinalizeJobVerticle failed: {}</entry>
+  <entry key="BUCKETEER-510">Hi, &lt;@{}&gt;, job {} had no new entries to add/old entries to fix</entry>
 </properties>
