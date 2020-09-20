@@ -250,13 +250,13 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 final long sourceFileSize = source.length();
                 final String ext = FileUtils.getExt(source.getName());
 
-                imageRequest.put(Constants.IMAGE_ID, item.getID() + "." + ext);
                 imageRequest.put(Constants.FILE_PATH, source.getAbsolutePath());
                 imageRequest.put(Constants.JOB_NAME, aJob.getName());
                 imageRequest.put(Config.S3_BUCKET, s3Bucket);
 
                 // Check that the image is not too large for us to process on AWS Lambda
                 if (sourceFileSize < maxFileSize) {
+                    imageRequest.put(Constants.IMAGE_ID, item.getID() + "." + ext);
                     sendImageRequest(S3BucketVerticle.class.getName(), imageRequest);
 
                     // If we've sent a upload message, note that we're processing files
@@ -270,6 +270,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                     if (featureFlagChecker.isPresent()) {
                         // If we do, check that it's enabled...
                         if (featureFlagChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)) {
+                            imageRequest.put(Constants.IMAGE_ID, item.getID());
                             sendImageRequest(LargeImageVerticle.class.getName(), imageRequest);
 
                             // If we've send a large image, note that we're processing files
@@ -303,8 +304,9 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         // If we don't have any records to process, let's finalize the job and send the CSV back as submitted
         if (!processing) {
-            sendMessage(myVertx, new JsonObject().put(Constants.JOB_NAME, aJob.getName())
-                .put(Constants.NOTHING_PROCESSED, true), JOB_FINALIZER);
+            sendMessage(myVertx,
+                    new JsonObject().put(Constants.JOB_NAME, aJob.getName()).put(Constants.NOTHING_PROCESSED, true),
+                    JOB_FINALIZER);
         }
     }
 

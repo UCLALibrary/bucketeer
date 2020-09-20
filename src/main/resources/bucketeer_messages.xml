@@ -181,4 +181,7 @@
   <entry key="BUCKETEER-508">GET in GetJobStatusesHandlerTest failed: {}</entry>
   <entry key="BUCKETEER-509">URL extraction from {} in FinalizeJobVerticle failed: {}</entry>
   <entry key="BUCKETEER-510">Hi, &lt;@{}&gt;, job {} had no new entries to add/old entries to fix</entry>
+  <entry key="BUCKETEER-511">Received request to load image: {} [{}]</entry>
+  <entry key="BUCKETEER-512">Large image server, whose feature flag is on, isn't currently configured</entry>
+  <entry key="BUCKETEER-513">Sending large image processing request: {}</entry>
 </properties>

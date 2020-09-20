@@ -1,9 +1,8 @@
 
 package edu.ucla.library.bucketeer.converters;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 import info.freelibrary.util.IOUtils;
 import info.freelibrary.util.Logger;
@@ -32,24 +31,10 @@ abstract class AbstractConverter {
         final Process process = aProcessBuilder.start();
 
         if (process.waitFor() != 0) {
-            aLogger.error(getMessage(new BufferedReader(new InputStreamReader(process.getErrorStream()))));
+            aLogger.error(new String(IOUtils.readBytes(process.getErrorStream()), StandardCharsets.UTF_8));
             throw new IOException(aLogger.getMessage(MessageCodes.BUCKETEER_001, aID));
         } else if (aLogger.isDebugEnabled()) {
-            aLogger.debug(getMessage(new BufferedReader(new InputStreamReader(process.getInputStream()))));
+            aLogger.debug(new String(IOUtils.readBytes(process.getInputStream()), StandardCharsets.UTF_8));
         }
-    }
-
-    private String getMessage(final BufferedReader aReader) throws IOException {
-        final StringBuilder buffer = new StringBuilder();
-
-        String line;
-
-        while ((line = aReader.readLine()) != null) {
-            buffer.append(line);
-        }
-
-        IOUtils.closeQuietly(aReader);
-
-        return buffer.toString();
     }
 }

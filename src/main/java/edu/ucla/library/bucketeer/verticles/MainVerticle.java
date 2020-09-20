@@ -51,11 +51,11 @@ import oshi.hardware.HardwareAbstractionLayer;
  */
 public class MainVerticle extends AbstractVerticle {
 
+    public static final int DEFAULT_PORT = 8888;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class, MESSAGES);
 
     private static final String DEFAULT_SPEC = "bucketeer.yaml";
-
-    private static final int DEFAULT_PORT = 8888;
 
     private static final String THREAD_NAME = "-thread";
 
@@ -249,6 +249,7 @@ public class MainVerticle extends AbstractVerticle {
         futures.add(deployVerticle(SlackMessageVerticle.class.getName(), basicOpts, Promise.promise()));
         futures.add(deployVerticle(ItemFailureVerticle.class.getName(), basicOpts, Promise.promise()));
         futures.add(deployVerticle(FinalizeJobVerticle.class.getName(), basicOpts, Promise.promise()));
+        futures.add(deployVerticle(LargeImageVerticle.class.getName(), basicOpts, Promise.promise()));
         futures.add(deployVerticle(FesterVerticle.class.getName(), basicOpts, Promise.promise()));
 
         // Confirm all our verticles were successfully deployed

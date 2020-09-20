@@ -158,6 +158,9 @@
     <!-- IIIF server URL (including the prefix, if there is one) -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
 
+    <!-- Bucketeer server configured to handle large images -->
+    <large.image.url>http://localhost:8888</large.image.url>
+
     <!-- Fester manifestor collections endpoint -->
     <fester.url>http://localhost:9999/collections</fester.url>
 
@@ -180,11 +183,6 @@
 
     <!-- The artifact is qualified if it's built with Kakadu -->
     <artifact.qualifier></artifact.qualifier>
-
-    <!-- Additional Docker configurations -->
-    <docker.cleanup>remove</docker.cleanup>
-    <docker.showLogs>true</docker.showLogs>
-    <docker.allContainers>true</docker.allContainers>
   </properties>
 
   <dependencies>
@@ -645,6 +643,7 @@
             <bucketeer-ff-off>
               <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
               <run>
+                <skip>${skipFfTs}</skip>
                 <containerNamePattern>bucketeer-ff-off</containerNamePattern>
                 <ports>
                   <port>${ff.off.http.port}:8888</port> <!-- Start test container on an available host port -->
@@ -681,6 +680,7 @@
             <bucketeer-ff-on>
               <name>${docker.registry.account}${project.artifactId}${artifact.qualifier}:%l</name>
               <run>
+                <skip>${skipFfTs}</skip>
                 <containerNamePattern>bucketeer-ff-on</containerNamePattern>
                 <ports>
                   <port>${ff.on.http.port}:8888</port> <!-- Start test container on an available host port -->
@@ -734,6 +734,9 @@
             <goals>
               <goal>start</goal>
             </goals>
+            <configuration>
+              <showLogs>true</showLogs>
+            </configuration>
           </execution>
 
           <!-- Stops the integration tests' Docker container -->
@@ -743,6 +746,10 @@
             <goals>
               <goal>stop</goal>
             </goals>
+            <configuration>
+              <allContainers>true</allContainers>
+              <stopNamePattern>bucket*</stopNamePattern>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -752,7 +759,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>**/*IT.java</exclude>
+            <exclude>**/*IT.java</exclude> <!-- Includes *KakaduIT.java -->
+            <exclude>**/*FT.java</exclude>
             <exclude>**/*FfOnT.java</exclude>
             <exclude>**/*FfOffT.java</exclude>
           </excludes>
@@ -778,7 +786,6 @@
         <configuration>
           <excludes>
             <exclude>**/*Test.java</exclude>
-            <exclude>**/*KakaduIT.java</exclude>
           </excludes>
           <systemPropertyVariables>
             <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
@@ -1163,8 +1170,51 @@
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
               <includes>
-                <include>**/*KakaduIT.java</include>
+                <include>**/*FT.java</include>
+                <include>**/*IT.java</include>
               </includes>
+              <systemPropertyVariables>
+                <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
+                <http.port>${http.port}</http.port>
+                <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
+                <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
+              </systemPropertyVariables>
+              <argLine>${jacoco.agent.arg}</argLine>
+              <skipTests>${skipITs}</skipTests>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>missing-kakadu</id>
+      <activation>
+        <property>
+          <name>!kakadu.version</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/*FT.java</include>
+                <include>**/*IT.java</include>
+              </includes>
+              <excludes>
+                <!-- Don't run Kakadu tests if we don't have it installed -->
+                <exclude>**/*KakaduIT.java</exclude>
+              </excludes>
               <systemPropertyVariables>
                 <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
                 <http.port>${http.port}</http.port>
