@@ -38,8 +38,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
 
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String filePath = request.getParam(Constants.FILE_PATH);
-
-        LOGGER.debug(MessageCodes.BUCKETEER_511, imageId, filePath);
+        final String callback = request.getParam(Constants.CALLBACK_URL);
 
         if (StringUtils.isEmpty(imageId) || StringUtils.isEmpty(filePath)) {
             returnError(response, HTTP.BAD_REQUEST, new ProcessingException(MessageCodes.BUCKETEER_020));
@@ -50,9 +49,18 @@ public class LoadImageHandler implements Handler<RoutingContext> {
             final JsonObject imageWorkJson = new JsonObject();
             final DeliveryOptions options = new DeliveryOptions().setSendTimeout(Long.MAX_VALUE);
 
+            LOGGER.debug(MessageCodes.BUCKETEER_511, imageId, filePath);
+
+            // Callback URL is optional; not including it means you just want to trust that the work is done
+            if (callback != null) {
+                LOGGER.debug(MessageCodes.BUCKETEER_514, callback);
+                imageWorkJson.put(Constants.CALLBACK_URL, callback);
+            }
+
             imageWorkJson.put(Constants.IMAGE_ID, imageId);
             imageWorkJson.put(Constants.FILE_PATH, filePath);
 
+            // ImageWorker does the JP2/JPX conversion before replying; S3 upload is done after replying
             eventBus.request(ImageWorkerVerticle.class.getName(), imageWorkJson, options, imageLoad -> {
                 if (imageLoad.succeeded()) {
                     final JsonObject responseJson = new JsonObject();

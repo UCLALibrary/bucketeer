@@ -164,6 +164,9 @@
     <!-- Fester manifestor collections endpoint -->
     <fester.url>http://localhost:9999/collections</fester.url>
 
+    <!-- Bucketeer's batch callback URL: its variables are 'job-name' and 'image-id' -->
+    <batch.callback.url>http://localhost:8888/batch/jobs/{}/{}/</batch.callback.url>
+
     <!-- Thumbnail size for images served by the IIIF server -->
     <bucketeer.thumbnail.size>!200,200</bucketeer.thumbnail.size>
 

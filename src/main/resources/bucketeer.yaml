@@ -325,3 +325,9 @@ paths:
          schema:
           type: string
           description: The local image path, MUST be a valid path
+       - in: query
+         name: callback-url
+         required: false
+         schema:
+          type: string
+          description: A callback URL for batch job status updates

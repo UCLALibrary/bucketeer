@@ -42,13 +42,14 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
 
     private static final String LARGE_IMAGE_ENDPOINT = "/images/{}/{}"; // image-id and file-path
 
-    private static final String BATCH_UPDATE_ENDPOINT = "/batch/jobs/{}/{}/true"; // job-name and image-id
+    private Optional<String> myCallbackURL;
 
     private String myLargeImageServer;
 
     @Override
     public void start() throws Exception {
         final Optional<FeatureFlagChecker> featureChecker = getFeatureFlagChecker();
+        final JsonObject config = config();
 
         super.start();
 
@@ -60,7 +61,8 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
         }
 
         // Get the location to which we're sending large images for processing
-        myLargeImageServer = config().getString(Config.LARGE_IMAGE_URL);
+        myLargeImageServer = config.getString(Config.LARGE_IMAGE_URL);
+        myCallbackURL = Optional.ofNullable(config.getString(Config.BATCH_CALLBACK_URL));
 
         // We should have a configuration value for our large image server if the feature is turned on
         if (featureChecker.isPresent() && featureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING) &&
@@ -71,11 +73,20 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
         // Initialize a consumer of large image requests
         getJsonConsumer().handler(message -> {
             final JsonObject body = message.body();
+            final String jobName = URLEncoder.encode(body.getString(Constants.JOB_NAME), StandardCharsets.UTF_8);
             final String imageID = URLEncoder.encode(body.getString(Constants.IMAGE_ID), StandardCharsets.UTF_8);
             final String filePath = URLEncoder.encode(body.getString(Constants.FILE_PATH), StandardCharsets.UTF_8);
-            final int port = config().getInteger(Config.HTTP_PORT, MainVerticle.DEFAULT_PORT);
-            final String endpoint = myLargeImageServer + StringUtils.format(LARGE_IMAGE_ENDPOINT, imageID, filePath);
             final WebClient webClient = WebClient.create(getVertx());
+
+            String endpoint = myLargeImageServer + StringUtils.format(LARGE_IMAGE_ENDPOINT, imageID, filePath);
+
+            if (myCallbackURL.isPresent()) {
+                final String callbackURL = StringUtils.format(myCallbackURL.get(), jobName, imageID);
+                final String encodedCallbackURL = URLEncoder.encode(callbackURL, StandardCharsets.UTF_8);
+
+                // The callback URL has double encoded variables in the request path
+                endpoint += "?" + Constants.CALLBACK_URL + "=" + encodedCallbackURL;
+            }
 
             LOGGER.debug(MessageCodes.BUCKETEER_513, endpoint);
 
@@ -84,27 +95,12 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
                     final HttpResponse<Buffer> response = get.result();
 
                     if (response.statusCode() == HTTP.CREATED) {
-                        // Moving handler logic to verticles would be a good goal for one of our refactor sprints;
-                        // this way we could go through the message bus instead of through the API endpoint
-                        webClient.get(port, "0.0.0.0", BATCH_UPDATE_ENDPOINT).send(update -> {
-                            if (update.succeeded()) {
-                                message.reply(Op.SUCCESS);
-                            } else {
-                                final Throwable throwable = update.cause();
-                                final String errorMessage = throwable.getMessage();
-
-                                message.fail(HTTP.INTERNAL_SERVER_ERROR, errorMessage);
-                                LOGGER.error(throwable, errorMessage);
-                            }
-
-                            webClient.close();
-                        });
+                        message.reply(Op.SUCCESS);
                     } else {
                         final String errorMessage = response.statusMessage();
 
                         message.fail(HTTP.INTERNAL_SERVER_ERROR, errorMessage);
                         LOGGER.error(errorMessage);
-                        webClient.close();
                     }
                 } else {
                     final Throwable throwable = get.cause();
@@ -112,8 +108,9 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
 
                     message.fail(HTTP.INTERNAL_SERVER_ERROR, errorMessage);
                     LOGGER.error(throwable, errorMessage);
-                    webClient.close();
                 }
+
+                webClient.close();
             });
         });
     }

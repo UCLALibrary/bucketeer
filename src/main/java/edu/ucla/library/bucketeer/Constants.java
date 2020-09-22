@@ -17,6 +17,11 @@ public final class Constants {
     public static final String IMAGE_ID = "image-id";
 
     /**
+     * The callback URL for batch jobs.
+     */
+    public static final String CALLBACK_URL = "callback-url";
+
+    /**
      * A number of jobs.
      */
     public static final String COUNT = "count";

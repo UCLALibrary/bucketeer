@@ -5,6 +5,7 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -25,6 +26,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 
 public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
 
@@ -51,28 +53,48 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
             final File tiffFile = new File(json.getString(Constants.FILE_PATH));
             final String imageID = json.getString(Constants.IMAGE_ID);
             final Converter converter = ConverterFactory.getConverter(KakaduConverter.class);
+            final Optional<String> callbackUrlOpt = Optional.ofNullable(json.getString(Constants.CALLBACK_URL));
 
             LOGGER.debug(MessageCodes.BUCKETEER_024, imageID, json.getString(Constants.FILE_PATH));
 
             try {
                 final File jpx = converter.convert(imageID, tiffFile, Conversion.LOSSLESS);
-                final JsonObject message = new JsonObject();
                 final Promise<Void> promise = Promise.promise();
+                final JsonObject message = new JsonObject();
 
                 message.put(Constants.FILE_PATH, jpx.getAbsolutePath());
                 message.put(Constants.IMAGE_ID, jpx.getName());
 
+                // Do the conversion before responding back, but respond before doing the S3 upload
+                aMessage.reply(Op.SUCCESS);
+
                 // Handle the S3 storage request's response
                 promise.future().onComplete(upload -> {
-                    if (upload.succeeded()) {
-                        aMessage.reply(Op.SUCCESS);
-                    } else {
-                        final Throwable error = upload.cause();
-                        final String errorMessage = error.getMessage();
+                    if (callbackUrlOpt.isPresent()) {
+                        final WebClient webClient = WebClient.create(vertx);
+                        final boolean callbackUsesSSL;
+                        final String callbackURL;
 
-                        LOGGER.error(error, errorMessage);
-                        aMessage.fail(HTTP.INTERNAL_SERVER_ERROR, errorMessage);
-                    }
+                        if (upload.succeeded()) {
+                            callbackURL = callbackUrlOpt.get() + "true";
+                        } else {
+                            callbackURL = callbackUrlOpt.get() + "false";
+                        }
+
+                        callbackUsesSSL = callbackURL.startsWith("https") ? true : false;
+
+                        LOGGER.debug(MessageCodes.BUCKETEER_515, callbackURL);
+
+                        // Report the success of the S3 upload to whatever initiated the job
+                        webClient.patchAbs(callbackURL).ssl(callbackUsesSSL).send(callback -> {
+                            if (callback.failed()) {
+                                // If the callback isn't listening, just log that as an error
+                                LOGGER.error(callback.cause(), callback.cause().getMessage());
+                            }
+
+                            webClient.close();
+                        });
+                    } // else, we don't need to report back to anyone
                 });
 
                 // Request our JP2 be uploaded to S3
