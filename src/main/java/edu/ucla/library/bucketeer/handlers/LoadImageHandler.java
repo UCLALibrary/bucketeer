@@ -12,6 +12,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle;
+import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -23,7 +24,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
 /**
- * A handler that accepts requests to convert and load individual images.
+ * A handler that accepts requests to convert and upload individual images. It sends conversion requests to the
+ * {@link ImageWorkerVerticle}, which then sends upload requests to the {@link S3BucketVerticle}.
  */
 public class LoadImageHandler implements Handler<RoutingContext> {
 

@@ -85,7 +85,8 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
 
                         LOGGER.debug(MessageCodes.BUCKETEER_515, callbackURL);
 
-                        // Report the success of the S3 upload to whatever initiated the job
+                        // Report the success of the S3 upload to whatever initiated the job, this may be another
+                        // Bucketeer instance or it may be another application that needs an image in Cantaloupe.
                         webClient.patchAbs(callbackURL).ssl(callbackUsesSSL).send(callback -> {
                             if (callback.failed()) {
                                 // If the callback isn't listening, just log that as an error

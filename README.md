@@ -130,6 +130,22 @@ You do not need to supply the `kakadu.git.repo` argument when just starting or s
 
 Kakadu is only needed if you want to do Kakadu in Bucketeer, instead of using Bucketeer to send TIFFs to AWS Lambda to process.
 
+## Testing Locally with Kakadu
+
+The Kakadu instructions above are for including Kakadu in the Bucketeer container. It's also possible to run Bucketeer, with Kakadu, in the live test mode that's described in the "Running the Application for Development" section of this document. To do this, you need to have the Kakadu binaries installed on your local development system. The instructions for how to do this should have been included with your Kakadu distribution. Once installed, the binaries should be accessible from the $PATH and the related libraries should be included in the system's $LD_LIBRARY_PATH. To confirm everything is set up correctly and working, run:
+
+    kdu_compress -v
+
+If you want to test the large image feature, where large images can be sent from one Bucketeer to another (or, between the same one if you'd like, since you're running in test mode), you will need to enable Bucketeer's large image feature. To do this, create a feature configuration file at: `/etc/bucketeer/bucketeer-features.conf`. The contents of that file should be:
+
+    moirai {
+      bucketeer.large.images {
+        featureEnabled = true
+      }
+    }
+
+This should enable the feature. To confirm the feature has been configured correctly, once Bucketeer is started in the live test mode, visit the Bucketeer status page at: `http://localhost:8888/status`. In the JSON that's returned from the page, you should see that features are enabled and that the `bucketeer.large.images` feature, in particular, is enabled.
+
 ## Tweaking the Batch Upload
 
 Choosing between conversion methods depends largely on how quickly TIFF images can be uploaded to the AWS Lambda bucket. AWS Lambda scales horizontally (up to 1000 simultaneous functions), so if you can upload TIFFs to the S3 bucket faster than they can be processed by the X number of cores on your local machine, it makes sense to use the batch method.

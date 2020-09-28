@@ -40,11 +40,11 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LargeImageVerticle.class, Constants.MESSAGES);
 
-    private static final String LARGE_IMAGE_ENDPOINT = "/images/{}/{}"; // image-id and file-path
+    private static final String LOAD_IMAGE_ENDPOINT = "/images/{}/{}"; // image-id and file-path
 
     private Optional<String> myCallbackURL;
 
-    private String myLargeImageServer;
+    private String myLargeImageBucketeer;
 
     @Override
     public void start() throws Exception {
@@ -60,13 +60,13 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
             LOGGER.debug(MessageCodes.BUCKETEER_004, className, threadName);
         }
 
-        // Get the location to which we're sending large images for processing
-        myLargeImageServer = config.getString(Config.LARGE_IMAGE_URL);
+        // Get the location of the Bucketeer to which we're sending large images
+        myLargeImageBucketeer = config.getString(Config.LARGE_IMAGE_URL);
         myCallbackURL = Optional.ofNullable(config.getString(Config.BATCH_CALLBACK_URL));
 
         // We should have a configuration value for our large image server if the feature is turned on
         if (featureChecker.isPresent() && featureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING) &&
-                myLargeImageServer == null) {
+                myLargeImageBucketeer == null) {
             throw new ConfigurationException(LOGGER.getMessage(MessageCodes.BUCKETEER_512));
         }
 
@@ -78,19 +78,21 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
             final String filePath = URLEncoder.encode(body.getString(Constants.FILE_PATH), StandardCharsets.UTF_8);
             final WebClient webClient = WebClient.create(getVertx());
 
-            String endpoint = myLargeImageServer + StringUtils.format(LARGE_IMAGE_ENDPOINT, imageID, filePath);
+            // We want to send large images to the individual image load endpoint instead of to AWS Lambda
+            String loadImageEndpoint =
+                    myLargeImageBucketeer + StringUtils.format(LOAD_IMAGE_ENDPOINT, imageID, filePath);
 
             if (myCallbackURL.isPresent()) {
                 final String callbackURL = StringUtils.format(myCallbackURL.get(), jobName, imageID);
                 final String encodedCallbackURL = URLEncoder.encode(callbackURL, StandardCharsets.UTF_8);
 
                 // The callback URL has double encoded variables in the request path
-                endpoint += "?" + Constants.CALLBACK_URL + "=" + encodedCallbackURL;
+                loadImageEndpoint += "?" + Constants.CALLBACK_URL + "=" + encodedCallbackURL;
             }
 
-            LOGGER.debug(MessageCodes.BUCKETEER_513, endpoint);
+            LOGGER.debug(MessageCodes.BUCKETEER_513, loadImageEndpoint);
 
-            webClient.getAbs(endpoint).send(get -> {
+            webClient.getAbs(loadImageEndpoint).send(get -> {
                 if (get.succeeded()) {
                     final HttpResponse<Buffer> response = get.result();
 

@@ -330,4 +330,6 @@ paths:
          required: false
          schema:
           type: string
-          description: A callback URL for batch job status updates
+          description: "A callback URL for batch job status updates. This may be a callback to another Bucketeer that
+          is running a batch job, and has redirected a large image to this bucketeer for local processing, or it may
+          be a callback URL belonging to another application that has sent us an individual image conversion request."

@@ -1,5 +1,5 @@
 
-package edu.ucla.library.bucketeer.verticles;
+package edu.ucla.library.bucketeer;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -12,10 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import info.freelibrary.util.StringUtils;
-
-import edu.ucla.library.bucketeer.Config;
-import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.HTTP;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -32,7 +28,7 @@ import io.vertx.ext.web.client.predicate.ResponsePredicate;
  * Tests the image load verticle when running with Kakadu support.
  */
 @RunWith(VertxUnitRunner.class)
-public class ImageLoadVerticleKakaduIT {
+public class ImageLoadUsingKakaduIT {
 
     private static final String TEST_IMAGE_PATH = "/images/test.tif";
 
@@ -68,7 +64,7 @@ public class ImageLoadVerticleKakaduIT {
     }
 
     /**
-     * Tests to make sure that an image can be converted and loaded as expected.
+     * Tests to make sure that an image can be converted and uploaded as expected.
      *
      * @param aContext A test context
      */
