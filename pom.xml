@@ -164,11 +164,10 @@
     <!-- Fester manifestor collections endpoint -->
     <fester.url>http://localhost:9999/collections</fester.url>
 
-    <!-- The string template of a URL endpoint that updates the batch jobs status queue. This endpoint is updated by
-     AWS Lambda functions and by different Bucketeer instances that have been configured to process images larger
-     than the AWS Lambda function can handle. The 'batch.callback.url' is sent as a callback URL when a large image
-     processing request is sent to a different Bucketeer instance (to its loadImage endpoint). Its expected values
-     correspond to the 'job-name' and 'image-id' variables. More details can be found in the Bucketeer OpenAPI spec.
+    <!-- The string template of a URL endpoint that updates the batch jobs status queue. The 'batch.callback.url' is
+     sent as a callback URL when a large image processing request is sent to a different Bucketeer instance (to its
+     loadImage endpoint). Its expected values correspond to the 'job-name' and 'image-id' variables. More details can
+     be found in the Bucketeer OpenAPI specification.
     -->
     <batch.callback.url>http://localhost:8888/batch/jobs/{}/{}/</batch.callback.url>
 
