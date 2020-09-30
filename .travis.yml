@@ -40,7 +40,6 @@ script:
 branches:
   only:
   - master
-  - IIIF-919-large-image-handling
 
 cache:
   directories:

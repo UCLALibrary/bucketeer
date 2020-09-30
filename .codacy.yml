@@ -1,5 +1,0 @@
-# Exclude files that are still TODOs for this feature branch
-
----
-exclude_paths:
-  - '**/LargeImageVerticle.java'
