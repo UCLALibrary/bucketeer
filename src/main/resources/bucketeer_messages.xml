@@ -181,4 +181,9 @@
   <entry key="BUCKETEER-508">GET in GetJobStatusesHandlerTest failed: {}</entry>
   <entry key="BUCKETEER-509">URL extraction from {} in FinalizeJobVerticle failed: {}</entry>
   <entry key="BUCKETEER-510">Hi, &lt;@{}&gt;, job {} had no new entries to add/old entries to fix</entry>
+  <entry key="BUCKETEER-511">Received request to load image: {} [{}]</entry>
+  <entry key="BUCKETEER-512">The large image feature flag is on, but a large image Bucketeer isn't currently configured</entry>
+  <entry key="BUCKETEER-513">Sending large image processing request: {}</entry>
+  <entry key="BUCKETEER-514">Large image request includes a callback URL: {}</entry>
+  <entry key="BUCKETEER-515">Sending callback response: {}</entry>
 </properties>

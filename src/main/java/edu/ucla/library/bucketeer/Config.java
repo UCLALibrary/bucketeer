@@ -24,6 +24,12 @@ public final class Config {
     // The IIIF server URL in which the JPEG 2000 images end up
     public static final String IIIF_URL = "bucketeer.iiif.url";
 
+    // The local large image Bucketeer server
+    public static final String LARGE_IMAGE_URL = "large.image.url";
+
+    // A URL at which batch status updates can be sent
+    public static final String BATCH_CALLBACK_URL = "batch.callback.url";
+
     // The Fester manifestor URL (which includes the /collections endpoint)
     public static final String FESTER_URL = "fester.url";
 

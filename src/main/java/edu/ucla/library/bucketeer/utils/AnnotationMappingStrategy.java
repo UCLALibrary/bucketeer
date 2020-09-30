@@ -57,7 +57,6 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
         setAnnotationDriven(true);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public String[] generateHeader(final T aBean) throws CsvRequiredFieldEmptyException {
         final String[] result = super.generateHeader(aBean);

@@ -17,6 +17,13 @@ public final class Constants {
     public static final String IMAGE_ID = "image-id";
 
     /**
+     * The callback URL for batch jobs. This URL may be sent from another Bucketeer instance's batch job processing or
+     * it may be supplied by an external application (e.g. something that needs to create thumbnails for A/V materials
+     * or PDFs).
+     */
+    public static final String CALLBACK_URL = "callback-url";
+
+    /**
      * A number of jobs.
      */
     public static final String COUNT = "count";

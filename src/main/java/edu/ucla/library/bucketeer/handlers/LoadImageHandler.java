@@ -1,6 +1,8 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
+import java.io.FileNotFoundException;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
@@ -8,7 +10,9 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.verticles.ImageWorkerVerticle;
+import edu.ucla.library.bucketeer.verticles.S3BucketVerticle;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -19,11 +23,13 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * A handler that accepts requests to convert and upload individual images. It sends conversion requests to the
+ * {@link ImageWorkerVerticle}, which then sends upload requests to the {@link S3BucketVerticle}.
+ */
 public class LoadImageHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadImageHandler.class, Constants.MESSAGES);
-
-    private static final String IMAGE_WORKER_VERTICLE = ImageWorkerVerticle.class.getName();
 
     @Override
     public void handle(final RoutingContext aContext) {
@@ -34,39 +40,57 @@ public class LoadImageHandler implements Handler<RoutingContext> {
 
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String filePath = request.getParam(Constants.FILE_PATH);
+        final String callback = request.getParam(Constants.CALLBACK_URL);
 
         if (StringUtils.isEmpty(imageId) || StringUtils.isEmpty(filePath)) {
-            final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_020);
-
-            response.setStatusCode(HTTP.BAD_REQUEST);
-            response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
-            response.close();
+            returnError(response, HTTP.BAD_REQUEST, new ProcessingException(MessageCodes.BUCKETEER_020));
         } else if (!vertx.fileSystem().existsBlocking(filePath)) {
-            final String responseMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_129, filePath);
-
-            response.setStatusCode(HTTP.BAD_REQUEST);
-            response.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(responseMessage);
-            response.close();
+            returnError(response, HTTP.NOT_FOUND, new FileNotFoundException(filePath));
         } else {
             // On receiving a valid request, we put the request info in JSON and send it to the ImageWorkerVerticle
             final JsonObject imageWorkJson = new JsonObject();
-            final DeliveryOptions options = new DeliveryOptions();
+            final DeliveryOptions options = new DeliveryOptions().setSendTimeout(Long.MAX_VALUE);
+
+            LOGGER.debug(MessageCodes.BUCKETEER_511, imageId, filePath);
+
+            // Callback URL is optional; not including it means you just want to trust that the work is done
+            if (callback != null) {
+                LOGGER.debug(MessageCodes.BUCKETEER_514, callback);
+                imageWorkJson.put(Constants.CALLBACK_URL, callback);
+            }
 
             imageWorkJson.put(Constants.IMAGE_ID, imageId);
             imageWorkJson.put(Constants.FILE_PATH, filePath);
 
-            // TODO in IIIF-929 -> have this do the work and respond immediately so we can send a real HTTP response
-            eventBus.send(IMAGE_WORKER_VERTICLE, imageWorkJson, options);
+            // ImageWorker does the JP2/JPX conversion before replying; S3 upload is done after replying
+            eventBus.request(ImageWorkerVerticle.class.getName(), imageWorkJson, options, imageLoad -> {
+                if (imageLoad.succeeded()) {
+                    final JsonObject responseJson = new JsonObject();
 
-            // We also want to acknowledge that we've received the request
-            final JsonObject responseJson = new JsonObject();
+                    responseJson.put(Constants.IMAGE_ID, imageId);
+                    responseJson.put(Constants.FILE_PATH, filePath);
 
-            responseJson.put(Constants.IMAGE_ID, imageId);
-            responseJson.put(Constants.FILE_PATH, filePath);
-
-            response.setStatusCode(HTTP.OK);
-            response.putHeader(Constants.CONTENT_TYPE, Constants.JSON).end(responseJson.toBuffer());
-            response.close();
+                    response.setStatusCode(HTTP.CREATED);
+                    response.putHeader(Constants.CONTENT_TYPE, Constants.JSON).end(responseJson.toBuffer());
+                    response.close();
+                } else {
+                    returnError(response, HTTP.INTERNAL_SERVER_ERROR, imageLoad.cause());
+                }
+            });
         }
+    }
+
+    /**
+     * Return an error to the HTTP requester.
+     *
+     * @param aResponse An HTTP response
+     * @param aThrowable An exception
+     */
+    private void returnError(final HttpServerResponse aResponse, final int aErrorCode, final Throwable aThrowable) {
+        LOGGER.error(aThrowable, aThrowable.getMessage());
+
+        aResponse.setStatusCode(aErrorCode);
+        aResponse.putHeader(Constants.CONTENT_TYPE, Constants.TEXT).end(aThrowable.getMessage());
+        aResponse.close();
     }
 }

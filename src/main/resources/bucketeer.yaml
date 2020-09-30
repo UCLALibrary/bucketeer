@@ -236,8 +236,8 @@ paths:
       interface is to use Bucketeer's upload form. The upload form is meant to be metadata agnostic, but there are two
       metadata fields that must be present in the uploaded CSV file: 'Item ARK' and 'File Name'. Note that CSV file 
       names cannot include spaces.  The Bucketeer process also produces a CSV as output. There will be two additional
-      fields that Bucketeer adds in its output CSV: 'Buckateer State' and 'IIIF Access URL' (the URL of the item
-      served from the pre-configured IIIF server). The output CSV is sent to the Slack cghannel that has been
+      fields that Bucketeer adds in its output CSV: 'Bucketeer State' and 'IIIF Access URL' (the URL of the item
+      served from the pre-configured IIIF server). The output CSV is sent to the Slack channel that has been
       configured to receive Bucketeer output. The output is addressed to the Slack user that is sent as an
       argument to the 'Start CSV Batch Job' endpoint. The Slack user's handle does not need to be prefixed with 
       an @ symbol."
@@ -325,3 +325,11 @@ paths:
          schema:
           type: string
           description: The local image path, MUST be a valid path
+       - in: query
+         name: callback-url
+         required: false
+         schema:
+          type: string
+          description: "A callback URL for batch job status updates. This may be a callback to another Bucketeer that
+          is running a batch job, and has redirected a large image to this bucketeer for local processing, or it may
+          be a callback URL belonging to another application that has sent us an individual image conversion request."
