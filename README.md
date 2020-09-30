@@ -46,6 +46,19 @@ If you'd like to run Bucketeer in a Docker container, you need to have Docker in
 
 _Hint: If you want to run a build without a Docker cache, add -Ddocker.noCache to your mvn command; for instance: `mvn verify -Ddocker.noCache`_
 
+You can also specify that only a certain set of tests be run against the test containers. To do this, supply a runtime argument that excludes a set of tests:
+
+    -DskipUTs
+    -DskipITs
+    -DskipFTs
+    -DskipFfTs
+
+The first will skip the unit tests; the second will skip the integration tests; the third will skip the functional tests; and, the fourth will skip the feature flag tests. They can also be combined so that two types of tests are skipped. For instance, only the feature flag tests will be run if the following is typed:
+
+    mvn verify -DskipUTs -DskipITs -DskipFTs
+
+To see logging from the containers that are being run for the tests, consult the docker-maven-plugin [documentation](https://dmp.fabric8.io/#docker:logs). This is also useful when running the containers for manual testing, which is described below.
+
 ## Running the Bucketeer container
 
 The simplest way to run the newly built Bucketeer container (for development purposes) is to use the Maven Docker plugin. To do that, run:
@@ -116,6 +129,22 @@ and
 You do not need to supply the `kakadu.git.repo` argument when just starting or stopping your previously built Kakadu-enabled containers. That's only needed at the point of building them.
 
 Kakadu is only needed if you want to do Kakadu in Bucketeer, instead of using Bucketeer to send TIFFs to AWS Lambda to process.
+
+## Testing Locally with Kakadu
+
+The Kakadu instructions above are for including Kakadu in the Bucketeer container. It's also possible to run Bucketeer, with Kakadu, in the live test mode that's described in the "Running the Application for Development" section of this document. To do this, you need to have the Kakadu binaries installed on your local development system. The instructions for how to do this should have been included with your Kakadu distribution. Once installed, the binaries should be accessible from the $PATH and the related libraries should be included in the system's $LD_LIBRARY_PATH. To confirm everything is set up correctly and working, run:
+
+    kdu_compress -v
+
+If you want to test the large image feature, where large images can be sent from one Bucketeer to another (or, between the same one if you'd like, since you're running in test mode), you will need to enable Bucketeer's large image feature. To do this, create a feature configuration file at: `/etc/bucketeer/bucketeer-features.conf`. The contents of that file should be:
+
+    moirai {
+      bucketeer.large.images {
+        featureEnabled = true
+      }
+    }
+
+This should enable the feature. To confirm the feature has been configured correctly, once Bucketeer is started in the live test mode, visit the Bucketeer status page at: `http://localhost:8888/status`. In the JSON that's returned from the page, you should see that features are enabled and that the `bucketeer.large.images` feature, in particular, is enabled.
 
 ## Tweaking the Batch Upload
 

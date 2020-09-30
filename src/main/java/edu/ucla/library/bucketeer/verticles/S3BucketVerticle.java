@@ -10,6 +10,7 @@ import info.freelibrary.util.FileUtils;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
+
 import info.freelibrary.vertx.s3.S3Client;
 import info.freelibrary.vertx.s3.UserMetadata;
 
@@ -19,6 +20,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -234,7 +236,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
     private void shouldRetry(final String aImageID, final Handler<AsyncResult<Boolean>> aHandler) {
         final Promise<Boolean> promise = Promise.promise();
 
-        promise.future().setHandler(aHandler);
+        promise.future().onComplete(aHandler);
 
         vertx.sharedData().getLocalCounter(aImageID, getCounter -> {
             if (getCounter.succeeded()) {

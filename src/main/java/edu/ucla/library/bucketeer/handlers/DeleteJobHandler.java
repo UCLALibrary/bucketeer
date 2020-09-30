@@ -10,6 +10,7 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -90,7 +91,7 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
             final Handler<AsyncResult<Job>> aHandler) {
         final Promise<Job> promise = Promise.<Job>promise();
 
-        promise.future().setHandler(aHandler);
+        promise.future().onComplete(aHandler);
 
         aJobsMap.get(aJobName, getJob -> {
             if (getJob.succeeded()) {

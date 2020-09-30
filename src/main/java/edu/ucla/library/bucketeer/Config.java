@@ -24,6 +24,12 @@ public final class Config {
     // The IIIF server URL in which the JPEG 2000 images end up
     public static final String IIIF_URL = "bucketeer.iiif.url";
 
+    // The local large image Bucketeer server
+    public static final String LARGE_IMAGE_URL = "large.image.url";
+
+    // A URL at which batch status updates can be sent
+    public static final String BATCH_CALLBACK_URL = "batch.callback.url";
+
     // The Fester manifestor URL (which includes the /collections endpoint)
     public static final String FESTER_URL = "fester.url";
 
@@ -61,6 +67,9 @@ public final class Config {
 
     // A Slack user handle that tests use as the recipient of test messages
     public static final String SLACK_TEST_USER_HANDLE = "bucketeer.slack.test_user_handle";
+
+    // A configuration option for turning on or off feature flags
+    public static final String FEATURE_FLAGS = "feature.flags";
 
     /**
      * Private constructor for the Constants class.

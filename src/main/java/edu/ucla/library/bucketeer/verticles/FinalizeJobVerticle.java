@@ -15,6 +15,7 @@ import edu.ucla.library.bucketeer.JobNotFoundException;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
@@ -51,12 +52,12 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                         final String slackMessage;
 
                         if (json.containsKey(Constants.NOTHING_PROCESSED)) {
-                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(),
-                                job.getName());
+                            slackMessage =
+                                    LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(), job.getName());
                         } else {
                             final String iiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
-                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
-                                job.size(), iiifURL);
+                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(), job.size(),
+                                    iiifURL);
                         }
                         sendSlackMessage(slackChannelID, slackMessage, job);
                     }
@@ -83,8 +84,8 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         final String colon = ":";
         final String slash = "/";
         final URI uri = URI.create(aLongURL);
-        final StringBuilder builder = new StringBuilder().append(uri.getScheme()).append(colon)
-            .append(slash).append(slash).append(uri.getHost()).append(slash);
+        final StringBuilder builder = new StringBuilder().append(uri.getScheme()).append(colon).append(slash)
+                .append(slash).append(uri.getHost()).append(slash);
         return builder.toString();
     }
 
@@ -98,7 +99,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     private void removeJob(final String aJobName, final Handler<AsyncResult<Job>> aHandler) {
         final Promise<Job> promise = Promise.<Job>promise();
 
-        promise.future().setHandler(aHandler);
+        promise.future().onComplete(aHandler);
 
         vertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
@@ -115,8 +116,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                                         if (removeJob.succeeded()) {
                                             promise.complete(removeJob.result());
                                         } else {
-                                            failPromise(getMap.cause(), MessageCodes.BUCKETEER_082, aJobName,
-                                                    promise);
+                                            failPromise(getMap.cause(), MessageCodes.BUCKETEER_082, aJobName, promise);
                                         }
                                     });
                                 } else {

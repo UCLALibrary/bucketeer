@@ -6,8 +6,9 @@ import info.freelibrary.util.Logger;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
@@ -32,14 +33,12 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop(final Future<Void> aFuture) {
-        final Logger logger = getLogger();
-
-        if (logger.isDebugEnabled()) {
-            logger.debug(MessageCodes.BUCKETEER_028, getClass().getName(), deploymentID());
+    public void stop(final Promise<Void> aPromise) {
+        if (getLogger().isDebugEnabled()) {
+            getLogger().debug(MessageCodes.BUCKETEER_028, getClass().getName(), deploymentID());
         }
 
-        aFuture.complete();
+        aPromise.complete();
     }
 
     protected MessageConsumer<JsonObject> getJsonConsumer() {
@@ -57,7 +56,7 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
     protected void sendMessage(final JsonObject aJsonObject, final String aVerticleName, final long aTimeout) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
 
-        vertx.eventBus().send(aVerticleName, aJsonObject, options, response -> {
+        vertx.eventBus().request(aVerticleName, aJsonObject, options, response -> {
             if (response.failed()) {
                 if (response.cause() != null) {
                     getLogger().error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);

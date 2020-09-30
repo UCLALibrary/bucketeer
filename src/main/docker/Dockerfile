@@ -7,8 +7,9 @@ ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 # First we build the Kakadu code (if we've been given a Kakadu version)
 WORKDIR /build/kakadu/
 COPY kakadu /build/kakadu/
-RUN if [ ! -z "${kakadu.version}" ]; then \
-      apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
+RUN if [ -n "${kakadu.version}" ]; then \
+      apt-get update -qq && \
+      DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
       openjdk-11-jdk-headless${openjdk.version} \
       gcc${gcc.version} \
       make${make.version} \
@@ -40,20 +41,21 @@ COPY --from=KAKADU_TOOL_CHAIN /usr/local/lib/*.so /usr/local/lib/
 COPY --from=KAKADU_TOOL_CHAIN /usr/local/bin/kdu_* /usr/local/bin/
 
 # Copy over our Bucketeer application
-WORKDIR /usr/local/bucketeer
-COPY maven/${project.artifactId}-${project.version}.jar .
+WORKDIR /usr/local/"${project.artifactId}"
+COPY maven/"${project.artifactId}-${project.version}.jar" .
 
 EXPOSE 8888
 
 # Update packages and install tools
 #  Removing /var/lib/apt/lists/* prevents using `apt` unless you do `apt update` first
 RUN apt-get update -qq && \
-    apt-get install --reinstall -y locales && \
+    apt-get install --no-install-recommends --reinstall -y locales && \
     apt-get install -qq --no-install-recommends \
     libtiff-tools${libtiff.version} \
     libtiff5${libtiff.version} \
     libopenjp2-tools${libopenjp2.version} \
     openjdk-11-jre-headless${openjdk.version} \
+    curl${curl.version} \
     python2${python2.version} \
     < /dev/null > /dev/null && \
     rm -rf /var/lib/apt/lists/* && \
@@ -69,19 +71,20 @@ RUN dpkg-reconfigure --terse --frontend noninteractive locales
 
 # Set up our configuration files
 COPY docker-entrypoint.sh /usr/local/bin/
-COPY configs/bucketeer.properties.tmpl /etc/bucketeer/bucketeer.properties.tmpl
-COPY configs/bucketeer.properties.default /etc/bucketeer/bucketeer.properties.default
-COPY configs/logback.xml /etc/bucketeer/logback.xml
+COPY configs/"${project.artifactId}.properties.tmpl" /etc/"${project.artifactId}/${project.artifactId}.properties.tmpl"
+COPY configs/"${project.artifactId}.properties.default" /etc/"${project.artifactId}/${project.artifactId}.properties.default"
+COPY configs/logback.xml /etc/"${project.artifactId}"/logback.xml
 
 # Create a non-privileged user
-RUN adduser --system bucketeer
-WORKDIR /home/bucketeer
+RUN adduser --system "${project.artifactId}"
+WORKDIR /home/"${project.artifactId}"
 
 # Set permissions
-RUN mkdir -p /var/log/bucketeer /var/cache/bucketeer \
- && touch /etc/bucketeer/bucketeer.properties \
- && chown -R bucketeer /var/log/bucketeer /var/cache/bucketeer \
-    /etc/bucketeer/bucketeer.properties /usr/local/bin/docker-entrypoint.sh
+RUN mkdir -p "/var/log/${project.artifactId}" "/var/cache/${project.artifactId}" "/etc/${project.artifactId}" \
+ && touch "/etc/${project.artifactId}/${project.artifactId}.properties" \
+ && chown -R "${project.artifactId}" "/var/log/${project.artifactId}" "/var/cache/${project.artifactId}" \
+    "/etc/${project.artifactId}" "/etc/${project.artifactId}/${project.artifactId}.properties" \
+    /usr/local/bin/docker-entrypoint.sh
 
 # Clean up the placeholder files if we built without kakadu
 RUN if [ -z "${kakadu.version}" ]; then \
@@ -98,5 +101,5 @@ ENV CACHE_DIR="-Dvertx.cacheDirBase=/tmp"
 ENV CONFIG_FILE="-Dvertx-config-path=/etc/bucketeer/bucketeer.properties"
 ENV JAR_PATH="/usr/local/bucketeer/bucketeer-${project.version}.jar"
 ENV BOOT_CLASSPATH="-Xbootclasspath/a:/etc/bucketeer"
-ENV JAVA_HEAP_SIZE="2g"
-CMD ["sh", "-c", "java $BOOT_CLASSPATH $CACHE_DIR $CONFIG_FILE -Xmx$JAVA_HEAP_SIZE -jar $JAR_PATH"]
+ENV HEAP_SIZE="2g"
+CMD ["sh", "-c", "java $BOOT_CLASSPATH $CACHE_DIR $CONFIG_FILE -Xmx$HEAP_SIZE -jar $JAR_PATH"]

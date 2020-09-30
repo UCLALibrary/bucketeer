@@ -17,3 +17,6 @@ src/main/tools/travis
 src/main/generated
 file-uploads/
 src/main/docker/configs/logback.xml
+
+# A really large image that's not included in our git repo
+src/test/resources/images/21198-zz0019pp86_740667_master.tif

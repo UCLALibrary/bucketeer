@@ -12,12 +12,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import info.freelibrary.util.Logger;
-import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
+
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -30,8 +29,6 @@ public class Item implements Serializable {
      * The <code>serialVersionUID</code> of the Item.
      */
     private static final long serialVersionUID = 2062164135217237338L;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(Item.class, Constants.MESSAGES);
 
     private String myID;
 
@@ -98,8 +95,8 @@ public class Item implements Serializable {
      */
     @JsonIgnore
     public WorkflowState getWorkflowState() throws IllegalArgumentException {
-        return StringUtils.trimToNull(myWorkflowState) == null ? WorkflowState.EMPTY : WorkflowState.valueOf(
-                myWorkflowState.toUpperCase(Locale.US));
+        return StringUtils.trimToNull(myWorkflowState) == null ? WorkflowState.EMPTY
+                : WorkflowState.valueOf(myWorkflowState.toUpperCase(Locale.US));
     }
 
     /**
@@ -248,8 +245,8 @@ public class Item implements Serializable {
     }
 
     /**
-     * Returns a JSON representation of the item. To go from a JsonObject representation of Item back to an Item
-     * object, use: <code>final Item item = jsonObject.mapTo(Item.class);</code>.
+     * Returns a JSON representation of the item. To go from a JsonObject representation of Item back to an Item object,
+     * use: <code>final Item item = jsonObject.mapTo(Item.class);</code>.
      *
      * @return A JSON representation of a job
      */

@@ -27,5 +27,11 @@ EOT
 # Write our merged properties file to /etc directory
 $PYTHON2 -c "$SCRIPT" >> $PROPERTIES
 
+# If we have feature flags, grab the configuration
+if [[ -v FEATURE_FLAGS && ! -z FEATURE_FLAGS ]]; then
+  curl -s "${FEATURE_FLAGS}" > /etc/bucketeer/bucketeer-features.conf
+  chown bucketeer /etc/bucketeer/bucketeer-features.conf
+fi
+
 # Replaces parent process so signals are processed correctly
 exec "$@"
