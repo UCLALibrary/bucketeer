@@ -20,6 +20,8 @@ public class JobFactoryTest {
 
     private static final File CSV_FILE = new File("src/test/resources/csv/live-test.csv");
 
+    private static final File BAD_HEADERS = new File("src/test/resources/csv/dupe-headers.csv");
+
     private static final File JSON_FILE = new File("src/test/resources/json/job.json");
 
     private static final File TEST_TIFF_FILE = new File("src/test/resources/images/test.tif");
@@ -54,6 +56,17 @@ public class JobFactoryTest {
         }
 
         assertEquals(expected, job.setSlackHandle(SLACK_HANDLE).toJSON());
+    }
+
+    /**
+     * Test JobFactory rejects files with duplicate headers.
+     */
+    @Test
+    public final void testRejectDeupeHeaders() throws ProcessingException, IOException {
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
+        final int expected = 0;
+
+        assertEquals(expected, job.size());
     }
 
 }

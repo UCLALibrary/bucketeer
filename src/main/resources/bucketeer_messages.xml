@@ -186,5 +186,5 @@
   <entry key="BUCKETEER-513">Sending large image processing request: {}</entry>
   <entry key="BUCKETEER-514">Large image request includes a callback URL: {}</entry>
   <entry key="BUCKETEER-515">Sending callback response: {}</entry>
-  <entry key="BUCKETEER-516">CSV has more than one '{}' column</entry>
+  <entry key="BUCKETEER-516">CSV for job {} has more than one '{}' column</entry>
 </properties>
