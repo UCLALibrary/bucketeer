@@ -111,6 +111,14 @@ public final class JobFactory {
             int itemIdIndex = -1;
             int viewingHintIndex = -1;
 
+            // Counts of instances of header fields
+            int bucketeerStateCount = 0;
+            int objectTypeCount = 0;
+            int accessCopyCount = 0;
+            int fileNameCount = 0;
+            int itemIdCount = 0;
+            int viewingHintCount = 0;
+
             // Store the metadata without its headers
             job.setMetadata(metadata.subList(1, metadata.size()));
 
@@ -131,30 +139,61 @@ public final class JobFactory {
                             case Metadata.ITEM_ID:
                                 LOGGER.debug(MessageCodes.BUCKETEER_117, columnIndex);
                                 itemIdIndex = columnIndex;
+                                itemIdCount += 1;
                                 break;
                             case Metadata.VIEWING_HINT:
                                 LOGGER.debug(MessageCodes.BUCKETEER_152, columnIndex);
                                 viewingHintIndex = columnIndex;
+                                viewingHintCount += 1;
                                 break;
                             case Metadata.FILE_NAME:
                                 LOGGER.debug(MessageCodes.BUCKETEER_118, columnIndex);
                                 fileNameIndex = columnIndex;
+                                fileNameCount += 1;
                                 break;
                             case Metadata.OBJECT_TYPE:
                                 LOGGER.debug(MessageCodes.BUCKETEER_119, columnIndex);
                                 objectTypeIndex = columnIndex;
+                                objectTypeCount += 1;
                                 break;
                             case Metadata.BUCKETEER_STATE:
                                 LOGGER.debug(MessageCodes.BUCKETEER_120, columnIndex);
                                 bucketeerStateIndex = columnIndex;
+                                bucketeerStateCount += 1;
                                 break;
                             case Metadata.IIIF_ACCESS_URL:
                                 LOGGER.debug(MessageCodes.BUCKETEER_121, columnIndex);
                                 accessCopyIndex = columnIndex;
+                                accessCopyCount += 1;
                                 break;
                             default:
                                 break;
                         }
+                        if (itemIdCount > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "Item ARK"));
+                            break;
+                        }
+                        if (viewingHintCount > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "viewingHint"));
+                            break;
+                        }
+                        if (fileNameIndex > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "File Name"));
+                            break;
+                        }
+                        if (objectTypeCount > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "Object Type"));
+                            break;
+                        }
+                        if (bucketeerStateCount > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "Bucketeer State"));
+                            break;
+                        }
+                        if (accessCopyCount > 1) {
+                            error.addMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_516, "IIIF Access URL"));
+                            break;
+                        }
+
                     } else {
                         // Then we use the indices of the columns we care about to extract and/or check the values
                         if (fileNameIndex == -1) {
