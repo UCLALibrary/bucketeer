@@ -6,7 +6,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import info.freelibrary.util.StringUtils;
 
@@ -19,6 +21,8 @@ import io.vertx.core.json.JsonObject;
 public class JobFactoryTest {
 
     private static final File CSV_FILE = new File("src/test/resources/csv/live-test.csv");
+
+    private static final File BAD_HEADERS = new File("src/test/resources/csv/dupe-headers.csv");
 
     private static final File JSON_FILE = new File("src/test/resources/json/job.json");
 
@@ -33,6 +37,9 @@ public class JobFactoryTest {
     private static final String SLACK_HANDLE = "ksclarke";
 
     private static final String ITEMS = "items";
+
+    @Rule
+    public ExpectedException myThrown = ExpectedException.none();
 
     /**
      * Test JobFactory.createJob().
@@ -54,6 +61,16 @@ public class JobFactoryTest {
         }
 
         assertEquals(expected, job.setSlackHandle(SLACK_HANDLE).toJSON());
+    }
+
+    /**
+     * Test JobFactory rejects files with duplicate headers.
+     */
+    @Test
+    public final void testDupeHeadersThrowsException() throws ProcessingException, IOException {
+        myThrown.expect(ProcessingException.class);
+        myThrown.expectMessage("has one or more duplicate column headers");
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
     }
 
 }
