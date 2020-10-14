@@ -6,7 +6,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import info.freelibrary.util.StringUtils;
 
@@ -36,6 +38,9 @@ public class JobFactoryTest {
 
     private static final String ITEMS = "items";
 
+    @Rule
+    public ExpectedException myThrown = ExpectedException.none();
+
     /**
      * Test JobFactory.createJob().
      */
@@ -62,11 +67,10 @@ public class JobFactoryTest {
      * Test JobFactory rejects files with duplicate headers.
      */
     @Test
-    public final void testRejectDeupeHeaders() throws ProcessingException, IOException {
+    public final void testDupeHeadersThrowsException() throws ProcessingException, IOException {
+        myThrown.expect(ProcessingException.class);
+        myThrown.expectMessage("has one or more duplicate column headers");
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
-        final int expected = 0;
-
-        assertEquals(expected, job.size());
     }
 
 }

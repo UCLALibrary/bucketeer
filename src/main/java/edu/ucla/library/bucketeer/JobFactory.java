@@ -114,7 +114,10 @@ public final class JobFactory {
             // Store the metadata without its headers
             job.setMetadata(metadata.subList(1, metadata.size()));
 
-            if (!hasHeaderErrors(metadata.get(0), aName)) {
+            if (hasHeaderErrors(metadata.get(0), aName)) {
+                throw new ProcessingException(LOGGER.getMessage(MessageCodes.BUCKETEER_517, aCsvFile.getName(), aName));
+            } else {
+
                 // Cycle through all the rows in the CSV file (the first row has headers, the rest have values)
                 for (int rowIndex = 0; rowIndex < metadata.size(); rowIndex++) {
                     final ProcessingException error = new ProcessingException();

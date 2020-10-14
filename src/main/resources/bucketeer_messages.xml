@@ -187,4 +187,5 @@
   <entry key="BUCKETEER-514">Large image request includes a callback URL: {}</entry>
   <entry key="BUCKETEER-515">Sending callback response: {}</entry>
   <entry key="BUCKETEER-516">CSV for job {} has more than one '{}' column</entry>
+  <entry key="BUCKETEER-517">CSV {} for job {} has one or more duplicate column headers</entry>
 </properties>
