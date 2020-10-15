@@ -16,6 +16,7 @@ before_install:
 - chmod 600 kakadu_github_key
 - eval $(ssh-agent -s)
 - ssh-add kakadu_github_key
+- cat /etc/passwd | grep 2000
 
 install: true
 
@@ -51,3 +52,5 @@ notifications:
       - ksclarke@ksclarke.io
     on_success: change
     on_failure: change
+
+sudo: required

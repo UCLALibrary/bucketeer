@@ -18,6 +18,7 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.utils.GenericFilePathPrefix;
 import edu.ucla.library.bucketeer.utils.IFilePathPrefix;
+
 import io.vertx.core.json.jackson.DatabindCodec;
 
 /**
@@ -272,8 +273,8 @@ public final class JobFactory {
         int itemIdCount = 0;
         int viewingHintCount = 0;
 
-        for (int columnIndex = 0; columnIndex < aHeaders.length; columnIndex++) {
-            switch (aHeaders[columnIndex]) {
+        for (final String aHeader : aHeaders) {
+            switch (aHeader) {
                 case Metadata.ITEM_ID:
                     itemIdCount += 1;
                     break;

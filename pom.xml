@@ -164,11 +164,10 @@
     <!-- Fester manifestor collections endpoint -->
     <fester.url>http://localhost:9999/collections</fester.url>
 
-    <!-- The string template of a URL endpoint that updates the batch jobs status queue. The 'batch.callback.url' is
-     sent as a callback URL when a large image processing request is sent to a different Bucketeer instance (to its
-     loadImage endpoint). Its expected values correspond to the 'job-name' and 'image-id' variables. More details can
-     be found in the Bucketeer OpenAPI specification.
-    -->
+    <!-- The string template of a URL endpoint that updates the batch jobs status queue. The 'batch.callback.url' is sent 
+      as a callback URL when a large image processing request is sent to a different Bucketeer instance (to its loadImage endpoint). 
+      Its expected values correspond to the 'job-name' and 'image-id' variables. More details can be found in the Bucketeer OpenAPI 
+      specification. -->
     <batch.callback.url>http://localhost:8888/batch/jobs/{}/{}/</batch.callback.url>
 
     <!-- Thumbnail size for images served by the IIIF server -->
@@ -584,6 +583,33 @@
         </executions>
       </plugin>
 
+      <!-- Creates a directory in target to use as Docker's shared mount -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <configuration>
+          <systemProperties>
+            <systemProperty>
+              <key>logback.configurationFile</key>
+              <value>${project.basedir}/src/main/resources/logback.xml</value>
+            </systemProperty>
+          </systemProperties>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <classpathScope>test</classpathScope>
+              <mainClass>edu.ucla.library.bucketeer.utils.SharedDriveSetup</mainClass>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Builds and runs our Docker containers -->
       <plugin>
         <groupId>io.fabric8</groupId>
         <artifactId>docker-maven-plugin</artifactId>
