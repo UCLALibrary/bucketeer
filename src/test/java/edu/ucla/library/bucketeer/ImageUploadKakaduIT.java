@@ -176,8 +176,7 @@ public class ImageUploadKakaduIT {
 
                     if (myS3Client.doesBucketExistV2(myS3Bucket) && myS3Client.doesObjectExist(myS3Bucket, myJP2)) {
                         final File tmpTestDir = new File(TestConstants.JP2_TMP_DIR);
-                        final File kakaduTmpDir = new File(tmpTestDir, KakaduConverter.WORKING_DIR_NAME);
-                        final File testFile = new File(kakaduTmpDir, myJP2);
+                        final File testFile = new File(new File(tmpTestDir, KakaduConverter.WORKING_DIR_NAME), myJP2);
 
                         // Confirm we can create our temporary test directory (or that it already exists)
                         aContext.assertTrue(tmpTestDir.exists() || tmpTestDir.mkdirs());
