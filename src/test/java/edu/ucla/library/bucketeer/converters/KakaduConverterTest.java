@@ -1,7 +1,8 @@
 
 package edu.ucla.library.bucketeer.converters;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -27,7 +28,8 @@ public class KakaduConverterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverterTest.class, Constants.MESSAGES);
 
-    private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+    private static final File TMP_DIR =
+            new File(System.getProperty("java.io.tmpdir"), KakaduConverter.WORKING_DIR_NAME);
 
     private static final String EXEC_LOCATION = "/usr/local/bin/";
 

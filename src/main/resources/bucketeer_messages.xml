@@ -170,6 +170,12 @@
   <entry key="BUCKETEER-158">Unable to write temporary CSV file: {}</entry>
   <entry key="BUCKETEER-159">A URL for the Fester service was not supplied</entry>
   <entry key="BUCKETEER-160">Shutting down test server...</entry>
+  <entry key="BUCKETEER-161">Unable to remove temporary image file: {}</entry>
+  <entry key="BUCKETEER-162">Expected to have to delete a temporary image file, but none was found</entry>
+  <entry key="BUCKETEER-163">Working directory does not exist: {}</entry>
+  <entry key="BUCKETEER-164">Unable to delete test files from directory: {}</entry>
+  <entry key="BUCKETEER-165">Unexpected temporary test files found: {}</entry>
+  <entry key="BUCKETEER-166">Test file was not deleted as expected: {}</entry>
   <entry key="BUCKETEER-500">{}</entry>
   <entry key="BUCKETEER-501">Large image ({} [{}]) skipped; maximum allowed size set for: {}</entry>
   <entry key="BUCKETEER-502">Bucketeer is now listening on port: {}</entry>

@@ -142,14 +142,31 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                     LOGGER.error(MessageCodes.BUCKETEER_005, aListener, MessageCodes.BUCKETEER_136);
                 }
 
+                deleteImageFile(aJsonObject.getString(Constants.FILE_PATH));
                 aPromise.fail(exception);
             } else if (response.result().body().equals(Op.RETRY)) {
                 vertx.setTimer(myRequeueDelay, timer -> {
                     sendImageRequest(aListener, aJsonObject, aPromise);
                 });
             } else {
+                deleteImageFile(aJsonObject.getString(Constants.FILE_PATH));
                 aPromise.complete();
             }
         });
+    }
+
+    /**
+     * Clean up the temporary image file we've created.
+     *
+     * @param aImagePath A path to a temporary image file
+     */
+    private void deleteImageFile(final String aImagePath) {
+        if (aImagePath != null) {
+            if (!new File(aImagePath).delete()) {
+                LOGGER.error(MessageCodes.BUCKETEER_161, aImagePath);
+            }
+        } else {
+            LOGGER.error(MessageCodes.BUCKETEER_162);
+        }
     }
 }

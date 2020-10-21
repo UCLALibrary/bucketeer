@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import info.freelibrary.util.I18nRuntimeException;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -22,13 +23,15 @@ import edu.ucla.library.bucketeer.MessageCodes;
  */
 public class KakaduConverter extends AbstractConverter implements Converter {
 
+    public static final String WORKING_DIR_NAME = "kakadu";
+
     public static final String KAKADU_HOME = "KAKADU_HOME";
 
     public static final String RATE = "-rate";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverter.class, Constants.MESSAGES);
 
-    private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+    private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"), WORKING_DIR_NAME);
 
     private static final String KAKADU_COMMAND = "kdu_compress";
 
@@ -43,7 +46,9 @@ public class KakaduConverter extends AbstractConverter implements Converter {
     // private static final List<String> ALPHA_OPTION = Arrays.asList("-jp2_alpha");
 
     KakaduConverter() {
-        // Constructed by factory method
+        if (!TMP_DIR.exists() && !TMP_DIR.mkdirs()) {
+            throw new I18nRuntimeException(MessageCodes.BUNDLE, MessageCodes.BUCKETEER_163, TMP_DIR);
+        }
     }
 
     @Override

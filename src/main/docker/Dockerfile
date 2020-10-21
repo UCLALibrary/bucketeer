@@ -41,8 +41,8 @@ COPY --from=KAKADU_TOOL_CHAIN /usr/local/lib/*.so /usr/local/lib/
 COPY --from=KAKADU_TOOL_CHAIN /usr/local/bin/kdu_* /usr/local/bin/
 
 # Copy over our Bucketeer application
-WORKDIR /usr/local/"${project.artifactId}"
-COPY maven/"${project.artifactId}-${project.version}.jar" .
+WORKDIR /usr/local/bucketeer
+COPY "maven/bucketeer-${project.version}.jar" .
 
 EXPOSE 8888
 
@@ -71,25 +71,23 @@ RUN dpkg-reconfigure --terse --frontend noninteractive locales
 
 # Set up our configuration files
 COPY docker-entrypoint.sh /usr/local/bin/
-COPY configs/"${project.artifactId}.properties.tmpl" /etc/"${project.artifactId}/${project.artifactId}.properties.tmpl"
-COPY configs/"${project.artifactId}.properties.default" /etc/"${project.artifactId}/${project.artifactId}.properties.default"
-COPY configs/logback.xml /etc/"${project.artifactId}"/logback.xml
+COPY configs/bucketeer.properties.tmpl /etc/bucketeer/bucketeer.properties.tmpl
+COPY configs/bucketeer.properties.default /etc/bucketeer/bucketeer.properties.default
+COPY configs/logback.xml /etc/bucketeer/logback.xml
 
 # Create a non-privileged user
-RUN adduser --system "${project.artifactId}"
-WORKDIR /home/"${project.artifactId}"
+RUN addgroup --gid 1000 bucketeer && \
+    adduser --system --uid 1000 --gid 1000 --no-create-home --disabled-login --disabled-password bucketeer
 
 # Set permissions
-RUN mkdir -p "/var/log/${project.artifactId}" "/var/cache/${project.artifactId}" "/etc/${project.artifactId}" \
- && touch "/etc/${project.artifactId}/${project.artifactId}.properties" \
- && chown -R "${project.artifactId}" "/var/log/${project.artifactId}" "/var/cache/${project.artifactId}" \
-    "/etc/${project.artifactId}" "/etc/${project.artifactId}/${project.artifactId}.properties" \
-    /usr/local/bin/docker-entrypoint.sh
+RUN mkdir -p /var/log/bucketeer /var/cache/bucketeer /etc/bucketeer && \
+    touch /etc/bucketeer/bucketeer.properties && \
+    chown -R bucketeer /var/log/bucketeer /var/cache/bucketeer /etc/bucketeer /etc/bucketeer/bucketeer.properties \
+      /usr/local/bin/docker-entrypoint.sh
 
-# Clean up the placeholder files if we built without kakadu
 RUN if [ -z "${kakadu.version}" ]; then \
-      rm -rf /usr/local/lib/placeholder.so && \
-      rm -rf /usr/local/bin/kdu_placeholder ; \
+      # Clean up the placeholder files if we built without kakadu
+      rm -rf /usr/local/lib/placeholder.so /usr/local/bin/kdu_placeholder ; \
     fi
 
 # Switch to our non-privileged user
@@ -97,7 +95,7 @@ USER bucketeer
 
 # Prepare our runtime environment
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-ENV CACHE_DIR="-Dvertx.cacheDirBase=/tmp"
+ENV CACHE_DIR="-Dvertx.cacheDirBase=/tmp/vertx-cache"
 ENV CONFIG_FILE="-Dvertx-config-path=/etc/bucketeer/bucketeer.properties"
 ENV JAR_PATH="/usr/local/bucketeer/bucketeer-${project.version}.jar"
 ENV BOOT_CLASSPATH="-Xbootclasspath/a:/etc/bucketeer"
