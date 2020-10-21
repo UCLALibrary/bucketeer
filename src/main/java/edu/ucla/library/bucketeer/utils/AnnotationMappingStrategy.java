@@ -22,7 +22,7 @@ import edu.ucla.library.bucketeer.MessageCodes;
 /**
  * A strategy for handling CSV mapping annotations.
  *
- * @param <T> A type to be map to CSV format
+ * @param <T> A type to be mapped to CSV format
  */
 public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappingStrategy<T> {
 
