@@ -4,6 +4,9 @@ package edu.ucla.library.bucketeer.converters;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * An interface for implementations that convert TIFFs into JP2s.
+ */
 public interface Converter {
 
     /**

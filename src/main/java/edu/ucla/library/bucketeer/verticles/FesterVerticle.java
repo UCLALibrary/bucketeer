@@ -29,6 +29,9 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.multipart.MultipartForm;
 
+/**
+ * A verticle that sends Bucketeer CSV ingests to Fester. This is not currently in use.
+ */
 public class FesterVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FesterVerticle.class, Constants.MESSAGES);

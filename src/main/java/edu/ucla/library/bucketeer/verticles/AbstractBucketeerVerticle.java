@@ -14,6 +14,9 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.LocalMap;
 
+/**
+ * An abstract verticle that Bucketeer verticles can extend.
+ */
 public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
 
     @Override

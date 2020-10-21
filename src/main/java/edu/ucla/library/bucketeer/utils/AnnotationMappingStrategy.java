@@ -19,6 +19,11 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
+/**
+ * A strategy for handling CSV mapping annotations.
+ *
+ * @param <T> A type to be map to CSV format
+ */
 public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappingStrategy<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationMappingStrategy.class, Constants.MESSAGES);

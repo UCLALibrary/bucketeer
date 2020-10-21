@@ -7,6 +7,9 @@ import java.io.File;
 
 import org.junit.Test;
 
+/**
+ * Tests related to the UCLA file path prefix implementation.
+ */
 public class UCLAFilePathPrefixTest {
 
     private static final File DL_MASTERS_TEST_FILE = new File("asdf/aaaa");
@@ -20,8 +23,7 @@ public class UCLAFilePathPrefixTest {
      */
     @Test
     public final void testGetPrefixDlMasters() {
-        assertEquals("/mnt/ucla/Masters/dlmasters", new UCLAFilePathPrefix(ROOT_PATH).getPrefix(
-                DL_MASTERS_TEST_FILE));
+        assertEquals("/mnt/ucla/Masters/dlmasters", new UCLAFilePathPrefix(ROOT_PATH).getPrefix(DL_MASTERS_TEST_FILE));
     }
 
     /**

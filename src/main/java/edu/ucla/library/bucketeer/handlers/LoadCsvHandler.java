@@ -51,6 +51,9 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 
+/**
+ * A handler of CSV ingest requests.
+ */
 public class LoadCsvHandler extends AbstractBucketeerHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadCsvHandler.class, Constants.MESSAGES);

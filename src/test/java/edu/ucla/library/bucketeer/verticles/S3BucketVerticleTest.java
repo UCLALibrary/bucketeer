@@ -24,6 +24,7 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -33,6 +34,9 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+/**
+ * Tests of the verticle that sends JP2s to S3 buckets.
+ */
 @RunWith(VertxUnitRunner.class)
 public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
@@ -79,8 +83,8 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 myImageKey = UUID.randomUUID().toString() + ".jpx";
 
                 // We need to determine if we'll be able to run the S3 integration tests so we can skip if needed
-                if (config.containsKey(Config.S3_ACCESS_KEY) && !config.getString(Config.S3_ACCESS_KEY,
-                        DEFAULT_ACCESS_KEY).equalsIgnoreCase(DEFAULT_ACCESS_KEY)) {
+                if (config.containsKey(Config.S3_ACCESS_KEY) && !config
+                        .getString(Config.S3_ACCESS_KEY, DEFAULT_ACCESS_KEY).equalsIgnoreCase(DEFAULT_ACCESS_KEY)) {
                     isExecutable = true;
                 }
 

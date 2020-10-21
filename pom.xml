@@ -87,7 +87,7 @@
     <moirai.version>2.0.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
-    <freelib.utils.version>1.1.0</freelib.utils.version>
+    <freelib.utils.version>2.1.0</freelib.utils.version>
     <freelib.maven.version>0.1.0</freelib.maven.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
@@ -361,6 +361,12 @@
       <testResource>
         <directory>src/test/resources</directory>
         <filtering>true</filtering>
+        <excludes>
+          <!-- We don't need to filter binary files -->
+          <exclude>images/*.tif</exclude>
+          <exclude>images/*.jpx</exclude>
+          <exclude>*.enc</exclude>
+        </excludes>
       </testResource>
     </testResources>
 
@@ -976,6 +982,7 @@
                   <exclude>io.vertx:vertx-web</exclude>
                   <exclude>jakarta.activation:jakarta.activation-api</exclude>
                   <exclude>jakarta.xml.bind:jakarta.xml.bind-api</exclude>
+                  <exclude>jakarta.validation:jakarta.validation-api</exclude>
                   <exclude>javax.activation:activation</exclude>
                   <exclude>javax.annotation:jsr250-api</exclude>
                   <exclude>javax.enterprise:cdi-api</exclude>
@@ -1020,6 +1027,8 @@
                   <exclude>org.glassfish:javax.json</exclude>
                   <exclude>org.jboss.forge.roaster:roaster-api</exclude>
                   <exclude>org.jboss.forge.roaster:roaster-jdt</exclude>
+                  <exclude>org.jruby.jcodings:jcodings</exclude>
+                  <exclude>org.jruby.joni:joni</exclude>
                   <exclude>org.mozilla:rhino</exclude>
                   <exclude>org.slf4j:slf4j-api</exclude>
                   <exclude>org.slf4j:slf4j-ext</exclude>
@@ -1322,7 +1331,7 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>4.0.1</version>
+    <version>5.2.0</version>
   </parent>
 
 </project>

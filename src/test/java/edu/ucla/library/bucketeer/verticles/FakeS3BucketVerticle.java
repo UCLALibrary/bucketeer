@@ -8,8 +8,12 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+
 import io.vertx.core.json.JsonObject;
 
+/**
+ * A verticle that helps test S3 interactions. This is slowly being replaced by the S3 LocalStack container.
+ */
 public class FakeS3BucketVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FakeS3BucketVerticle.class, MESSAGES);
