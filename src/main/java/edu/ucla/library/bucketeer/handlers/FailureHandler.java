@@ -21,6 +21,9 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.validation.ValidationException;
 
+/**
+ * A handler for failures not automatically handled by the OpenAPI routing.
+ */
 public final class FailureHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FailureHandler.class, MESSAGES);

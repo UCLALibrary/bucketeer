@@ -22,6 +22,9 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 
+/**
+ * A verticle to wrap-up batch jobs once they've been completed.
+ */
 public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FinalizeJobVerticle.class, Constants.MESSAGES);

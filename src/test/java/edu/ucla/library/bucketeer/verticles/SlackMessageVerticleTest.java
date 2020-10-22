@@ -22,6 +22,7 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.ProcessingException;
+
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -31,6 +32,9 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+/**
+ * Tests of the Slack message verticle. This verticle sends Slack messages after batch jobs have been completed.
+ */
 @RunWith(VertxUnitRunner.class)
 public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
@@ -70,8 +74,8 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
             if (config.succeeded()) {
                 final JsonObject jsonConfig = config.result();
 
-                mySlackUserHandle = jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE).replace(Constants.AT,
-                        Constants.EMPTY);
+                mySlackUserHandle =
+                        jsonConfig.getString(Config.SLACK_TEST_USER_HANDLE).replace(Constants.AT, Constants.EMPTY);
                 mySlackChannelID = jsonConfig.getString(Config.SLACK_CHANNEL_ID);
                 mySlackErrorChannelID = jsonConfig.getString(Config.SLACK_ERROR_CHANNEL_ID);
 
@@ -151,12 +155,12 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      */
     @Test
-    public final void testSlackFileUpload(final TestContext aContext) throws FileNotFoundException,
-            ProcessingException, IOException {
+    public final void testSlackFileUpload(final TestContext aContext)
+            throws FileNotFoundException, ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB, LIVE_TEST_CSV);
         final String iiifURL = "unit.test.not.real.please.disregard.com";
-        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle, job.size(),
-                iiifURL);
+        final String slackMessage =
+                LOGGER.getMessage(MessageCodes.BUCKETEER_111, mySlackUserHandle, job.size(), iiifURL);
         final Vertx vertx = myRunTestOnContextRule.vertx();
         final JsonObject message = new JsonObject();
         final Async asyncTask = aContext.async();

@@ -28,6 +28,9 @@ import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 
+/**
+ * A verticle that handles individual image conversion requests.
+ */
 public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageWorkerVerticle.class, MESSAGES);

@@ -25,6 +25,9 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 
+/**
+ * Tests related to the shared methods in the abstract Bucketeer handler.
+ */
 public abstract class AbstractBucketeerHandlerTest {
 
     protected static final String JOB_FILE_NAME = "live-test.csv";

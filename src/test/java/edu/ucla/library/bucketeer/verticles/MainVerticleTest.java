@@ -25,6 +25,9 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
+/**
+ * Tests of the main verticle that starts running when the application is started.
+ */
 @RunWith(VertxUnitRunner.class)
 public class MainVerticleTest {
 

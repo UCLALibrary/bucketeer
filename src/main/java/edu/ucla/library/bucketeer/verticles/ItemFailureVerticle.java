@@ -24,6 +24,9 @@ import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 
+/**
+ * A verticle that deals with image conversion failures.
+ */
 public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemFailureVerticle.class, Constants.MESSAGES);

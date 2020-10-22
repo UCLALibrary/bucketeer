@@ -6,6 +6,9 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * A suite of tests related to CSV parsing exceptions.
+ */
 public class CsvParsingExceptionTest {
 
     private static final String EOL = System.lineSeparator();

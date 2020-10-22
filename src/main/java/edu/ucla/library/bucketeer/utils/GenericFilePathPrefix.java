@@ -6,6 +6,9 @@ import java.io.File;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * A basic file path prefix implementation.
+ */
 public class GenericFilePathPrefix implements IFilePathPrefix {
 
     /**
