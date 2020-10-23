@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>bucketeer</artifactId>
-  <version>0.2.3-SNAPSHOT</version>
+  <version>0.2.2-SNAPSHOT</version>
   <name>Bucketeer</name>
   <description>A TIFF to JP2 to S3 bucket microservice</description>
   <url>https://github.com/uclalibrary/bucketeer</url>
