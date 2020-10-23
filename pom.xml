@@ -88,7 +88,7 @@
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
     <freelib.utils.version>2.1.0</freelib.utils.version>
-    <freelib.maven.version>0.1.0</freelib.maven.version>
+    <freelib.maven.version>0.1.2</freelib.maven.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
@@ -1337,7 +1337,7 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>5.2.0</version>
+    <version>5.2.1</version>
   </parent>
 
 </project>
