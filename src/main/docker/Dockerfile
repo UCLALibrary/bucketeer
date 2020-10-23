@@ -77,13 +77,13 @@ COPY configs/logback.xml /etc/bucketeer/logback.xml
 
 # Create a non-privileged user
 RUN addgroup --gid 1000 bucketeer && \
-    adduser --system --uid 1000 --gid 1000 --no-create-home --disabled-login --disabled-password bucketeer
+    adduser --uid 1000 --gid 1000 --no-create-home --disabled-login --disabled-password bucketeer
 
 # Set permissions
 RUN mkdir -p /var/log/bucketeer /var/cache/bucketeer /etc/bucketeer && \
     touch /etc/bucketeer/bucketeer.properties && \
-    chown -R bucketeer /var/log/bucketeer /var/cache/bucketeer /etc/bucketeer /etc/bucketeer/bucketeer.properties \
-      /usr/local/bin/docker-entrypoint.sh
+    chown -R bucketeer /usr/local/bucketeer /var/log/bucketeer /var/cache/bucketeer /etc/bucketeer \
+      /etc/bucketeer/bucketeer.properties /usr/local/bin/docker-entrypoint.sh
 
 RUN if [ -z "${kakadu.version}" ]; then \
       # Clean up the placeholder files if we built without kakadu
