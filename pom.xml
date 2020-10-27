@@ -141,7 +141,8 @@
     <bucketeer.slack.error_channel_id>YOUR_SLACK_ERROR_CHANNEL_ID</bucketeer.slack.error_channel_id>
 
     <!-- We can use a lambda kakadu converter if we send things to its bucket -->
-    <lambda.s3.bucket>test-bucketeer-tiff</lambda.s3.bucket>
+    <!-- We use the same value as `bucketeer.s3.bucket` for our tests, where we're mocking the Lambda anyway -->
+    <lambda.s3.bucket>bucketeer-test-data</lambda.s3.bucket>
 
     <!-- The maximum number of active S3 upload requests allowed at a time -->
     <s3.max.requests>20</s3.max.requests>
