@@ -49,9 +49,9 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
     private JsonObject myConfig;
 
-    private String myIiifUrl;
+    private String myIiifURL;
 
-    private String mySlackChannelId;
+    private String mySlackChannelID;
 
     private String myFilesystemCsvMount;
 
@@ -61,8 +61,8 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
         myConfig = config();
 
-        myIiifUrl = getSimpleURL(myConfig.getString(Config.IIIF_URL));
-        mySlackChannelId = myConfig.getString(Config.SLACK_CHANNEL_ID);
+        myIiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
+        mySlackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
         myFilesystemCsvMount = myConfig.getString(Config.FILESYSTEM_CSV_MOUNT);
 
         // Throw an error if the CSV filesystem mount feature is turned on but we don't have the path configured
@@ -153,11 +153,11 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                                                 job.getName());
                                     } else {
                                         jobResultMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
-                                                job.size(), myIiifUrl);
+                                                job.size(), myIiifURL);
                                     }
                                     slackMessage = StringUtils.format("{} {}", jobResultMsg, csvWriteStatusMsg);
 
-                                    sendSlackMessage(mySlackChannelId, slackMessage, job, csvData);
+                                    sendSlackMessage(mySlackChannelID, slackMessage, job, csvData);
                                 }
 
                                 if (shouldFailPromise) {
