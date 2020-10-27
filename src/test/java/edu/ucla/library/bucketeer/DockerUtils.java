@@ -60,18 +60,23 @@ public final class DockerUtils {
             if (LOGGER.isDebugEnabled()) {
                 final StringBuilder log = new StringBuilder(System.lineSeparator());
 
-                for (final File file : new File(aDestDirPath, KakaduConverter.WORKING_DIR_NAME).listFiles()) {
-                    final Path path = file.toPath();
+                for (final File dir : new File(aDestDirPath).listFiles()) {
+                    // List the converted image files
+                    if (dir.getName().equals(KakaduConverter.WORKING_DIR_NAME)) {
+                        for (final File file : new File(aDestDirPath, KakaduConverter.WORKING_DIR_NAME).listFiles()) {
+                            final Path path = file.toPath();
 
-                    try {
-                        final String user = Files.getOwner(path).getName();
-                        final String perms = PosixFilePermissions.toString(Files.getPosixFilePermissions(path));
+                            try {
+                                final String user = Files.getOwner(path).getName();
+                                final String perms = PosixFilePermissions.toString(Files.getPosixFilePermissions(path));
 
-                        log.append("  "); // Add a little indentation since we use line breaks for formatting
-                        log.append(String.join(Constants.SPACE, file.getAbsolutePath(), user, perms));
-                        log.append(System.lineSeparator());
-                    } catch (final IOException details) {
-                        throw new RuntimeException(details);
+                                log.append("  "); // Add a little indentation since we use line breaks for formatting
+                                log.append(String.join(Constants.SPACE, file.getAbsolutePath(), user, perms));
+                                log.append(System.lineSeparator());
+                            } catch (final IOException details) {
+                                throw new RuntimeException(details);
+                            }
+                        }
                     }
                 }
 
