@@ -176,6 +176,7 @@
   <entry key="BUCKETEER-164">Unable to delete test files from directory: {}</entry>
   <entry key="BUCKETEER-165">Unexpected temporary test files found: {}</entry>
   <entry key="BUCKETEER-166">Test file was not deleted as expected: {}</entry>
+  <entry key="BUCKETEER-167">Uploaded JP2 image deleted from local tmp space: {}</entry>
   <entry key="BUCKETEER-500">{}</entry>
   <entry key="BUCKETEER-501">Large image ({} [{}]) skipped; maximum allowed size set for: {}</entry>
   <entry key="BUCKETEER-502">Bucketeer is now listening on port: {}</entry>
