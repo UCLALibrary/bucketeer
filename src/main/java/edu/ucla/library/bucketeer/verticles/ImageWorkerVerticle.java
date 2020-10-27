@@ -167,6 +167,8 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
         if (aImagePath != null) {
             if (!new File(aImagePath).delete()) {
                 LOGGER.error(MessageCodes.BUCKETEER_161, aImagePath);
+            } else {
+                LOGGER.debug(MessageCodes.BUCKETEER_167, aImagePath);
             }
         } else {
             LOGGER.error(MessageCodes.BUCKETEER_162);
