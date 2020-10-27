@@ -46,8 +46,6 @@ If you'd like to run Bucketeer in a Docker container, you need to have Docker in
 
 _Hint: If you want to run a build without a Docker cache, add -Ddocker.noCache to your mvn command; for instance: `mvn verify -Ddocker.noCache`_
 
-_Note: For the e2e tests to succeed, you must first create the directory specified by the `csv.root` POM property, and set its permissions so that the Docker container can write to it._
-
 You can also specify that only a certain set of tests be run against the test containers. To do this, supply a runtime argument that excludes a set of tests:
 
     -DskipUTs
