@@ -50,6 +50,8 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
                         final String messageCode = CodeUtils.getCode(replyException.failureCode());
                         final String details = replyException.getMessage();
 
+                        // FIXME: this throws IndexOutOfBoundsException if the reply failed with a code whose message
+                        // has either zero or two-or-more slots
                         log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(messageCode, details));
                     } else {
                         log.error(exception, MessageCodes.BUCKETEER_005, aVerticleName, exception.getMessage());

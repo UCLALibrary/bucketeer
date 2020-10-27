@@ -12,6 +12,9 @@ public final class Features {
     /* The name for the large image routing feature. */
     public static final String LARGE_IMAGE_ROUTING = "bucketeer.large.images";
 
+    /* The name for the "write CSVs to local filesystem" feature. */
+    public static final String FS_WRITE_CSV = "bucketeer.fs.write.csv";
+
     /* The property name for our features. */
     public static final String FEATURES = "features";
 

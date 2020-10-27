@@ -89,8 +89,8 @@ public class MainVerticle extends AbstractVerticle {
                 aPromise.fail(configuration.cause());
             } else {
                 final JsonObject config = configuration.result();
-                final String fsMount = config.getString(Config.FILESYSTEM_MOUNT);
-                final String fsPrefix = config.getString(Config.FILESYSTEM_PREFIX);
+                final String fsMount = config.getString(Config.FILESYSTEM_IMAGE_MOUNT);
+                final String fsPrefix = config.getString(Config.FILESYSTEM_IMAGE_PREFIX);
 
                 if (fsMount != null && fsPrefix != null) {
                     final IFilePathPrefix filePathPrefix = FilePathPrefixFactory.getPrefix(fsPrefix, fsMount);

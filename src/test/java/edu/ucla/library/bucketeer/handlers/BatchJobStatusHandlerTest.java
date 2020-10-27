@@ -132,8 +132,11 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
 
         myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
-                final String id = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
-                final Job job = new Job(JOB_NAME).setItems(Arrays.asList(new Item().setID(id)));
+                final Job job = new Job(JOB_NAME);
+                final String firstItemId = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
+
+                // Add two items to the job so it doesn't complete when we update the status of one of them
+                job.setItems(Arrays.asList(new Item().setID(firstItemId), new Item().setID("item2")));
 
                 // Put the job in our jobs queue so we can test against it
                 getMap.result().put(JOB_NAME, job, put -> {

@@ -1,19 +1,11 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
-import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import javax.naming.ConfigurationException;
-
-import com.nike.moirai.ConfigFeatureFlagChecker;
-import com.nike.moirai.FeatureFlagChecker;
-import com.nike.moirai.Suppliers;
-import com.nike.moirai.resource.FileResourceLoaders;
-import com.nike.moirai.typesafeconfig.TypesafeConfigDecider;
-import com.nike.moirai.typesafeconfig.TypesafeConfigReader;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -48,7 +40,6 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
 
     @Override
     public void start() throws Exception {
-        final Optional<FeatureFlagChecker> featureChecker = getFeatureFlagChecker();
         final JsonObject config = config();
 
         super.start();
@@ -65,8 +56,8 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
         myCallbackURL = Optional.ofNullable(config.getString(Config.BATCH_CALLBACK_URL));
 
         // We should have a configuration value for our large image server if the feature is turned on
-        if (featureChecker.isPresent() && featureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING) &&
-                myLargeImageBucketeer == null) {
+        if (myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)
+                && myLargeImageBucketeer == null) {
             throw new ConfigurationException(LOGGER.getMessage(MessageCodes.BUCKETEER_512));
         }
 
@@ -120,21 +111,5 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
     @Override
     protected Logger getLogger() {
         return LOGGER;
-    }
-
-    /**
-     * Gets a feature flag checker.
-     *
-     * @return An optional feature flag checker
-     */
-    private Optional<FeatureFlagChecker> getFeatureFlagChecker() {
-        if (vertx.fileSystem().existsBlocking(Features.FEATURE_FLAGS_FILE)) {
-            return Optional.of(ConfigFeatureFlagChecker.forConfigSupplier(
-                    Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
-                            TypesafeConfigReader.FROM_STRING),
-                    TypesafeConfigDecider.FEATURE_ENABLED));
-        } else {
-            return Optional.empty();
-        }
     }
 }

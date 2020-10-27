@@ -30,16 +30,16 @@ public final class DockerUtils {
     /**
      * Copy a directory of files from inside the Docker container to our host system so that we can inspect them.
      *
-     * @param aSrcDir The source directory in the Docker container
-     * @param aDestDir The destination directory on the host system
+     * @param aContainerName The name of the container to copy from
+     * @param aSrcDirPath The absolute path to the source directory in the Docker container
+     * @param aDestDirPath The path to the destination directory on the host system; may be relative
      * @return True If files were successfully copied to the host system's temporary directory
      * @throws IOException If there is trouble reading from the copying process
      * @throws InterruptedException If the copying process gets interrupted
      */
-    public static boolean copy(final File aSrcDir, final File aDestDir) {
-        final String containerSrcDirPath = aSrcDir.getAbsolutePath();
-        final String localDestDirPath = aDestDir.getAbsolutePath();
-        final ProcessBuilder builder = new ProcessBuilder("docker", "cp", containerSrcDirPath, localDestDirPath);
+    public static boolean copy(final String aContainerName, final String aSrcDirPath, final String aDestDirPath) {
+        final String namespacedContainerSrcDirPath = aContainerName + ":" + aSrcDirPath;
+        final ProcessBuilder builder = new ProcessBuilder("docker", "cp", namespacedContainerSrcDirPath, aDestDirPath);
 
         builder.redirectErrorStream(true);
 
@@ -60,7 +60,7 @@ public final class DockerUtils {
             if (LOGGER.isDebugEnabled()) {
                 final StringBuilder log = new StringBuilder(System.lineSeparator());
 
-                for (final File file : new File(aDestDir, KakaduConverter.WORKING_DIR_NAME).listFiles()) {
+                for (final File file : new File(aDestDirPath, KakaduConverter.WORKING_DIR_NAME).listFiles()) {
                     final Path path = file.toPath();
 
                     try {

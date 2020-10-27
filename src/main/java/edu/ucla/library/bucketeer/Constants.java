@@ -180,6 +180,11 @@ public final class Constants {
     public static final String NOTHING_PROCESSED = "nothing-processed";
 
     /**
+     * CSV-formatted data.
+     */
+    public static final String CSV_DATA = "csv-data";
+
+    /**
      * Private constructor for Constants class.
      */
     private Constants() {

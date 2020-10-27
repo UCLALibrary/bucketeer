@@ -3,7 +3,18 @@ package edu.ucla.library.bucketeer.verticles;
 
 import info.freelibrary.util.Logger;
 
+import java.io.File;
+import java.util.Optional;
+
+import com.nike.moirai.ConfigFeatureFlagChecker;
+import com.nike.moirai.FeatureFlagChecker;
+import com.nike.moirai.Suppliers;
+import com.nike.moirai.resource.FileResourceLoaders;
+import com.nike.moirai.typesafeconfig.TypesafeConfigDecider;
+import com.nike.moirai.typesafeconfig.TypesafeConfigReader;
+
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 
@@ -19,6 +30,8 @@ import io.vertx.core.shareddata.LocalMap;
  */
 public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
 
+    protected Optional<FeatureFlagChecker> myFeatureChecker;
+
     @Override
     public void start() throws Exception {
         super.start();
@@ -33,6 +46,9 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
         } else {
             verticleMap.put(verticleName, deploymentID());
         }
+
+        // Make a feature flag checker available to verticles if they need it
+        myFeatureChecker = getFeatureFlagChecker();
     }
 
     @Override
@@ -81,6 +97,22 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
      */
     protected void sendMessage(final JsonObject aJsonObject, final String aVerticleName) {
         sendMessage(aJsonObject, aVerticleName, DeliveryOptions.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * Gets a feature flag checker.
+     *
+     * @return An optional feature flag checker
+     */
+    protected Optional<FeatureFlagChecker> getFeatureFlagChecker() {
+        if (vertx.fileSystem().existsBlocking(Features.FEATURE_FLAGS_FILE)) {
+            return Optional.of(ConfigFeatureFlagChecker.forConfigSupplier(
+                    Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
+                            TypesafeConfigReader.FROM_STRING),
+                    TypesafeConfigDecider.FEATURE_ENABLED));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**

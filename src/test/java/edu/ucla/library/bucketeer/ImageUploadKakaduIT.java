@@ -170,15 +170,15 @@ public class ImageUploadKakaduIT {
                     LOGGER.debug(MessageCodes.BUCKETEER_037, counter + 1);
 
                     if (myS3Client.doesBucketExistV2(myS3Bucket) && myS3Client.doesObjectExist(myS3Bucket, myJP2)) {
-                        final File srcDir = new File(TestConstants.JP2_SRC_DIR);
-                        final File tmpDestDir = new File(TestConstants.JP2_TMP_DEST_DIR);
+                        final String srcDir = TestConstants.JP2_SRC_DIR;
+                        final File tmpDestDir = new File(TestConstants.TMP_DEST_DIR);
                         final File testFile = new File(new File(tmpDestDir, KakaduConverter.WORKING_DIR_NAME), myJP2);
 
                         // Confirm we can create our temporary test directory (or that it already exists)
                         aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs());
 
                         // Confirm we can copy the test container's files to the temporary test directory
-                        aContext.assertTrue(DockerUtils.copy(srcDir, tmpDestDir));
+                        aContext.assertTrue(DockerUtils.copy(TestConstants.BUCKETEER, srcDir, tmpDestDir.toString()));
 
                         // Check that our converted image file was cleaned up after S3 upload
                         if (testFile.exists()) {

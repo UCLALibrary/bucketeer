@@ -34,7 +34,8 @@ public class GetConfigHandler extends AbstractBucketeerHandler {
         final HttpServerResponse response = aContext.response();
         final JsonObject viewableConfig = new JsonObject();
         final String iiifURL = myConfig.getString(Config.IIIF_URL);
-        final String fsMount = myConfig.getString(Config.FILESYSTEM_MOUNT);
+        final String fsImageMount = myConfig.getString(Config.FILESYSTEM_IMAGE_MOUNT);
+        final String fsCsvMount = myConfig.getString(Config.FILESYSTEM_CSV_MOUNT);
         final String tnSize = myConfig.getString(Config.THUMBNAIL_SIZE);
         final String lambdaBucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
         final String s3Bucket = myConfig.getString(Config.S3_BUCKET);
@@ -48,8 +49,12 @@ public class GetConfigHandler extends AbstractBucketeerHandler {
             viewableConfig.put("bucketeer-tn-size", tnSize);
         }
 
-        if (fsMount != null) {
-            viewableConfig.put("bucketeer-fs-mount", fsMount);
+        if (fsImageMount != null) {
+            viewableConfig.put("bucketeer-fs-image-mount", fsImageMount);
+        }
+
+        if (fsCsvMount != null) {
+            viewableConfig.put("bucketeer-fs-csv-mount", fsCsvMount);
         }
 
         if (s3Region != null) {

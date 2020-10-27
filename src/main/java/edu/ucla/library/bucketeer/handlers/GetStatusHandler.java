@@ -52,11 +52,17 @@ public class GetStatusHandler implements Handler<RoutingContext> {
         if (featureFlagChecker.isPresent()) {
             features.put(Features.ENABLED, true);
 
-            // If it's found, check that it's enabled
+            // Check whether each feature is enabled or not
             if (featureFlagChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)) {
                 features.put(Features.LARGE_IMAGE_ROUTING, true);
             } else { // Feature isn't enabled
                 features.put(Features.LARGE_IMAGE_ROUTING, false);
+            }
+
+            if (featureFlagChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV)) {
+                features.put(Features.FS_WRITE_CSV, true);
+            } else {
+                features.put(Features.FS_WRITE_CSV, false);
             }
         } else { // Feature flag isn't available
             features.put(Features.ENABLED, false);

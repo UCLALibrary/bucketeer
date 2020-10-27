@@ -46,6 +46,8 @@ If you'd like to run Bucketeer in a Docker container, you need to have Docker in
 
 _Hint: If you want to run a build without a Docker cache, add -Ddocker.noCache to your mvn command; for instance: `mvn verify -Ddocker.noCache`_
 
+_Note: For the e2e tests to succeed, you must first create the directory specified by the `csv.root` POM property, and set its permissions so that the Docker container can write to it._
+
 You can also specify that only a certain set of tests be run against the test containers. To do this, supply a runtime argument that excludes a set of tests:
 
     -DskipUTs
@@ -87,9 +89,9 @@ Once run, the service can be verified/accessed at [http://localhost:8888/status]
 
 If you want to run the application with a different mount point (for image sources) and file prefix (e.g. the UCLA file path prefix), you can use something like:
 
-    mvn -Plive test -Dbucketeer.fs.mount=/opt/data -Dbucketeer.fs.prefix=UCLAFilePathPrefix
+    mvn -Plive test -Dbucketeer.fs.image.mount=/opt/data -Dbucketeer.fs.image.prefix=UCLAFilePathPrefix
 
-If you leave off the `bucketeer.fs.prefix` Bucketeer will treat the `bucketeer.fs.mount` as the default directory.
+If you leave off the `bucketeer.fs.image.prefix` Bucketeer will treat the `bucketeer.fs.image.mount` as the default directory.
 
 ## Including Kakadu
 
@@ -145,6 +147,18 @@ If you want to test the large image feature, where large images can be sent from
     }
 
 This should enable the feature. To confirm the feature has been configured correctly, once Bucketeer is started in the live test mode, visit the Bucketeer status page at: `http://localhost:8888/status`. In the JSON that's returned from the page, you should see that features are enabled and that the `bucketeer.large.images` feature, in particular, is enabled.
+
+## Enable Writing CSVs to a Mounted Filesystem
+
+Set the `bucketeer.fs.write.csv` key in your feature flags configuration, e.g.:
+
+    moirai {
+      bucketeer.fs.write.csv {
+        featureEnabled = true
+      }
+    }
+
+Then, map a filesystem directory to the container's `bucketeer.fs.csv.mount`.
 
 ## Tweaking the Batch Upload
 
