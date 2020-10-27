@@ -128,9 +128,6 @@
     <!-- The location of images used for testing -->
     <image.root>src/test/resources/images</image.root>
 
-    <!-- The location to write CSVs to for testing. NOTE: must be writable by the Docker container -->
-    <csv.root>./test-write-csv</csv.root>
-
     <!-- AWS configuration properties -->
     <bucketeer.s3.region>us-east-1</bucketeer.s3.region>
     <bucketeer.s3.bucket>bucketeer-test-data</bucketeer.s3.bucket>
@@ -709,7 +706,7 @@
                 <volumes>
                   <bind>
                     <volume>${image.root}:/images/</volume>
-                    <volume>${csv.root}:/csv/</volume>
+                    <volume>bucketeer-csv-temp-volume:/csv/</volume>
                   </bind>
                 </volumes>
                 <env>
@@ -751,6 +748,31 @@
             </goals>
           </execution>
 
+          <!-- Creates a mock volume for storing processed CSVs -->
+          <execution>
+            <id>docker-create-volume</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>volume-create</goal>
+            </goals>
+            <configuration>
+              <volumes>
+                <volume>
+                  <name>bucketeer-csv-temp-volume</name>
+                  <driver>local</driver>
+                  <opts>
+                    <type>tmpfs</type>
+                    <device>tmpfs</device>
+                    <o>size=100m,uid=1000,mode=777</o>
+                  </opts>
+                  <labels>
+                    <volatileData>true</volatileData>
+                  </labels>
+                </volume>
+              </volumes>
+            </configuration>
+          </execution>
+
           <!-- Starts the Docker container for integration testing -->
           <execution>
             <id>docker-start</id>
@@ -773,6 +795,22 @@
             <configuration>
               <allContainers>true</allContainers>
               <stopNamePattern>bucket*</stopNamePattern>
+            </configuration>
+          </execution>
+
+          <!-- Removes the mock volume for storing processed CSVs -->
+          <execution>
+            <id>docker-volume-remove</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>volume-remove</goal>
+            </goals>
+            <configuration>
+              <volumes>
+                 <volume>
+                   <name>bucketeer-csv-temp-volume</name>
+                 </volume>
+              </volumes>
             </configuration>
           </execution>
         </executions>
