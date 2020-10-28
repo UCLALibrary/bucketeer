@@ -764,7 +764,7 @@
                   <opts>
                     <type>tmpfs</type>
                     <device>tmpfs</device>
-                    <o>size=100m,uid=1000,mode=777</o>
+                    <o>size=100m,uid=1000,gid=1000</o>
                   </opts>
                   <labels>
                     <volatileData>true</volatileData>
