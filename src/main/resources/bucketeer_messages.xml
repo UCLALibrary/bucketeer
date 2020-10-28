@@ -171,7 +171,7 @@
   <entry key="BUCKETEER-159">A URL for the Fester service was not supplied</entry>
   <entry key="BUCKETEER-160">Shutting down test server...</entry>
   <entry key="BUCKETEER-161">Unable to remove temporary image file: {}</entry>
-  <entry key="BUCKETEER-162">Expected to have to delete a temporary image file, but none was found</entry>
+  <entry key="BUCKETEER-162"></entry>
   <entry key="BUCKETEER-163">Working directory does not exist: {}</entry>
   <entry key="BUCKETEER-164">Unable to delete test files from directory: {}</entry>
   <entry key="BUCKETEER-165">Unexpected temporary test files found: {}</entry>
