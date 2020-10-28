@@ -707,7 +707,7 @@
                 <volumes>
                   <bind>
                     <volume>${image.root}:/images/</volume>
-                    <volume>bucketeer-csv-temp-volume:/csv/</volume>
+                    <volume>bucketeer-test-write-csv:/csv/</volume>
                   </bind>
                 </volumes>
                 <env>
@@ -751,7 +751,7 @@
 
           <!-- Creates a mock volume for storing processed CSVs -->
           <execution>
-            <id>docker-create-volume</id>
+            <id>docker-volume-create</id>
             <phase>pre-integration-test</phase>
             <goals>
               <goal>volume-create</goal>
@@ -759,16 +759,12 @@
             <configuration>
               <volumes>
                 <volume>
-                  <name>bucketeer-csv-temp-volume</name>
-                  <driver>local</driver>
+                  <name>bucketeer-test-write-csv</name>
                   <opts>
                     <type>tmpfs</type>
                     <device>tmpfs</device>
-                    <o>size=100m,uid=1000,gid=1000</o>
+                    <o>size=1m</o>
                   </opts>
-                  <labels>
-                    <volatileData>true</volatileData>
-                  </labels>
                 </volume>
               </volumes>
             </configuration>
@@ -809,7 +805,7 @@
             <configuration>
               <volumes>
                  <volume>
-                   <name>bucketeer-csv-temp-volume</name>
+                   <name>bucketeer-test-write-csv</name>
                  </volume>
               </volumes>
             </configuration>
