@@ -74,6 +74,11 @@ public final class Constants {
     public static final String JOB_NAME = "job-name";
 
     /**
+     * The header for indicating an image is a derivative image.
+     */
+    public static final String DERIVATIVE_IMAGE = "derivative-image";
+
+    /**
      * The Slack handle of the person submitting the batch job
      */
     public static final String SLACK_HANDLE = "slack-handle";
