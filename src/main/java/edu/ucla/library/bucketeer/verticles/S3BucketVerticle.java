@@ -116,6 +116,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      */
     @SuppressWarnings("Indentation") // Checkstyle's indentation check doesn't work with multiple lambdas
     private void upload(final Message<JsonObject> aMessage, final JsonObject aConfig) {
+        final boolean deletable = aMessage.headers().contains(Constants.DERIVATIVE_IMAGE);
         final JsonObject storageRequest = aMessage.body();
 
         // If an S3 bucket isn't being supplied to us, use the one in our application configuration
@@ -153,6 +154,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                             LOGGER.error(exception, details);
 
+                            closeFile(asyncFile, filePath, false);
                             sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_500), details);
                         });
 
@@ -162,7 +164,8 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                             vertx.sharedData().getLocalMap(Constants.RESULTS_MAP).put(imageIDSansExt, true);
 
-                            // Send the success result and decrement the S3 request counter
+                            // Close the file, send the success result, and decrement the S3 request counter
+                            closeFile(asyncFile, filePath, deletable);
                             sendReply(aMessage, 0, Op.SUCCESS);
                         } else {
                             LOGGER.error(MessageCodes.BUCKETEER_014, statusCode, response.statusMessage());
@@ -174,25 +177,25 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                             // If there is some internal S3 server error, let's try again
                             if (statusCode == HTTP.INTERNAL_SERVER_ERROR) {
+                                closeFile(asyncFile, filePath, false);
                                 sendReply(aMessage, 0, Op.RETRY);
                             } else {
                                 final String errorMessage = statusCode + " - " + response.statusMessage();
 
                                 LOGGER.warn(MessageCodes.BUCKETEER_156, errorMessage);
+                                closeFile(asyncFile, filePath, false);
                                 retryUpload(imageID, aMessage);
                             }
                         }
-
-                        // Client sent the file, so we want to close our reference to it
-                        closeUploadedFile(asyncFile, filePath);
                     }, exception -> {
                         LOGGER.warn(MessageCodes.BUCKETEER_156, exception.getMessage());
+                        closeFile(asyncFile, filePath, false);
                         retryUpload(imageID, aMessage);
                     });
                 } catch (final ConnectionPoolTooBusyException details) {
                     LOGGER.debug(MessageCodes.BUCKETEER_046, imageID);
+                    closeFile(asyncFile, filePath, false);
                     sendReply(aMessage, 0, Op.RETRY);
-                    closeUploadedFile(asyncFile, filePath);
                 }
             } else {
                 LOGGER.error(open.cause(), LOGGER.getMessage(MessageCodes.BUCKETEER_043, filePath));
@@ -271,11 +274,23 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      *
      * @param aAsyncFile An asynchronous file handle
      * @param aFilePath The path to the file
+     * @param aDeletableImage If the file was uploaded successfully and the image is deletable
      */
-    private void closeUploadedFile(final AsyncFile aAsyncFile, final String aFilePath) {
+    private void closeFile(final AsyncFile aAsyncFile, final String aFilePath, final boolean aDeletableImage) {
         aAsyncFile.close(closure -> {
             if (closure.failed()) {
                 LOGGER.error(closure.cause(), MessageCodes.BUCKETEER_047, aFilePath);
+            }
+
+            // If the file was uploaded successfully and it's a derivative image, delete it
+            if (aDeletableImage) {
+                vertx.fileSystem().delete(aFilePath, handler -> {
+                    if (handler.failed()) {
+                        LOGGER.error(handler.cause(), MessageCodes.BUCKETEER_161, aFilePath);
+                    } else {
+                        LOGGER.debug(MessageCodes.BUCKETEER_167, aFilePath);
+                    }
+                });
             }
         });
     }
