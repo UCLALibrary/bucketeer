@@ -1273,7 +1273,7 @@
         <gcc.version>=4:9.3.0-1ubuntu2</gcc.version>
         <make.version>=4.2.1-1.2</make.version>
         <libtiff.version>=4.1.0+git191117-2build1</libtiff.version>
-        <build.essential.version>=12.8ubuntu1.1</build.essential.version>
+        <build.essential.version>=12.8ubuntu1</build.essential.version>
         <libopenjp2.version>=2.3.1-1ubuntu4</libopenjp2.version>
         <git.version>=1:2.25.1-1ubuntu3</git.version>
         <curl.version>=7.68.0-1ubuntu2.2</curl.version>
