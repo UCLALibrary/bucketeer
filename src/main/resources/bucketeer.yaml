@@ -43,6 +43,9 @@ paths:
                       bucketeer.large.images:
                         type: boolean
                         example: false
+                      bucketeer.fs.write.csv:
+                        type: boolean
+                        example: false
         '500':
           description: There was an internal server error
   /config:
@@ -70,9 +73,12 @@ paths:
                   lambda-s3-bucket:
                     type: string
                     example: bucketeer-lambda-bucket
-                  bucketeer-fs-mount:
+                  bucketeer-fs-image-mount:
                     type: string
-                    example: bucketeer-fs-mount
+                    example: bucketeer-fs-image-mount
+                  bucketeer-fs-csv-mount:
+                    type: string
+                    example: bucketeer-fs-csv-mount
                   bucketeer-tn-size:
                     type: string
                     example: '!200,200'

@@ -36,6 +36,12 @@ public final class Op {
     public static final String RETRY = "retry";
 
     /**
+     * The value sent with a message reply from FinalizeJobVerticle if it fails to write a CSV to the local filesystem
+     * mount. TODO: check for this value in the reply
+     */
+    public static final String FS_WRITE_CSV_FAILURE = "fs-write-csv-failure";
+
+    /**
      * Hidden constructor for the Op constants class.
      */
     private Op() {

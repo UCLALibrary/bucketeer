@@ -120,7 +120,7 @@
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
   <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached. A total of {} images were
-    processed for this job. These images are available for viewing on: {}</entry>
+    processed for this job. These images are available for viewing on: {}.</entry>
   <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
   <entry key="BUCKETEER-113">Failed to find job keys in shared lambda map</entry>
   <entry key="BUCKETEER-114">Unexpected response code: {} [{}]</entry>
@@ -162,8 +162,8 @@
   <entry key="BUCKETEER-150">Job '{}' for '{}' pulled from queue [items: {}]</entry>
   <entry key="BUCKETEER-151">Added item ({} [{}]) to JSON response</entry>
   <entry key="BUCKETEER-152">Viewing Hint header index: {}</entry>
-  <entry key="BUCKETEER-153">Bucketeer State index position found: {}</entry>
-  <entry key="BUCKETEER-154">IIIF Access URL index position found: {}</entry>
+  <entry key="BUCKETEER-153">{} index position found: {}</entry>
+  <entry key="BUCKETEER-154">Unable to construct message {} with value '{}': {}</entry>
   <entry key="BUCKETEER-155">Adding {} new header columns</entry>
   <entry key="BUCKETEER-156">Error triggering S3 upload retry: {}</entry>
   <entry key="BUCKETEER-157">Failed to upload CSV file [{}] to Fester: {} [{}]</entry>
@@ -187,7 +187,7 @@
   <entry key="BUCKETEER-507">Fester request for '{}' failed to be sent: {}</entry>
   <entry key="BUCKETEER-508">GET in GetJobStatusesHandlerTest failed: {}</entry>
   <entry key="BUCKETEER-509">URL extraction from {} in FinalizeJobVerticle failed: {}</entry>
-  <entry key="BUCKETEER-510">Hi, &lt;@{}&gt;, job {} had no new entries to add/old entries to fix</entry>
+  <entry key="BUCKETEER-510">Hi, &lt;@{}&gt;, job {} had no new entries to add/old entries to fix.</entry>
   <entry key="BUCKETEER-511">Received request to load image: {} [{}]</entry>
   <entry key="BUCKETEER-512">The large image feature flag is on, but a large image Bucketeer isn't currently configured</entry>
   <entry key="BUCKETEER-513">Sending large image processing request: {}</entry>
@@ -195,4 +195,7 @@
   <entry key="BUCKETEER-515">Sending callback response: {}</entry>
   <entry key="BUCKETEER-516">CSV for job {} has more than one '{}' column</entry>
   <entry key="BUCKETEER-517">CSV {} for job {} has one or more duplicate column headers</entry>
+  <entry key="BUCKETEER-518">The csv filesystem write feature flag is on, but a file system mount point isn't currently configured</entry>
+  <entry key="BUCKETEER-519">The CSV '{}' is available on the mounted filesystem.</entry>
+  <entry key="BUCKETEER-520">The CSV '{}' could not be written to the mounted filesystem: {}.</entry>
 </properties>

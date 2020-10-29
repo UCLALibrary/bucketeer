@@ -87,9 +87,9 @@ Once run, the service can be verified/accessed at [http://localhost:8888/status]
 
 If you want to run the application with a different mount point (for image sources) and file prefix (e.g. the UCLA file path prefix), you can use something like:
 
-    mvn -Plive test -Dbucketeer.fs.mount=/opt/data -Dbucketeer.fs.prefix=UCLAFilePathPrefix
+    mvn -Plive test -Dbucketeer.fs.image.mount=/opt/data -Dbucketeer.fs.image.prefix=UCLAFilePathPrefix
 
-If you leave off the `bucketeer.fs.prefix` Bucketeer will treat the `bucketeer.fs.mount` as the default directory.
+If you leave off the `bucketeer.fs.image.prefix` Bucketeer will treat the `bucketeer.fs.image.mount` as the default directory.
 
 ## Including Kakadu
 
@@ -145,6 +145,20 @@ If you want to test the large image feature, where large images can be sent from
     }
 
 This should enable the feature. To confirm the feature has been configured correctly, once Bucketeer is started in the live test mode, visit the Bucketeer status page at: `http://localhost:8888/status`. In the JSON that's returned from the page, you should see that features are enabled and that the `bucketeer.large.images` feature, in particular, is enabled.
+
+## Enabling Writing Output CSVs to a Local Filesystem
+
+If you want the output CSVs to be written to a directory on a local filesystem, specify the directory with `bucketeer.fs.csv.mount` and set the `bucketeer.fs.write.csv` key in your feature flags configuration, e.g.:
+
+    moirai {
+      bucketeer.fs.write.csv {
+        featureEnabled = true
+      }
+    }
+
+Make sure the directory is writable by the application.
+
+_Note: if you're running Bucketeer in a container, this value should be the path to the destination directory from the container's perspective._
 
 ## Tweaking the Batch Upload
 

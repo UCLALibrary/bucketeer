@@ -1,24 +1,34 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.naming.ConfigurationException;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.JobNotFoundException;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.ProcessingException;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 
@@ -31,11 +41,27 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
     private JsonObject myConfig;
 
+    private String myIiifURL;
+
+    private String mySlackChannelID;
+
+    private String myFilesystemCsvMount;
+
     @Override
     public void start() throws Exception {
         super.start();
 
         myConfig = config();
+
+        myIiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
+        mySlackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
+        myFilesystemCsvMount = myConfig.getString(Config.FILESYSTEM_CSV_MOUNT);
+
+        // Throw an error if the CSV filesystem mount feature is turned on but we don't have the path configured
+        if (myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV)
+                && myFilesystemCsvMount == null) {
+            throw new ConfigurationException(LOGGER.getMessage(MessageCodes.BUCKETEER_518));
+        }
 
         getJsonConsumer().handler(message -> {
             final JsonObject json = message.body();
@@ -47,25 +73,108 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             removeJob(jobName, removeJob -> {
                 if (removeJob.succeeded()) {
                     final Job job = removeJob.result();
+                    final String fileName = jobName + ".csv";
                     final Optional<String> slackHandle = Optional.ofNullable(job.getSlackHandle());
-                    final String slackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
+                    final String csvData;
 
-                    // If we have someone waiting on this result, let them know
-                    if (slackHandle.isPresent()) {
-                        final String slackMessage;
+                    try {
+                        // Update the job's metadata and serialize it to CSV format
+                        csvData = job.updateMetadata().toCSV();
 
-                        if (json.containsKey(Constants.NOTHING_PROCESSED)) {
-                            slackMessage =
-                                    LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(), job.getName());
-                        } else {
-                            final String iiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
-                            slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(), job.size(),
-                                    iiifURL);
-                        }
-                        sendSlackMessage(slackChannelID, slackMessage, job);
+                        Future.<Boolean>future(writeAttempt -> {
+                            // Determine if we should try to write the CSV to the local filesystem
+                            if (myFeatureChecker.isPresent()
+                                    && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV)) {
+                                // Open the file for writing; create it if it doesn't exist, overwrite it if it does
+                                final String filePath = Paths
+                                        .get(myFilesystemCsvMount, fileName).toString();
+                                final OpenOptions options = new OpenOptions().setWrite(true).setCreate(true)
+                                        .setTruncateExisting(true);
+
+                                // If the destination directory doesn't exist, create it
+                                if (!vertx.fileSystem().existsBlocking(myFilesystemCsvMount)) {
+                                    vertx.fileSystem().mkdirBlocking(myFilesystemCsvMount);
+                                }
+
+                                vertx.fileSystem().open(filePath, options, open -> {
+                                    // Complete the promise with whether or not the attempted write succeeded
+                                    if (open.succeeded()) {
+                                        open.result().write(Buffer.buffer(csvData), write -> {
+                                            if (write.succeeded()) {
+                                                writeAttempt.complete(true);
+                                            } else {
+                                                LOGGER.error(MessageCodes.BUCKETEER_520, filePath,
+                                                        "cannot write: " + write.cause().getMessage());
+                                                writeAttempt.complete(false);
+                                            }
+                                        }).close();
+                                    } else {
+                                        LOGGER.error(MessageCodes.BUCKETEER_520, filePath,
+                                                "cannot open: " + open.cause().getMessage());
+                                        // Complete the promise rather than fail in order to send a Slack message
+                                        writeAttempt.complete(false);
+                                    }
+                                });
+                            } else {
+                                // No write was attempted, so complete the promise with null
+                                writeAttempt.complete();
+                            }
+                        }).compose(attemptedCsvWriteSucceeded -> {
+                            return Future.<String>future(writeAttempt -> {
+                                // We still want to send a Slack message even if the CSV write failed
+                                // Determine what (if anything) to tell the Slack user about it
+                                final String csvWriteStatusMsg;
+                                final boolean shouldFailPromise;
+
+                                if (attemptedCsvWriteSucceeded != null) {
+                                    if (attemptedCsvWriteSucceeded) {
+                                        csvWriteStatusMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_519, fileName);
+                                    } else {
+                                        csvWriteStatusMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_520, fileName,
+                                                "see error log");
+                                    }
+                                    shouldFailPromise = !attemptedCsvWriteSucceeded;
+                                } else {
+                                    // We didn't try to write the CSV, so don't mention it to the user
+                                    csvWriteStatusMsg = "";
+                                    shouldFailPromise = false;
+                                }
+
+                                // If we have someone waiting on this result, let them know via Slack
+                                if (slackHandle.isPresent()) {
+                                    final String jobResultMsg;
+                                    final String slackMessage;
+
+                                    if (json.containsKey(Constants.NOTHING_PROCESSED)) {
+                                        jobResultMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_510, slackHandle.get(),
+                                                job.getName());
+                                    } else {
+                                        jobResultMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
+                                                job.size(), myIiifURL);
+                                    }
+                                    slackMessage = StringUtils.format("{} {}", jobResultMsg, csvWriteStatusMsg);
+
+                                    sendSlackMessage(mySlackChannelID, slackMessage, job, csvData);
+                                }
+
+                                if (shouldFailPromise) {
+                                    // If we get here, that means csvWriteStatusMsg contains an error message related to
+                                    // the CSV write attempt
+                                    // TODO: factor in the result of the Slack message send
+                                    writeAttempt.fail(csvWriteStatusMsg);
+                                } else {
+                                    writeAttempt.complete();
+                                }
+                            });
+                        }).onSuccess(unused -> {
+                            message.reply(Op.SUCCESS);
+                        }).onFailure(failure -> {
+                            // TODO: factor in the result of the Slack message send
+                            message.reply(Op.FS_WRITE_CSV_FAILURE);
+                        });
+                    } catch (final IOException | ProcessingException details) {
+                        message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                     }
-
-                    message.reply(Op.SUCCESS);
                 } else {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_137), jobName);
                 }
@@ -170,7 +279,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
      * @param aChannelId ID of the channel to which we want to send this message
      */
     private void sendSlackMessage(final String aChannelId, final String aMessageText) {
-        sendSlackMessage(aChannelId, aMessageText, null);
+        sendSlackMessage(aChannelId, aMessageText, null, null);
     }
 
     /**
@@ -178,16 +287,19 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
      *
      * @param aMessageText Text of the message we want to send
      * @param aChannelId ID of the channel to which we want to send this message
+     * @param aJob A job to notify a Slack user of the completion of
+     * @param aCsvData The CSV data to send as a file attachment in the Slack message
      */
-    private void sendSlackMessage(final String aChannelId, final String aMessageText, final Job aJob) {
+    private void sendSlackMessage(final String aChannelId, final String aMessageText, final Job aJob,
+            final String aCsvData) {
         final JsonObject message = new JsonObject();
 
         message.put(Config.SLACK_CHANNEL_ID, aChannelId);
         message.put(Constants.SLACK_MESSAGE_TEXT, aMessageText);
 
-        if (aJob != null) {
+        if (aJob != null && aCsvData != null) {
             message.put(Constants.JOB_NAME, aJob.getName());
-            message.put(Constants.BATCH_METADATA, JsonObject.mapFrom(aJob));
+            message.put(Constants.CSV_DATA, aCsvData);
         }
 
         sendMessage(message, SlackMessageVerticle.class.getName());

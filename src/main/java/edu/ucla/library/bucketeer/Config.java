@@ -49,9 +49,12 @@ public final class Config {
     public static final String S3_UPLOADER_THREADS = "s3.uploader.threads";
 
     // Where image files can be found on the local file system
-    public static final String FILESYSTEM_MOUNT = "bucketeer.fs.mount";
+    public static final String FILESYSTEM_IMAGE_MOUNT = "bucketeer.fs.image.mount";
 
-    public static final String FILESYSTEM_PREFIX = "bucketeer.fs.prefix";
+    public static final String FILESYSTEM_IMAGE_PREFIX = "bucketeer.fs.image.prefix";
+
+    // Where CSVs are written on the local file system
+    public static final String FILESYSTEM_CSV_MOUNT = "bucketeer.fs.csv.mount";
 
     // The S3 bucket that the bucketeer lambda watches for TIFF uploads
     public static final String LAMBDA_S3_BUCKET = "lambda.s3.bucket";

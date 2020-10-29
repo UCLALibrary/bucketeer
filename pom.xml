@@ -141,7 +141,8 @@
     <bucketeer.slack.error_channel_id>YOUR_SLACK_ERROR_CHANNEL_ID</bucketeer.slack.error_channel_id>
 
     <!-- We can use a lambda kakadu converter if we send things to its bucket -->
-    <lambda.s3.bucket>test-bucketeer-tiff</lambda.s3.bucket>
+    <!-- We use the same value as `bucketeer.s3.bucket` for our tests, where we're mocking the Lambda anyway -->
+    <lambda.s3.bucket>bucketeer-test-data</lambda.s3.bucket>
 
     <!-- The maximum number of active S3 upload requests allowed at a time -->
     <s3.max.requests>20</s3.max.requests>
@@ -177,8 +178,11 @@
     <bucketeer.max.source.file.size>300000000</bucketeer.max.source.file.size>
 
     <!-- Where the source images are mounted on the local file system -->
-    <bucketeer.fs.mount>.</bucketeer.fs.mount>
-    <bucketeer.fs.prefix>GenericFilePathPrefix</bucketeer.fs.prefix>
+    <bucketeer.fs.image.mount>.</bucketeer.fs.image.mount>
+    <bucketeer.fs.image.prefix>GenericFilePathPrefix</bucketeer.fs.image.prefix>
+
+    <!-- The location of the directory that processed CSVs should be written to -->
+    <bucketeer.fs.csv.mount>./csv/</bucketeer.fs.csv.mount>
 
     <!-- The Docker registry user and password used for publishing images -->
     <docker.registry.username />
@@ -631,17 +635,18 @@
                   </bind>
                 </volumes>
                 <env>
+                  <LAMBDA_S3_BUCKET>${lambda.s3.bucket}</LAMBDA_S3_BUCKET>
                   <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
                   <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
                   <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                   <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                   <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
                   <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
-                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
-                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
-                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
-                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
-                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
+                  <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
+                  <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
+                  <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
+                  <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
                   <HEAP_SIZE>1g</HEAP_SIZE>
                 </env>
                 <wait>
@@ -667,18 +672,19 @@
                   </bind>
                 </volumes>
                 <env>
+                  <LAMBDA_S3_BUCKET>${lambda.s3.bucket}</LAMBDA_S3_BUCKET>
                   <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
                   <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
                   <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                   <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                   <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
                   <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
-                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
-                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
-                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
-                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
-                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
-                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/bucketeer-features-off.conf</FEATURE_FLAGS>
+                  <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
+                  <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
+                  <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
+                  <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
+                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-off.conf</FEATURE_FLAGS>
                   <HEAP_SIZE>300m</HEAP_SIZE>
                 </env>
                 <wait>
@@ -704,18 +710,20 @@
                   </bind>
                 </volumes>
                 <env>
+                  <LAMBDA_S3_BUCKET>${lambda.s3.bucket}</LAMBDA_S3_BUCKET>
                   <BUCKETEER_S3_BUCKET>${bucketeer.s3.bucket}</BUCKETEER_S3_BUCKET>
                   <BUCKETEER_S3_REGION>${bucketeer.s3.region}</BUCKETEER_S3_REGION>
                   <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                   <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                   <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
                   <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
-                  <SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</SLACK_OAUTH_TOKEN>
-                  <SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</SLACK_ERROR_CHANNEL_ID>
-                  <SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</SLACK_CHANNEL_ID>
-                  <BUCKETEER_FS_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_PREFIX>
-                  <BUCKETEER_FS_MOUNT>/images/</BUCKETEER_FS_MOUNT>
-                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/bucketeer-features-on.conf</FEATURE_FLAGS>
+                  <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
+                  <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
+                  <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
+                  <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
+                  <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
+                  <BUCKETEER_FS_CSV_MOUNT>${bucketeer.fs.csv.mount}</BUCKETEER_FS_CSV_MOUNT>
+                  <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-on.conf</FEATURE_FLAGS>
                   <HEAP_SIZE>300m</HEAP_SIZE>
                 </env>
                 <wait>
@@ -842,6 +850,7 @@
               <skipTests>${skipFfTs}</skipTests>
               <systemPropertyVariables>
                 <http.port>${ff.on.http.port}</http.port>
+                <bucketeer.fs.csv.mount>/usr/local/bucketeer/csv</bucketeer.fs.csv.mount>
               </systemPropertyVariables>
             </configuration>
           </execution>

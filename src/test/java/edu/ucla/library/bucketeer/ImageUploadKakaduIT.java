@@ -4,15 +4,10 @@ package edu.ucla.library.bucketeer;
 import static io.vertx.ext.web.client.predicate.ResponsePredicate.SC_BAD_REQUEST;
 import static io.vertx.ext.web.client.predicate.ResponsePredicate.SC_SUCCESS;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -175,14 +170,15 @@ public class ImageUploadKakaduIT {
                     LOGGER.debug(MessageCodes.BUCKETEER_037, counter + 1);
 
                     if (myS3Client.doesBucketExistV2(myS3Bucket) && myS3Client.doesObjectExist(myS3Bucket, myJP2)) {
-                        final File tmpTestDir = new File(TestConstants.JP2_TMP_DIR);
-                        final File testFile = new File(new File(tmpTestDir, KakaduConverter.WORKING_DIR_NAME), myJP2);
+                        final String srcDir = TestConstants.JP2_SRC_DIR;
+                        final File tmpDestDir = new File(TestConstants.TMP_DEST_DIR);
+                        final File testFile = new File(new File(tmpDestDir, KakaduConverter.WORKING_DIR_NAME), myJP2);
 
                         // Confirm we can create our temporary test directory (or that it already exists)
-                        aContext.assertTrue(tmpTestDir.exists() || tmpTestDir.mkdirs());
+                        aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs());
 
                         // Confirm we can copy the test container's files to the temporary test directory
-                        aContext.assertTrue(dockerCopyTo(tmpTestDir));
+                        aContext.assertTrue(DockerUtils.copy(TestConstants.BUCKETEER, srcDir, tmpDestDir.toString()));
 
                         // Check that our converted image file was cleaned up after S3 upload
                         if (testFile.exists()) {
@@ -243,59 +239,6 @@ public class ImageUploadKakaduIT {
         webClient.get(PORT, Constants.UNSPECIFIED_HOST, filePath).expect(SC_BAD_REQUEST).send(handler -> {
             complete(asyncTask);
         });
-    }
-
-    /**
-     * Copy a directory of files from inside the Docker container to our host system so that we can inspect them.
-     *
-     * @param aTmpDir A temporary directory on the host system
-     * @return True If files were successfully copied to the host system's temporary directory
-     * @throws IOException If there is trouble reading from the copying process
-     * @throws InterruptedException If the copying process gets interrupted
-     */
-    private boolean dockerCopyTo(final File aTmpDir) {
-        final String localTmpDirPath = aTmpDir.getAbsolutePath();
-        final ProcessBuilder builder = new ProcessBuilder("docker", "cp", "bucketeer:/tmp/kakadu", localTmpDirPath);
-
-        builder.redirectErrorStream(true);
-
-        try {
-            final Process process = builder.start();
-
-            if (process.waitFor() != 0) {
-                final BufferedInputStream inStream = new BufferedInputStream(process.getInputStream());
-
-                LOGGER.error(new String(inStream.readAllBytes(), StandardCharsets.UTF_8));
-                return false;
-            }
-
-            return true;
-        } catch (final IOException | InterruptedException details) {
-            throw new RuntimeException(details);
-        } finally {
-            if (LOGGER.isDebugEnabled()) {
-                final StringBuilder log = new StringBuilder(System.lineSeparator());
-
-                for (final File file : new File(aTmpDir, KakaduConverter.WORKING_DIR_NAME).listFiles()) {
-                    final Path path = file.toPath();
-
-                    try {
-                        final String user = Files.getOwner(path).getName();
-                        final String perms = PosixFilePermissions.toString(Files.getPosixFilePermissions(path));
-
-                        log.append("  "); // Add a little indentation since we use line breaks for formatting
-                        log.append(String.join(Constants.SPACE, file.getAbsolutePath(), user, perms));
-                        log.append(System.lineSeparator());
-                    } catch (final IOException details) {
-                        throw new RuntimeException(details);
-                    }
-                }
-
-                if (log.length() != System.lineSeparator().length()) {
-                    LOGGER.debug(MessageCodes.BUCKETEER_165, log.toString());
-                }
-            }
-        }
     }
 
     /**
