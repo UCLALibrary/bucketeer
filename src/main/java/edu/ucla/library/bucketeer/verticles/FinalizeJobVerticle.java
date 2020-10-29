@@ -95,9 +95,14 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                                     && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV)) {
                                 // Open the file for writing; create it if it doesn't exist, overwrite it if it does
                                 final String filePath = Paths
-                                        .get(myConfig.getString(Config.FILESYSTEM_CSV_MOUNT), fileName).toString();
+                                        .get(myFilesystemCsvMount, fileName).toString();
                                 final OpenOptions options = new OpenOptions().setWrite(true).setCreate(true)
                                         .setTruncateExisting(true);
+
+                                // If the destination directory doesn't exist, create it
+                                if (!vertx.fileSystem().existsBlocking(myFilesystemCsvMount)) {
+                                    vertx.fileSystem().mkdirBlocking(myFilesystemCsvMount);
+                                }
 
                                 vertx.fileSystem().open(filePath, options, open -> {
                                     // Complete the promise with whether or not the attempted write succeeded
