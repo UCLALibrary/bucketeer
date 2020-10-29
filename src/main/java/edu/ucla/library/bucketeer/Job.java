@@ -294,7 +294,7 @@ public class Job implements Serializable {
      * @param aHeader The header to find
      * @return The index of the header if it exists, otherwise -1
      */
-    private int findHeader(final String[] aHeadersArray, final String aHeader) {
+    int findHeader(final String[] aHeadersArray, final String aHeader) {
         Objects.requireNonNull(aHeadersArray);
         Objects.requireNonNull(aHeader);
 
