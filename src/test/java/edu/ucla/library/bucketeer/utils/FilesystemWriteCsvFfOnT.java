@@ -97,10 +97,11 @@ public class FilesystemWriteCsvFfOnT {
 
                 jobCompletion.future().onComplete(fakeLambda -> {
                     if (fakeLambda.succeeded()) {
-                        final String srcDir = System.getProperty(Config.FILESYSTEM_CSV_MOUNT);
+                        final Path srcDir = Path.of(System.getProperty(Config.FILESYSTEM_CSV_MOUNT));
+                        final String srcDirName = srcDir.getFileName().toString();
                         final File tmpDestDir = new File(TestConstants.TMP_DEST_DIR);
 
-                        final Path expectedFilePath = Path.of(tmpDestDir.getPath(), srcDir, TEST_CSV.getName());
+                        final Path expectedFilePath = Path.of(tmpDestDir.getPath(), srcDirName, TEST_CSV.getName());
                         final File expectedFile = new File(expectedFilePath.toString());
 
                         // Confirm we can create our temporary test directory (or that it already exists)
@@ -108,7 +109,8 @@ public class FilesystemWriteCsvFfOnT {
 
                         // Confirm we can copy the test container's files to the temporary test directory
                         aContext.assertTrue(
-                                DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir, tmpDestDir.toString()));
+                                DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir.toString(),
+                                        tmpDestDir.toString()));
 
                         // Confirm the file we expect to exist actually does
                         aContext.assertTrue(expectedFile.exists());
