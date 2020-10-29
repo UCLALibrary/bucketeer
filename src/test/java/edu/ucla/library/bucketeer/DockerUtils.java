@@ -50,6 +50,7 @@ public final class DockerUtils {
                 final BufferedInputStream inStream = new BufferedInputStream(process.getInputStream());
 
                 LOGGER.error(new String(inStream.readAllBytes(), StandardCharsets.UTF_8));
+                inStream.close();
                 return false;
             }
 
