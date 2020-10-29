@@ -125,8 +125,8 @@ public class JobTest extends AbstractBucketeerTest {
     public final void testFindHeader() throws IOException, ProcessingException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
 
-        assertNotEquals(job.findHeader(job.getMetadataHeader(), Metadata.ITEM_ID), -1);
-        assertEquals(job.findHeader(job.getMetadataHeader(), "???"), -1);
+        assertNotEquals(job.findHeader(Metadata.ITEM_ID), -1);
+        assertEquals(job.findHeader("???"), -1);
     }
 
     /**
@@ -136,7 +136,7 @@ public class JobTest extends AbstractBucketeerTest {
     public final void testUpdateMetadata() throws IOException, ProcessingException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final String[] originalHeader = job.getMetadataHeader();
-        final int bucketeerStateIndex = job.findHeader(originalHeader, Metadata.BUCKETEER_STATE);
+        final int bucketeerStateIndex = job.findHeader(Metadata.BUCKETEER_STATE);
 
         final String[] newHeader;
         final List<String[]> newMetadata;
@@ -154,7 +154,7 @@ public class JobTest extends AbstractBucketeerTest {
         for (final String[] row : newMetadata) {
             final WorkflowState expectedWorkflowState;
 
-            if (row[job.findHeader(newHeader, Metadata.FILE_NAME)].equals(TEST_FAIL_FILE.getPath())) {
+            if (row[job.findHeader(Metadata.FILE_NAME)].equals(TEST_FAIL_FILE.getPath())) {
                 expectedWorkflowState = WorkflowState.FAILED;
             } else {
                 expectedWorkflowState = WorkflowState.EMPTY;

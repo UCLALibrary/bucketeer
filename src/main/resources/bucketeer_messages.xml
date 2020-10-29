@@ -162,8 +162,8 @@
   <entry key="BUCKETEER-150">Job '{}' for '{}' pulled from queue [items: {}]</entry>
   <entry key="BUCKETEER-151">Added item ({} [{}]) to JSON response</entry>
   <entry key="BUCKETEER-152">Viewing Hint header index: {}</entry>
-  <entry key="BUCKETEER-153">Bucketeer State index position found: {}</entry>
-  <entry key="BUCKETEER-154">IIIF Access URL index position found: {}</entry>
+  <entry key="BUCKETEER-153">{} index position found: {}</entry>
+  <entry key="BUCKETEER-154"></entry>
   <entry key="BUCKETEER-155">Adding {} new header columns</entry>
   <entry key="BUCKETEER-156">Error triggering S3 upload retry: {}</entry>
   <entry key="BUCKETEER-157">Failed to upload CSV file [{}] to Fester: {} [{}]</entry>
