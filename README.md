@@ -146,9 +146,9 @@ If you want to test the large image feature, where large images can be sent from
 
 This should enable the feature. To confirm the feature has been configured correctly, once Bucketeer is started in the live test mode, visit the Bucketeer status page at: `http://localhost:8888/status`. In the JSON that's returned from the page, you should see that features are enabled and that the `bucketeer.large.images` feature, in particular, is enabled.
 
-## Enable Writing CSVs to a Mounted Filesystem
+## Enabling Writing Output CSVs to a Local Filesystem
 
-Set the `bucketeer.fs.write.csv` key in your feature flags configuration, e.g.:
+If you want the output CSVs to be written to a directory on a local filesystem, specify the directory with `bucketeer.fs.csv.mount` and set the `bucketeer.fs.write.csv` key in your feature flags configuration, e.g.:
 
     moirai {
       bucketeer.fs.write.csv {
@@ -156,7 +156,9 @@ Set the `bucketeer.fs.write.csv` key in your feature flags configuration, e.g.:
       }
     }
 
-Then, map a filesystem directory to the container's `bucketeer.fs.csv.mount`.
+Make sure the directory is writable by the application.
+
+_Note: if you're running Bucketeer in a container, this value should be the path to the destination directory from the container's perspective._
 
 ## Tweaking the Batch Upload
 
