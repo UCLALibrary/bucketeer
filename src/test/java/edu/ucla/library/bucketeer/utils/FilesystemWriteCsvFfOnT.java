@@ -145,9 +145,10 @@ public class FilesystemWriteCsvFfOnT {
                 aWebClient.get(aPort, aHost, "/batch/jobs/live-test-docker").send(get -> {
                     if (get.succeeded()) {
                         // Gets a list of the image IDs of the current jobs
-                        final List<String> imageIds = get.result().bodyAsJsonObject().getJsonArray("jobs").stream()
-                                .map(JsonObject.class::cast).filter(job -> job.getString("status").equals(""))
-                                .map(job -> job.getString("image-id")).collect(Collectors.toList());
+                        final List<String> imageIds = get.result().bodyAsJsonObject().getJsonArray(Constants.JOBS)
+                                .stream().map(JsonObject.class::cast)
+                                .filter(job -> job.getString(Constants.STATUS).equals(Constants.EMPTY))
+                                .map(job -> job.getString(Constants.IMAGE_ID)).collect(Collectors.toList());
 
                         getImageIds.complete(imageIds);
                     } else {
