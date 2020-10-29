@@ -2,17 +2,12 @@
 package edu.ucla.library.bucketeer.verticles;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.naming.ConfigurationException;
-
-import com.opencsv.CSVWriter;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -21,14 +16,11 @@ import info.freelibrary.util.StringUtils;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Features;
-import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.JobNotFoundException;
 import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.ProcessingException;
-import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
 
 import io.vertx.core.AsyncResult;
@@ -87,7 +79,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
                     try {
                         // Update the job's metadata and serialize it to CSV format
-                        csvData = jobToCsv(updateMetadata(job));
+                        csvData = job.updateMetadata().toCSV();
 
                         Future.<Boolean>future(writeAttempt -> {
                             // Determine if we should try to write the CSV to the local filesystem
@@ -311,134 +303,5 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         }
 
         sendMessage(message, SlackMessageVerticle.class.getName());
-    }
-
-    /**
-     * Update the job's metadata before it's turned back into CSV and output to Slack.
-     *
-     * @param aJob A job whose metadata we want to update
-     * @return The job with the updated metadata
-     */
-    private Job updateMetadata(final Job aJob) throws ProcessingException {
-        final List<String[]> metadata = aJob.getMetadata();
-        final List<Item> items = aJob.getItems();
-
-        String[] metadataHeader = aJob.getMetadataHeader();
-        int bucketeerStateIndex = -1;
-        int accessUrlIndex = -1;
-
-        // Find the index position of our two columns: Bucketeer State and Access URL
-        for (int headerIndex = 0; headerIndex < metadataHeader.length; headerIndex++) {
-            if (Metadata.IIIF_ACCESS_URL.equals(metadataHeader[headerIndex])) {
-                LOGGER.debug(MessageCodes.BUCKETEER_154, headerIndex);
-                accessUrlIndex = headerIndex;
-            } else if (Metadata.BUCKETEER_STATE.equals(metadataHeader[headerIndex])) {
-                LOGGER.debug(MessageCodes.BUCKETEER_153, headerIndex);
-                bucketeerStateIndex = headerIndex;
-            }
-        }
-
-        // If both headers are missing, we need to expand our headers array by two
-        if (bucketeerStateIndex == -1 && accessUrlIndex == -1) {
-            final String[] newHeader = new String[metadataHeader.length + 2];
-
-            LOGGER.debug(MessageCodes.BUCKETEER_155, 2);
-
-            System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
-            newHeader[metadataHeader.length] = Metadata.BUCKETEER_STATE;
-            newHeader[metadataHeader.length + 1] = Metadata.IIIF_ACCESS_URL;
-            bucketeerStateIndex = metadataHeader.length;
-            accessUrlIndex = metadataHeader.length + 1;
-            metadataHeader = newHeader;
-            aJob.setMetadataHeader(metadataHeader);
-        } else if (bucketeerStateIndex == -1 || accessUrlIndex == -1) {
-            // If only one header is missing, we need to expand our headers array by one
-            final String[] newHeader = new String[metadataHeader.length + 1];
-            final int index = findHeader(metadataHeader, Metadata.BUCKETEER_STATE);
-
-            LOGGER.debug(MessageCodes.BUCKETEER_155, 1);
-
-            System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
-
-            // If Bucketeer State was found, add the other one; else, add Bucketeer State
-            if (index != -1) {
-                newHeader[newHeader.length - 1] = Metadata.IIIF_ACCESS_URL;
-                accessUrlIndex = newHeader.length - 1;
-            } else {
-                newHeader[newHeader.length - 1] = Metadata.BUCKETEER_STATE;
-                bucketeerStateIndex = newHeader.length - 1;
-            }
-
-            metadataHeader = newHeader;
-            aJob.setMetadataHeader(metadataHeader);
-        }
-
-        // Then let's loop through the metadata and add or update columns as needed
-        for (int index = 0; index < metadata.size(); index++) {
-            final Item item = items.get(index);
-
-            String[] row = metadata.get(index);
-
-            // If the number of columns has changed, increase our metadata row array size
-            if (row.length != metadataHeader.length) {
-                final String[] newRow = new String[(metadataHeader.length - row.length) + row.length];
-
-                System.arraycopy(row, 0, newRow, 0, row.length);
-                row = newRow;
-            }
-
-            // We mark structural rows with empty statuses before outputting the CSV data
-            if (WorkflowState.STRUCTURAL.equals(item.getWorkflowState())) {
-                row[bucketeerStateIndex] = WorkflowState.EMPTY.toString();
-            } else {
-                row[bucketeerStateIndex] = item.getWorkflowState().toString();
-            }
-
-            row[accessUrlIndex] = item.getAccessURL();
-            metadata.set(index, row);
-        }
-
-        return aJob;
-    }
-
-    /**
-     * Finds the index of the header in the header row.
-     *
-     * @param aHeadersArray The header row
-     * @param aHeader The header to find
-     * @return The index of the header if it exists, otherwise -1
-     */
-    private int findHeader(final String[] aHeadersArray, final String aHeader) {
-        Objects.requireNonNull(aHeadersArray);
-        Objects.requireNonNull(aHeader);
-
-        for (int index = 0; index < aHeadersArray.length; index++) {
-            if (aHeader.equals(aHeadersArray[index])) {
-                return index;
-            }
-        }
-
-        return -1;
-    }
-
-    /**
-     * Converts a Job to a CSV string.
-     *
-     * @param aJob The job that has the metadata to convert
-     * @return A string in CSV format
-     * @throws IOException
-     */
-    private String jobToCsv(final Job aJob) throws IOException {
-        final String[] metadataHeader = aJob.getMetadataHeader();
-        final List<String[]> metadata = aJob.getMetadata();
-        final StringWriter stringWriter = new StringWriter();
-        final CSVWriter csvWriter = new CSVWriter(stringWriter);
-
-        // Let's be explicit and put all values in quotes
-        csvWriter.writeNext(metadataHeader, true);
-        csvWriter.writeAll(metadata, true);
-        csvWriter.close();
-
-        return stringWriter.toString();
     }
 }

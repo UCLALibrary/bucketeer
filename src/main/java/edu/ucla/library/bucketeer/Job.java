@@ -1,15 +1,21 @@
 
 package edu.ucla.library.bucketeer;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.opencsv.CSVWriter;
 
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -17,6 +23,8 @@ import io.vertx.core.json.JsonObject;
  */
 @JsonPropertyOrder({ "jobName", "slackHandle", "isSubsequentRun", "items", "metadataHeader", "metadata" })
 public class Job implements Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Job.class, Constants.MESSAGES);
 
     /**
      * The <code>serialVersionUID</code> for Job.
@@ -190,6 +198,132 @@ public class Job implements Serializable {
      */
     public String getSlackHandle() {
         return mySlackHandle;
+    }
+
+    /**
+     * Update the job's metadata with Bucketeer State and IIIF Access URL.
+     *
+     * @return The job
+     */
+    public Job updateMetadata() throws ProcessingException {
+        final List<String[]> metadata = getMetadata();
+        final List<Item> items = getItems();
+
+        String[] metadataHeader = getMetadataHeader();
+        int bucketeerStateIndex = -1;
+        int accessUrlIndex = -1;
+
+        // Find the index position of our two columns: Bucketeer State and Access URL
+        for (int headerIndex = 0; headerIndex < metadataHeader.length; headerIndex++) {
+            if (Metadata.IIIF_ACCESS_URL.equals(metadataHeader[headerIndex])) {
+                LOGGER.debug(MessageCodes.BUCKETEER_154, headerIndex);
+                accessUrlIndex = headerIndex;
+            } else if (Metadata.BUCKETEER_STATE.equals(metadataHeader[headerIndex])) {
+                LOGGER.debug(MessageCodes.BUCKETEER_153, headerIndex);
+                bucketeerStateIndex = headerIndex;
+            }
+        }
+
+        // If both headers are missing, we need to expand our headers array by two
+        if (bucketeerStateIndex == -1 && accessUrlIndex == -1) {
+            final String[] newHeader = new String[metadataHeader.length + 2];
+
+            LOGGER.debug(MessageCodes.BUCKETEER_155, 2);
+
+            System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
+            newHeader[metadataHeader.length] = Metadata.BUCKETEER_STATE;
+            newHeader[metadataHeader.length + 1] = Metadata.IIIF_ACCESS_URL;
+            bucketeerStateIndex = metadataHeader.length;
+            accessUrlIndex = metadataHeader.length + 1;
+            metadataHeader = newHeader;
+            setMetadataHeader(metadataHeader);
+        } else if (bucketeerStateIndex == -1 || accessUrlIndex == -1) {
+            // If only one header is missing, we need to expand our headers array by one
+            final String[] newHeader = new String[metadataHeader.length + 1];
+            final int index = findHeader(metadataHeader, Metadata.BUCKETEER_STATE);
+
+            LOGGER.debug(MessageCodes.BUCKETEER_155, 1);
+
+            System.arraycopy(metadataHeader, 0, newHeader, 0, metadataHeader.length);
+
+            // If Bucketeer State was found, add the other one; else, add Bucketeer State
+            if (index != -1) {
+                newHeader[newHeader.length - 1] = Metadata.IIIF_ACCESS_URL;
+                accessUrlIndex = newHeader.length - 1;
+            } else {
+                newHeader[newHeader.length - 1] = Metadata.BUCKETEER_STATE;
+                bucketeerStateIndex = newHeader.length - 1;
+            }
+
+            metadataHeader = newHeader;
+            setMetadataHeader(metadataHeader);
+        }
+
+        // Then let's loop through the metadata and add or update columns as needed
+        for (int index = 0; index < metadata.size(); index++) {
+            final Item item = items.get(index);
+
+            String[] row = metadata.get(index);
+
+            // If the number of columns has changed, increase our metadata row array size
+            if (row.length != metadataHeader.length) {
+                final String[] newRow = new String[(metadataHeader.length - row.length) + row.length];
+
+                System.arraycopy(row, 0, newRow, 0, row.length);
+                row = newRow;
+            }
+
+            // We mark structural rows with empty statuses before outputting the CSV data
+            if (WorkflowState.STRUCTURAL.equals(item.getWorkflowState())) {
+                row[bucketeerStateIndex] = WorkflowState.EMPTY.toString();
+            } else {
+                row[bucketeerStateIndex] = item.getWorkflowState().toString();
+            }
+
+            row[accessUrlIndex] = item.getAccessURL();
+            metadata.set(index, row);
+        }
+
+        return this;
+    }
+
+    /**
+     * Finds the index of the header in the header row.
+     *
+     * @param aHeadersArray The header row
+     * @param aHeader The header to find
+     * @return The index of the header if it exists, otherwise -1
+     */
+    private int findHeader(final String[] aHeadersArray, final String aHeader) {
+        Objects.requireNonNull(aHeadersArray);
+        Objects.requireNonNull(aHeader);
+
+        for (int index = 0; index < aHeadersArray.length; index++) {
+            if (aHeader.equals(aHeadersArray[index])) {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Converts a Job to a CSV string.
+     *
+     * @return A string in CSV format
+     * @throws IOException
+     */
+    @JsonIgnore
+    public String toCSV() throws IOException {
+        final StringWriter stringWriter = new StringWriter();
+        final CSVWriter csvWriter = new CSVWriter(stringWriter);
+
+        // Let's be explicit and put all values in quotes
+        csvWriter.writeNext(getMetadataHeader(), true);
+        csvWriter.writeAll(getMetadata(), true);
+        csvWriter.close();
+
+        return stringWriter.toString();
     }
 
     /**
