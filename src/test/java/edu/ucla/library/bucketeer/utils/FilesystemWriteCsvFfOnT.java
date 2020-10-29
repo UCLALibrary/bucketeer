@@ -142,16 +142,16 @@ public class FilesystemWriteCsvFfOnT {
             s3BucketVerticleSwap.complete();
         }).compose(success -> {
             return Future.<List<String>>future(getImageIds -> {
-                aWebClient.get(aPort, aHost, "/batch/jobs/live-test-docker").send(ar -> {
-                    if (ar.succeeded()) {
+                aWebClient.get(aPort, aHost, "/batch/jobs/live-test-docker").send(get -> {
+                    if (get.succeeded()) {
                         // Gets a list of the image IDs of the current jobs
-                        final List<String> imageIds = ar.result().bodyAsJsonObject().getJsonArray("jobs").stream()
+                        final List<String> imageIds = get.result().bodyAsJsonObject().getJsonArray("jobs").stream()
                                 .map(JsonObject.class::cast).filter(job -> job.getString("status").equals(""))
                                 .map(job -> job.getString("image-id")).collect(Collectors.toList());
 
                         getImageIds.complete(imageIds);
                     } else {
-                        getImageIds.fail(ar.cause());
+                        getImageIds.fail(get.cause());
                     }
                 });
             });
@@ -162,11 +162,11 @@ public class FilesystemWriteCsvFfOnT {
                     final String urlPath = "/batch/jobs/live-test-docker/" + urlEncodedImageId + "/true";
 
                     // Tell our Bucketeer instance to treat the job as completed
-                    aWebClient.patch(aPort, aHost, urlPath).send(ar -> {
-                        if (ar.succeeded()) {
+                    aWebClient.patch(aPort, aHost, urlPath).send(patch -> {
+                        if (patch.succeeded()) {
                             finishJob.complete();
                         } else {
-                            finishJob.fail(ar.cause());
+                            finishJob.fail(patch.cause());
                         }
                     });
                 });
