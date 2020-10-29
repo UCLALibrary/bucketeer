@@ -181,8 +181,8 @@
     <bucketeer.fs.image.mount>.</bucketeer.fs.image.mount>
     <bucketeer.fs.image.prefix>GenericFilePathPrefix</bucketeer.fs.image.prefix>
 
-    <!-- The location of the directory, from the container's perspective, that processed CSVs should be written to -->
-    <bucketeer.fs.csv.mount>/csv/</bucketeer.fs.csv.mount>
+    <!-- The location of the directory that processed CSVs should be written to -->
+    <bucketeer.fs.csv.mount>./csv/</bucketeer.fs.csv.mount>
 
     <!-- The Docker registry user and password used for publishing images -->
     <docker.registry.username />
@@ -707,7 +707,6 @@
                 <volumes>
                   <bind>
                     <volume>${image.root}:/images/</volume>
-                    <volume>bucketeer-test-write-csv:/csv/</volume>
                   </bind>
                 </volumes>
                 <env>
@@ -723,7 +722,7 @@
                   <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
                   <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
                   <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
-                  <BUCKETEER_FS_CSV_MOUNT>/csv/</BUCKETEER_FS_CSV_MOUNT>
+                  <BUCKETEER_FS_CSV_MOUNT>${bucketeer.fs.csv.mount}</BUCKETEER_FS_CSV_MOUNT>
                   <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-on.conf</FEATURE_FLAGS>
                   <HEAP_SIZE>300m</HEAP_SIZE>
                 </env>
@@ -749,27 +748,6 @@
             </goals>
           </execution>
 
-          <!-- Creates a mock volume for storing processed CSVs -->
-          <execution>
-            <id>docker-volume-create</id>
-            <phase>pre-integration-test</phase>
-            <goals>
-              <goal>volume-create</goal>
-            </goals>
-            <configuration>
-              <volumes>
-                <volume>
-                  <name>bucketeer-test-write-csv</name>
-                  <opts>
-                    <type>tmpfs</type>
-                    <device>tmpfs</device>
-                    <o>size=1m</o>
-                  </opts>
-                </volume>
-              </volumes>
-            </configuration>
-          </execution>
-
           <!-- Starts the Docker container for integration testing -->
           <execution>
             <id>docker-start</id>
@@ -792,22 +770,6 @@
             <configuration>
               <allContainers>true</allContainers>
               <stopNamePattern>bucket*</stopNamePattern>
-            </configuration>
-          </execution>
-
-          <!-- Removes the mock volume for storing processed CSVs -->
-          <execution>
-            <id>docker-volume-remove</id>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>volume-remove</goal>
-            </goals>
-            <configuration>
-              <volumes>
-                 <volume>
-                   <name>bucketeer-test-write-csv</name>
-                 </volume>
-              </volumes>
             </configuration>
           </execution>
         </executions>
@@ -888,7 +850,7 @@
               <skipTests>${skipFfTs}</skipTests>
               <systemPropertyVariables>
                 <http.port>${ff.on.http.port}</http.port>
-                <bucketeer.fs.csv.mount>${bucketeer.fs.csv.mount}</bucketeer.fs.csv.mount>
+                <bucketeer.fs.csv.mount>/usr/local/bucketeer/csv</bucketeer.fs.csv.mount>
               </systemPropertyVariables>
             </configuration>
           </execution>
