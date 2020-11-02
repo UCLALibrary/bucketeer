@@ -79,7 +79,7 @@ You can always see which containers are running by using Docker's `docker ps` co
 
 ## Mocking AWS Lambda's Response
 
-When you run the Bucketeer container on a local machine, there is no AWS Lambda function connected to your local desktop (or laptop). While we hope in the future to orchestrate a fully functional testing environment, where the developer can mock AWS Lambda for testing through the use of [TestContainers](https://www.testcontainers.org/), in the meantime, there is a Bash script that can be run to "mock" the interaction with AWS Lambda. This is only relevant when one is testing batch jobs against Bucketeer. Individual image conversion jobs do not use AWS Lambda and so don't require any mocking of that interaction.
+When you run the Bucketeer container on a local machine, there is no connected AWS Lambda function. While we hope in the future to orchestrate a fully functional testing environment, where the developer can mock AWS Lambda for testing through the use of [TestContainers](https://www.testcontainers.org/), in the meantime, there is a Bash script that can be run to "mock" the interaction with AWS Lambda. This is only relevant when one is testing batch jobs against Bucketeer. Individual image conversion jobs do not use AWS Lambda and so don't require any mocking of that interaction.
 
 To use this testing script, first submit a batch job to your local Bucketeer instance. This will initiate the job and put Bucketeer in a state of waiting for feedback from AWS Lambda. In this project's `src/test/scripts` directory, there is a Bash script called `fake-lambda.sh`. That can be run with `src/test/scripts/fake-lambda.sh [my-job-name]` where `my-job-name` is the name of the CSV file you've uploaded, minus the ".csv" extension.
 
