@@ -62,6 +62,9 @@ public class Item implements Serializable {
     @JsonIgnore
     public Item(final String aID, final String aFilePath) {
         myFilePath = Optional.ofNullable(aFilePath);
+        if (myFilePath == null || myFilePath.isEmpty()) {
+            hasImageFile = false;
+        }
         myID = aID;
     }
 
@@ -161,7 +164,9 @@ public class Item implements Serializable {
         final String filePath;
         final File file;
 
-        if (!hasFile() || myFilePath.isEmpty()) {
+        if (myFilePath == null) {
+            return Optional.empty();
+        } else if (!hasFile() || myFilePath.isEmpty()) {
             return Optional.empty();
         } else {
             if (myFilePathPrefix != null) {
