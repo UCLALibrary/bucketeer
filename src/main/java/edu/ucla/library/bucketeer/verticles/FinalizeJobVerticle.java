@@ -150,7 +150,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                                                 job.getName());
                                     } else {
                                         jobResultMsg = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackHandle.get(),
-                                                job.size(), myIiifURL);
+                                                job.size(), job.failedItems(), job.missingItems(), myIiifURL);
                                     }
                                     slackMessage = StringUtils.format("{} {}", jobResultMsg, csvWriteStatusMsg);
 

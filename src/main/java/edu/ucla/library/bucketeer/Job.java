@@ -71,6 +71,26 @@ public class Job implements Serializable {
     }
 
     /**
+     * Gets the failed items count of the job.
+     *
+     * @return The failed items count
+     */
+    @JsonIgnore
+    public long failedItems() {
+        return myItems.stream().filter(item->item.getWorkflowState().equals(WorkflowState.FAILED)).count();
+    }
+
+    /**
+     * Gets the missing items count of the job.
+     *
+     * @return The missing items count
+     */
+    @JsonIgnore
+    public long missingItems() {
+        return myItems.stream().filter(item->item.getWorkflowState().equals(WorkflowState.MISSING)).count();
+    }
+
+    /**
      * Gets the number of items yet to be processed.
      *
      * @return The number of items yet to be processed
