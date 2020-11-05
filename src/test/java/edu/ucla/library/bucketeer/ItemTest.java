@@ -107,6 +107,17 @@ public class ItemTest extends AbstractBucketeerTest {
     }
 
     /**
+     * Tests setting an empty file path via default constructor.
+     *
+     */
+    @Test
+    public final void testSetEmptyFilePathDefaultConstructor() {
+        final Item item = new Item();
+
+        assertEquals(Optional.empty(), item.getFilePath());
+    }
+
+    /**
      * Tests getting the item ID.
      */
     @Test
