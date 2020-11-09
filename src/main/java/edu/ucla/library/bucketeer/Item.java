@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -212,8 +213,8 @@ public class Item implements Serializable {
      * @return The item
      */
     public Item setFilePath(final Optional<String> aFilePath) {
+        myFilePath = Objects.requireNonNull(aFilePath);
         myPrefixedFilePath = null;
-        myFilePath = aFilePath;
 
         return this;
     }
