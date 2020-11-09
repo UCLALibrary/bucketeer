@@ -52,6 +52,7 @@ public class Item implements Serializable {
      */
     public Item() {
         // Used in deserialization and testing
+        myFilePath = Optional.empty();
     }
 
     /**
@@ -63,6 +64,9 @@ public class Item implements Serializable {
     @JsonIgnore
     public Item(final String aID, final String aFilePath) {
         myFilePath = Optional.ofNullable(aFilePath);
+        if (myFilePath.isEmpty()) {
+            hasImageFile = false;
+        }
         myID = aID;
     }
 
