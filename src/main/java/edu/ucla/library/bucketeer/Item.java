@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -165,7 +166,7 @@ public class Item implements Serializable {
         final String filePath;
         final File file;
 
-        if (myFilePath == null || !hasFile() || myFilePath.isEmpty()) {
+        if (!hasFile() || myFilePath.isEmpty()) {
             return Optional.empty();
         } else {
             if (myFilePathPrefix != null) {
@@ -216,8 +217,8 @@ public class Item implements Serializable {
      * @return The item
      */
     public Item setFilePath(final Optional<String> aFilePath) {
+        myFilePath = Objects.requireNonNull(aFilePath);
         myPrefixedFilePath = null;
-        myFilePath = aFilePath;
 
         return this;
     }
