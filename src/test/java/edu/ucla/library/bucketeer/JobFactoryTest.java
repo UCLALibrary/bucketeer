@@ -22,6 +22,8 @@ public class JobFactoryTest {
 
     private static final File CSV_FILE = new File("src/test/resources/csv/live-test.csv");
 
+    private static final File MISSING_FAILED_FILE = new File("src/test/resources/csv/missing-failed.csv");
+
     private static final File BAD_HEADERS = new File("src/test/resources/csv/dupe-headers.csv");
 
     private static final File JSON_FILE = new File("src/test/resources/json/job.json");
@@ -71,6 +73,18 @@ public class JobFactoryTest {
         myThrown.expect(ProcessingException.class);
         myThrown.expectMessage("has one or more duplicate column headers");
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
+    }
+
+    /**
+     * Test JobFactory records failed/missing images.
+     */
+    @Test
+    public final void testFailedMissingCount() throws ProcessingException, IOException {
+        final long expectedFailed = 2;
+        final long expectedMissing = 1;
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, MISSING_FAILED_FILE);
+        assertEquals(expectedFailed, job.failedItems());
+        assertEquals(expectedMissing, job.missingItems());
     }
 
 }
