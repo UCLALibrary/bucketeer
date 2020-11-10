@@ -171,7 +171,14 @@ public final class JobFactory {
                                 error.addMessage(MessageCodes.BUCKETEER_123);
                                 break;
                             } else if (fileNameIndex == columnIndex) {
-                                item.setFilePath(Optional.ofNullable(StringUtils.trimToNull(columns[columnIndex])));
+                                if (columns[columnIndex].trim().contains(" ")) {
+                                    final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_521,
+                                                                aCsvFile.getName(), aName);
+                                    LOGGER.error(errorMessage);
+                                    throw new ProcessingException(errorMessage);
+                                } else {
+                                    item.setFilePath(Optional.ofNullable(StringUtils.trimToNull(columns[columnIndex])));
+                                }
                             } else if (viewingHintIndex == columnIndex) {
                                 final String viewingHint = columns[columnIndex];
 

@@ -33,6 +33,8 @@ public class JobFactoryTest {
 
     private static final File BAD_HEADERS = new File("src/test/resources/csv/dupe-headers.csv");
 
+    private static final File FILE_WITH_SPACES = new File("src/test/resources/csv/spaces-file.csv");
+
     private static final File JSON_FILE = new File("src/test/resources/json/job.json");
 
     private static final File TEST_TIFF_FILE = new File("src/test/resources/images/test.tif");
@@ -80,6 +82,16 @@ public class JobFactoryTest {
         myThrown.expect(ProcessingException.class);
         myThrown.expectMessage("has one or more duplicate column headers");
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
+    }
+
+    /**
+     * Test JobFactory rejects files with spaces in "File Name" entries.
+     */
+    @Test
+    public final void testSpacesThrowsException() throws ProcessingException, IOException {
+        myThrown.expect(ProcessingException.class);
+        myThrown.expectMessage("There are spaces (\" \")");
+        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, FILE_WITH_SPACES);
     }
 
     /**
