@@ -4,13 +4,16 @@ name: Maven Release
 on:
   release:
     types: [ published ]
+    strategy:
+      matrix:
+        java: [ 11 ]
+        build_property: [ "kakadu.version", "ignored.version" ]
 
 jobs:
   publish:
     name: Maven Artifact Publisher (JDK 11)
     runs-on: ubuntu-latest
     env:
-      AUTORELEASE_ARTIFACT: ${{ secrets.AUTORELEASE_ARTIFACT }}
       SKIP_JAR_DEPLOYMENT: ${{ secrets.SKIP_JAR_DEPLOYMENT }}
       MAVEN_CACHE_KEY: ${{ secrets.MAVEN_CACHE_KEY }}
     steps:
@@ -31,11 +34,8 @@ jobs:
         if: ${{ env.MAVEN_CACHE_KEY }}
         with:
           path: ~/.m2
-          key: freelibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: freelibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-
-      - name: Set autorelease config
-        if: env.AUTORELEASE_ARTIFACT == null
-        run: echo "AUTORELEASE_ARTIFACT=false" >> $GITHUB_ENV
+          key: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-
       - name: Set Jar deployment config
         if: env.SKIP_JAR_DEPLOYMENT == null
         run: echo "SKIP_JAR_DEPLOYMENT=false" >> $GITHUB_ENV
@@ -47,18 +47,30 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Install Kakadu SSH key
+        uses: webfactory/ssh-agent@ee29fafb6aa450493bac9136b346e51ea60a8b5e # v0.4.1
+        with:
+          ssh-private-key: ${{ secrets.KAKADU_PRIVATE_SSH_KEY }}
       - name: Release with Maven
         uses: samuelmeuli/action-maven-publish@201a45a3f311b2ee888f252ba9f4194257545709 # v1.4.0
         with:
-          gpg_private_key: ${{ secrets.BUILD_KEY }}
-          gpg_passphrase: ${{ secrets.BUILD_PASSPHRASE }}
           nexus_username: ${{ secrets.SONATYPE_USERNAME }}
           nexus_password: ${{ secrets.SONATYPE_PASSWORD }}
-          maven_profiles: release,${{ secrets.BUILD_PROFILES }}
+          maven_profiles: release
           maven_args: >
-            -Drevision=${{ github.event.release.tag_name }} -DautoReleaseAfterClose=${{ env.AUTORELEASE_ARTIFACT }}
-            -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error ${{ secrets.BUILD_PROPERTIES }}
+            -Drevision=${{ github.event.release.tag_name }}
+            -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error
             -DskipNexusStagingDeployMojo=${{ env.SKIP_JAR_DEPLOYMENT }}
             -Ddocker.registry.username=${{ secrets.DOCKER_USERNAME }}
             -Ddocker.registry.account=${{ secrets.DOCKER_REGISTRY_ACCOUNT}}
             -Ddocker.registry.password=${{ secrets.DOCKER_PASSWORD }}
+            "-D${{ matrix.build_property }}=${{ secrets.KAKADU_VERSION }}"
+            -Dbucketeer.slack.error_channel_id="${{ secrets.SLACK_ERROR_CHANNEL_ID }}"
+            -Dbucketeer.slack.channel_id="${{ secrets.SLACK_CHANNEL_ID }}"
+            -Dbucketeer.slack.oauth_token="${{ secrets.SLACK_OAUTH_TOKEN }}"
+            -Dbucketeer.slack.test_user_handle="${{ secrets.SLACK_TEST_USER_HANDLE }}"
+            -Dbucketeer.s3.access_key="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            -Dbucketeer.s3.secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            -Dbucketeer.s3.region="${{ secrets.BUCKETEER_S3_REGION }}"
+            -Dbucketeer.s3.bucket="${{ secrets.BUCKETEER_S3_BUCKET }}"
+            -Dbucketeer.iiif.url="${{ secrets.BUCKETEER_IIIF_URL }}"
