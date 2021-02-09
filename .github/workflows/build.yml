@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CACHE_KEY: ${{ secrets.MAVEN_CACHE_KEY }}
+      KAKADU_VERSION: ${{ secrets.KAKADU_VERSION }}
     strategy:
       matrix:
         java: [ 11 ]
-        kakadu_version: [ "", "${{ secrets.KAKADU_VERSION }}" ]
+        kakadu_version: [ "", "${{ env.KAKADU_VERSION }}" ]
 
     steps:
       - name: Check out code
