@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,6 +71,8 @@ public class ImageLoadUsingKakaduIT {
      */
     @Test
     public void testTiffImageLoad(final TestContext aContext) {
+        Assume.assumeNotNull(System.getProperty(TestConstants.BUCKETEER_VERSION));
+
         final String imagePath = URLEncoder.encode(TEST_IMAGE_PATH, StandardCharsets.UTF_8);
         final String path = StringUtils.format(PATH, myImageID, imagePath);
         final WebClient webClient = WebClient.create(myVertx);
@@ -100,6 +103,8 @@ public class ImageLoadUsingKakaduIT {
      */
     @Test
     public void testMissingTiffImageLoad(final TestContext aContext) {
+        Assume.assumeNotNull(System.getProperty(TestConstants.BUCKETEER_VERSION));
+
         final String imagePath = URLEncoder.encode("MISSING_IMAGE", StandardCharsets.UTF_8);
         final String path = StringUtils.format(PATH, myImageID, imagePath);
         final WebClient webClient = WebClient.create(myVertx);

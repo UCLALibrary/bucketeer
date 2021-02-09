@@ -2,6 +2,7 @@
 src/main/docker/kakadu/*
 
 target/
+.flattened-pom.xml
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -13,7 +14,6 @@ buildNumber.properties
 .editorconfig
 .checkstyle
 src/main/tools/eclipse
-src/main/tools/travis
 src/main/generated
 file-uploads/
 src/main/docker/configs/logback.xml
