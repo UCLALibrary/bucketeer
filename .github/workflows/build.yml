@@ -12,11 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CACHE_KEY: ${{ secrets.MAVEN_CACHE_KEY }}
-      KAKADU_VERSION: ${{ secrets.KAKADU_VERSION }}
     strategy:
       matrix:
         java: [ 11 ]
-        kakadu_version: [ "", "${{ env.KAKADU_VERSION }}" ]
+        build_property: [ "kakadu.version", "ignored.version" ]
 
     steps:
       - name: Check out code
@@ -46,7 +45,7 @@ jobs:
           maven_args: >
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error deploy
             -DlogLevel=DEBUG -DtestLogLevel=DEBUG
-            -Dkakadu.version="${{ matrix.kakadu_version }}"
+            "-D${{ matrix.build_property }}=${{ secrets.KAKADU_VERSION }}"
             -Dbucketeer.slack.error_channel_id="${{ SLACK_ERROR_CHANNEL_ID }}"
             -Dbucketeer.slack.channel_id="${{ SLACK_CHANNEL_ID }}"
             -Dbucketeer.slack.oauth_token="${{ SLACK_OAUTH_TOKEN }}"
