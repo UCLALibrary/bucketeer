@@ -46,13 +46,13 @@ jobs:
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error deploy
             -DlogLevel=DEBUG -DtestLogLevel=DEBUG
             "-D${{ matrix.build_property }}=${{ secrets.KAKADU_VERSION }}"
-            -Dbucketeer.slack.error_channel_id="${{ SLACK_ERROR_CHANNEL_ID }}"
-            -Dbucketeer.slack.channel_id="${{ SLACK_CHANNEL_ID }}"
-            -Dbucketeer.slack.oauth_token="${{ SLACK_OAUTH_TOKEN }}"
-            -Dbucketeer.slack.test_user_handle="${{ SLACK_TEST_USER_HANDLE }}"
-            -Dbucketeer.s3.access_key="${{ AWS_ACCESS_KEY_ID }}"
-            -Dbucketeer.s3.secret_key="${{ AWS_SECRET_ACCESS_KEY }}"
-            -Dbucketeer.s3.region="${{ BUCKETEER_S3_REGION }}"
-            -Dbucketeer.s3.bucket="${{ BUCKETEER_S3_BUCKET }}"
-            -Dbucketeer.iiif.url="${{ BUCKETEER_IIIF_URL }}"
+            -Dbucketeer.slack.error_channel_id="${{ secrets.SLACK_ERROR_CHANNEL_ID }}"
+            -Dbucketeer.slack.channel_id="${{ secrets.SLACK_CHANNEL_ID }}"
+            -Dbucketeer.slack.oauth_token="${{ secrets.SLACK_OAUTH_TOKEN }}"
+            -Dbucketeer.slack.test_user_handle="${{ secrets.SLACK_TEST_USER_HANDLE }}"
+            -Dbucketeer.s3.access_key="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            -Dbucketeer.s3.secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            -Dbucketeer.s3.region="${{ secrets.BUCKETEER_S3_REGION }}"
+            -Dbucketeer.s3.bucket="${{ secrets.BUCKETEER_S3_BUCKET }}"
+            -Dbucketeer.iiif.url="${{ secrets.BUCKETEER_IIIF_URL }}"
 
