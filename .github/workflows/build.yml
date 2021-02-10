@@ -48,7 +48,7 @@ jobs:
           maven_profiles: default
           maven_args: >
             -V -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error -DlogLevel=DEBUG -DtestLogLevel=DEBUG
-            "-D${{ matrix.build_property }}=${{ secrets.KAKADU_VERSION }}"
+            -D${{ matrix.build_property }}=${{ secrets.KAKADU_VERSION }}
             -Dbucketeer.slack.error_channel_id="${{ secrets.SLACK_ERROR_CHANNEL_ID }}"
             -Dbucketeer.slack.channel_id="${{ secrets.SLACK_CHANNEL_ID }}"
             -Dbucketeer.slack.oauth_token="${{ secrets.SLACK_OAUTH_TOKEN }}"
@@ -58,4 +58,3 @@ jobs:
             -Dbucketeer.s3.region="${{ secrets.BUCKETEER_S3_REGION }}"
             -Dbucketeer.s3.bucket="${{ secrets.BUCKETEER_S3_BUCKET }}"
             -Dbucketeer.iiif.url="${{ secrets.BUCKETEER_IIIF_URL }}"
-
