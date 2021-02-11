@@ -1,6 +1,6 @@
 
 # The first stage of our multi-stage build builds the kakadu libraries and binaries
-FROM ubuntu:20.04 AS KAKADU_TOOL_CHAIN
+FROM ubuntu:${ubuntu.tag} AS KAKADU_TOOL_CHAIN
 
 ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
 
@@ -10,13 +10,13 @@ COPY kakadu /build/kakadu/
 RUN if [ -n "${kakadu.version}" ]; then \
       apt-get update -qq && \
       DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
-      openjdk-11-jdk-headless${openjdk.version} \
-      gcc${gcc.version} \
-      make${make.version} \
-      build-essential${build.essential.version} \
-      libtiff-tools${libtiff.version} \
-      libtiff5${libtiff.version} \
-      libtiff5-dev${libtiff.version} && \
+      openjdk-11-jdk-headless=${openjdk.version} \
+      gcc=${gcc.version} \
+      make=${make.version} \
+      build-essential=${build.essential.version} \
+      libtiff-tools=${libtiff.version} \
+      libtiff5=${libtiff.version} \
+      libtiff5-dev=${libtiff.version} && \
       cd /build/kakadu/"${kakadu.version}"/make && \
       BUILD_ARCH="Linux-x86-64-gcc" && \
       make -f Makefile-$BUILD_ARCH && \
@@ -30,7 +30,7 @@ RUN if [ -n "${kakadu.version}" ]; then \
     fi
 
 # This is the Docker image we are actually going to use
-FROM ubuntu:20.04
+FROM ubuntu:${ubuntu.tag}
 
 # Sets this for the build, but not persisted in the image
 ARG DEBIAN_FRONTEND=noninteractive
@@ -51,12 +51,12 @@ EXPOSE 8888
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends --reinstall -y locales && \
     apt-get install -qq --no-install-recommends \
-    libtiff-tools${libtiff.version} \
-    libtiff5${libtiff.version} \
-    libopenjp2-tools${libopenjp2.version} \
-    openjdk-11-jre-headless${openjdk.version} \
-    curl${curl.version} \
-    python2${python2.version} \
+    libtiff-tools=${libtiff.version} \
+    libtiff5=${libtiff.version} \
+    libopenjp2-tools=${libopenjp2.version} \
+    openjdk-11-jre-headless=${openjdk.version} \
+    curl=${curl.version} \
+    python2=${python2.version} \
     < /dev/null > /dev/null && \
     rm -rf /var/lib/apt/lists/* && \
     sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \

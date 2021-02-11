@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -149,6 +150,8 @@ public class ImageUploadKakaduIT {
     @Test
     public final void testImageUpload(final TestContext aContext)
             throws UnsupportedEncodingException, SdkClientException, AmazonServiceException {
+        Assume.assumeNotNull(System.getProperty(TestConstants.BUCKETEER_VERSION));
+
         final String filePath = URLEncoder.encode(TEST_FILE_PATH, StandardCharsets.UTF_8);
         final String request = StringUtils.format("/images/{}/{}", myUUID, filePath);
         final WebClient client = WebClient.create(myVertx);
@@ -216,6 +219,8 @@ public class ImageUploadKakaduIT {
      */
     @Test
     public void testLoadImageHandlerFailsWithMissingParam(final TestContext aContext) {
+        Assume.assumeNotNull(System.getProperty(TestConstants.BUCKETEER_VERSION));
+
         final WebClient webClient = WebClient.create(myVertx);
         final Async asyncTask = aContext.async();
 
@@ -231,6 +236,8 @@ public class ImageUploadKakaduIT {
      */
     @Test
     public void confirmLoadImageHandlerFailsWithInvalideFilepath(final TestContext aContext) {
+        Assume.assumeNotNull(System.getProperty(TestConstants.BUCKETEER_VERSION));
+
         final String filePath = "/12345/this-file-does-not-exist.tiff";
         final WebClient webClient = WebClient.create(myVertx);
         final Async asyncTask = aContext.async();

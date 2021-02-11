@@ -19,7 +19,7 @@
   <logger name="io.netty" level="ERROR" additivity="false">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
-  </logger> 
+  </logger>
   <logger name="io.vertx" level="ERROR" additivity="false">
   <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />

@@ -1,4 +1,5 @@
-# Bucketeer  &nbsp;[![Build Status](https://travis-ci.com/UCLALibrary/bucketeer.svg?branch=master)](https://travis-ci.com/UCLALibrary/bucketeer) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
+## Bucketeer
+[![Maven Build](https://github.com/uclalibrary/bucketeer/workflows/Maven%20Build/badge.svg)](https://github.com/UCLALibrary/bucketeer/actions) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
  
 A TIFF to JP2/JPX to S3 bucket microservice. It will turn TIFF images into JPEG 2000 images in two ways:
 
@@ -188,6 +189,14 @@ To support getting TIFFs up to S3 as quickly as possible, there are a number of 
 </dl>
 
 We're still experimenting with different configurations, so we don't have a recommendation for best values, given a particular type of machine, for these properties at this time.
+
+## Working with Pinned OS Packages
+
+We pin the versions of packages that we install into our base image. What this means is that periodically a pinned version will become obsolete and the build will break. We have a nightly build that should catch this issues for us, but in the case that you find the breakage before us, there is a handy way to tell which pinned version has broken the build. To see the current versions inside the base image, run:
+
+    mvn validate -Dversions
+
+This will output a list of current versions, which can be compared to the pinned versions defined in the project's POM file (i.e., pom.xml).
 
 ## Contact
 

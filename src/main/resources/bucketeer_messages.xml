@@ -119,9 +119,9 @@
   <entry key="BUCKETEER-108">Mapping bean field to CSV value: &quot;{}&quot; = &quot;{}&quot;</entry>
   <entry key="BUCKETEER-109">Unable to add bean to CSV value to values map: {}</entry>
   <entry key="BUCKETEER-110">&lt;!channel&gt; Bucketeer batch error --> {}</entry>
-  <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached. A total of {} images were
-	  processed for this job. There were {} failed and {} missing images in the job. 
-	  These images are available for viewing on: {}.</entry>
+  <entry key="BUCKETEER-111">Hi, &lt;@{}&gt;, your Bucketeer job is done! The result is attached.
+      A total of {} images were processed for this job. There were {} failed and {} missing images in the job.
+      These images are available for viewing on: {}.</entry>
   <entry key="BUCKETEER-112">Configuring S3 uploader: {} instance(s) and {} thread(s) per instance</entry>
   <entry key="BUCKETEER-113">Failed to find job keys in shared lambda map</entry>
   <entry key="BUCKETEER-114">Unexpected response code: {} [{}]</entry>

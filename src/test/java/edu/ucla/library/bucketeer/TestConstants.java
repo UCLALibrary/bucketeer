@@ -22,6 +22,11 @@ public final class TestConstants {
     public static final String BUCKETEER_FF_ON = "bucketeer-ff-on";
 
     /**
+     * The name of the Bucketeer version system property.
+     */
+    public static final String BUCKETEER_VERSION = "kakadu.version";
+
+    /**
      * The place in the container where JP2s are written to after conversion.
      */
     public static final String JP2_SRC_DIR = "/tmp/kakadu";
