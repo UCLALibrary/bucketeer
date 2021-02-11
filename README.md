@@ -1,5 +1,5 @@
 ## Bucketeer
-[![Maven Build](https://github.com/uclalibrary/bucketeer/workflows/Maven%20Build/badge.svg)](https://github.com/UCLALibrary/bucketeer/actions) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
+[![Maven Build](https://github.com/uclalibrary/bucketeer/workflows/Maven%20PR%20Build/badge.svg)](https://github.com/UCLALibrary/bucketeer/actions) [![Known Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/uclalibrary/bucketeer.svg)](https://snyk.io/test/github/uclalibrary/bucketeer)
  
 A TIFF to JP2/JPX to S3 bucket microservice. It will turn TIFF images into JPEG 2000 images in two ways:
 
