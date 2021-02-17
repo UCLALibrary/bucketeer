@@ -16,6 +16,7 @@ import com.opencsv.CSVWriter;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -77,7 +78,7 @@ public class Job implements Serializable {
      */
     @JsonIgnore
     public long failedItems() {
-        return myItems.stream().filter(item->item.getWorkflowState().equals(WorkflowState.FAILED)).count();
+        return myItems.stream().filter(item -> item.getWorkflowState().equals(WorkflowState.FAILED)).count();
     }
 
     /**
@@ -87,7 +88,7 @@ public class Job implements Serializable {
      */
     @JsonIgnore
     public long missingItems() {
-        return myItems.stream().filter(item->item.getWorkflowState().equals(WorkflowState.MISSING)).count();
+        return myItems.stream().filter(item -> item.getWorkflowState().equals(WorkflowState.MISSING)).count();
     }
 
     /**
@@ -224,6 +225,7 @@ public class Job implements Serializable {
      * Update the job's metadata with Bucketeer State and IIIF Access URL.
      *
      * @return The job
+     * @throws ProcessingException when there is trouble parsing the metadata
      */
     public Job updateMetadata() throws ProcessingException {
         final List<Item> items = getItems();
