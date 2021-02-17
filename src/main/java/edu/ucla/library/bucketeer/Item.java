@@ -2,7 +2,6 @@
 package edu.ucla.library.bucketeer;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -184,7 +183,6 @@ public class Item implements Serializable {
      * Returns the prefixed file name.
      *
      * @return The absolute file path of the item's source file
-     * @throws IOException If there is trouble resolving the path to the file
      */
     @JsonIgnore
     public Optional<String> getPrefixedFilePath() {

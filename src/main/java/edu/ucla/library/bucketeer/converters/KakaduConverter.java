@@ -92,6 +92,7 @@ public class KakaduConverter extends AbstractConverter implements Converter {
      *
      * @param aFile An image file
      * @return The path of the supplied image file
+     * @throws IOException If the file doesn't exist and can't be written
      */
     public String getPath(final File aFile) throws IOException {
         if (!aFile.exists() && !aFile.getParentFile().canWrite()) {

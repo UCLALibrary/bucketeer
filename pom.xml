@@ -527,13 +527,7 @@
           </dependency>
         </dependencies>
         <configuration>
-          <stylesheetfile>javadocs.css</stylesheetfile>
-          <nonavbar>true</nonavbar>
-          <show>public</show>
-          <nosince>true</nosince>
-          <notimestamp>true</notimestamp>
-          <bottom> </bottom>
-          <detectLinks>false</detectLinks>
+          <doclint>all,-syntax</doclint>
           <additionalJOptions>
             <additionalJOption>-J-Dhttp.agent=maven-javadoc-plugin-${project.name}</additionalJOption>
           </additionalJOptions>
