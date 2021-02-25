@@ -68,7 +68,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
             final HttpClientOptions options = new HttpClientOptions();
 
             // Set the S3 client options
-            options.setDefaultHost(s3Region);
+            options.setSsl(true).setDefaultPort(443).setDefaultHost(s3Region);
 
             myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, options);
 
