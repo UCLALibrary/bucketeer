@@ -71,6 +71,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
             options.setSsl(true).setDefaultPort(443).setDefaultHost(s3Region);
 
             myS3Client = new S3Client(getVertx(), s3AccessKey, s3SecretKey, options);
+            myS3Client.useV2Signature(true);
 
             // Trace is only for developer use; don't turn on when running on a server
             LOGGER.trace(MessageCodes.BUCKETEER_045, s3AccessKey, s3SecretKey);
