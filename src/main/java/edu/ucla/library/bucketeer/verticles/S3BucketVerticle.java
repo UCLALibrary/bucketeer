@@ -37,11 +37,11 @@ import io.vertx.core.shareddata.Counter;
  */
 public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
-    public static final long DEFAULT_S3_MAX_RETRIES = 20;
+    public static final long DEFAULT_S3_MAX_RETRIES = 30;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticle.class, MESSAGES);
 
-    private static final int DEFAULT_S3_MAX_REQUESTS = 10;
+    private static final int DEFAULT_S3_MAX_REQUESTS = 20;
 
     private S3Client myS3Client;
 
