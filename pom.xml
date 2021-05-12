@@ -79,13 +79,13 @@
 
     <!-- OS pinned package versions (Cf. https://ubuntuupdates.org/package_metas for latest versions) -->
     <ubuntu.tag>20.04</ubuntu.tag>
-    <openjdk.version>11.0.10+9-0ubuntu1~20.04</openjdk.version>
+    <openjdk.version>11.0.11+9-0ubuntu2~20.04</openjdk.version>
     <gcc.version>4:9.3.0-1ubuntu2</gcc.version>
     <make.version>4.2.1-1.2</make.version>
     <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.1</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
     <libopenjp2.version>2.3.1-1ubuntu4.20.04.1</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.4</curl.version>
+    <curl.version>7.68.0-1ubuntu2.5</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
@@ -158,6 +158,9 @@
 
     <!-- The maximum number of active S3 upload requests allowed at a time -->
     <s3.max.requests>20</s3.max.requests>
+    
+    <!-- The maximum number of upload attempts will be made for a single item -->
+    <s3.max.retries>30</s3.max.retries>
 
     <!-- The delay in seconds before pending S3 requests are re-queued -->
     <s3.requeue.delay>1</s3.requeue.delay>
