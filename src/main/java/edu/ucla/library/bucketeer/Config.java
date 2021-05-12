@@ -42,6 +42,8 @@ public final class Config {
     // Configuration options for the S3 upload verticle(s)
     public static final String S3_MAX_REQUESTS = "s3.max.requests";
 
+    public static final String S3_MAX_RETRIES = "s3.max.retries";
+
     public static final String S3_REQUEUE_DELAY = "s3.requeue.delay";
 
     public static final String S3_UPLOADER_INSTANCES = "s3.uploader.instances";

@@ -37,13 +37,15 @@ import io.vertx.core.shareddata.Counter;
  */
 public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
+    public static final long DEFAULT_S3_MAX_RETRIES = 30;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticle.class, MESSAGES);
 
-    private static final int DEFAULT_S3_MAX_REQUESTS = 10;
-
-    private static final long MAX_RETRIES = 10;
+    private static final int DEFAULT_S3_MAX_REQUESTS = 20;
 
     private S3Client myS3Client;
+
+    private long myMaxRetries;
 
     @Override
     public void start() throws Exception {
@@ -51,6 +53,9 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
         final JsonObject config = config();
         final int s3MaxRequests = config.getInteger(Config.S3_MAX_REQUESTS, DEFAULT_S3_MAX_REQUESTS);
+
+        // Number of upload attempts before we give up
+        myMaxRetries = config.getLong(Config.S3_MAX_RETRIES, DEFAULT_S3_MAX_RETRIES);
 
         if (LOGGER.isDebugEnabled()) {
             final String threadName = Thread.currentThread().getName();
@@ -183,13 +188,13 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                             } else {
                                 final String errorMessage = statusCode + " - " + response.statusMessage();
 
-                                LOGGER.warn(MessageCodes.BUCKETEER_156, errorMessage);
+                                LOGGER.error(MessageCodes.BUCKETEER_156, errorMessage);
                                 closeFile(asyncFile, filePath, false);
                                 retryUpload(imageID, aMessage);
                             }
                         }
                     }, exception -> {
-                        LOGGER.warn(MessageCodes.BUCKETEER_156, exception.getMessage());
+                        LOGGER.error(MessageCodes.BUCKETEER_156, exception.getMessage());
                         closeFile(asyncFile, filePath, false);
                         retryUpload(imageID, aMessage);
                     });
@@ -217,7 +222,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                 if (retryCheck.result()) {
                     sendReply(aMessage, 0, Op.RETRY);
                 } else {
-                    sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), EMPTY);
+                    sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), String.valueOf(myMaxRetries));
                 }
             } else {
                 final Throwable retryException = retryCheck.cause();
@@ -248,11 +253,11 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
                 counter.addAndGet(1L, get -> {
                     if (get.succeeded()) {
-                        if (get.result() == MAX_RETRIES) {
+                        if (get.result() == myMaxRetries) {
                             promise.complete(Boolean.FALSE);
 
                             // Reset the counter in case we ever need to process this item again
-                            counter.compareAndSet(MAX_RETRIES, 0L, reset -> {
+                            counter.compareAndSet(myMaxRetries, 0L, reset -> {
                                 if (reset.failed()) {
                                     LOGGER.error(MessageCodes.BUCKETEER_133, aImageID);
                                 }
