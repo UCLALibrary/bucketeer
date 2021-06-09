@@ -9,6 +9,11 @@
 #
 # This is only for development purposes and thus assumes you are running at http://localhost:8888
 #
+# This pattern can also be used to clear Bucketeer jobs that are stuck on a real server; for that, type the full URL:
+#   curl -X PATCH "https://bucketeer.library.ucla.edu/batch/jobs/minasian-pages-3/ark%3A%2F21198%2Fzz002gp8t4/true"
+#
+# The quotation marks around the URL are important.
+#
 
 if [ -z "$1" ]; then
   echo "Please include a job name when you run this script:"

@@ -6,7 +6,6 @@ import static edu.ucla.library.bucketeer.Constants.EMPTY;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.Set;
 
 import info.freelibrary.util.Logger;
@@ -21,7 +20,6 @@ import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
-import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -229,24 +227,12 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      */
     private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetails,
             final HttpServerResponse aResponse) {
-        final Optional<String> errorChannel = Optional.ofNullable(myConfig.getString(Config.SLACK_ERROR_CHANNEL_ID));
         final String errorDetails = LOGGER.getMessage(aMessageCode, aDetails);
 
         if (aThrowable != null) {
             LOGGER.error(aThrowable, errorDetails);
         } else {
             LOGGER.error(errorDetails);
-        }
-
-        // Send notice about error to Slack channel too if we have one configured
-        if (errorChannel.isPresent()) {
-            final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, errorDetails);
-            final JsonObject message = new JsonObject();
-
-            message.put(Config.SLACK_CHANNEL_ID, errorChannel.get());
-            message.put(Constants.SLACK_MESSAGE_TEXT, errorMessage);
-
-            myVertx.eventBus().send(SlackMessageVerticle.class.getName(), message);
         }
 
         aResponse.setStatusCode(HTTP.INTERNAL_SERVER_ERROR);

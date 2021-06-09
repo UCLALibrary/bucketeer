@@ -222,7 +222,8 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
                 if (retryCheck.result()) {
                     sendReply(aMessage, 0, Op.RETRY);
                 } else {
-                    sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_140), String.valueOf(myMaxRetries));
+                    final String message = LOGGER.getMessage(MessageCodes.BUCKETEER_140, myMaxRetries, aImageID);
+                    sendReply(aMessage, CodeUtils.getInt(MessageCodes.BUCKETEER_000), message);
                 }
             } else {
                 final Throwable retryException = retryCheck.cause();

@@ -150,7 +150,7 @@
   <entry key="BUCKETEER-137">Failed to remove job from queue: {}</entry>
   <entry key="BUCKETEER-138">Failed to increment S3 upload counter</entry>
   <entry key="BUCKETEER-139">Failed to get S3 upload counter</entry>
-  <entry key="BUCKETEER-140">Stopped retrying S3 upload; maximum number of retries allowed reached: {}</entry>
+  <entry key="BUCKETEER-140">Stopped retrying S3 upload; maximum number of retries allowed reached: {} [{}]</entry>
   <entry key="BUCKETEER-141">Successfully marked item '{}' as failed</entry>
   <entry key="BUCKETEER-142">Refused to delete '{}' job because it's still processing images</entry>
   <entry key="BUCKETEER-143">Test server for {} started...</entry>
@@ -200,4 +200,5 @@
   <entry key="BUCKETEER-519">The CSV '{}' is available on the mounted filesystem.</entry>
   <entry key="BUCKETEER-520">The CSV '{}' could not be written to the mounted filesystem: {}.</entry>
   <entry key="BUCKETEER-521">There are spaces (" ") in one or more "File Name" entries in CSV {} for job {}</entry>
+  <entry key="BUCKETEER-522">Bucketeer was not able to send a message through Slack so the CSV was not delivered</entry>
 </properties>
