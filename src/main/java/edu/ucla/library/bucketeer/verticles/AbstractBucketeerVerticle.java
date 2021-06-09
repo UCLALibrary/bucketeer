@@ -1,8 +1,6 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
-import info.freelibrary.util.Logger;
-
 import java.io.File;
 import java.util.Optional;
 
@@ -12,6 +10,8 @@ import com.nike.moirai.Suppliers;
 import com.nike.moirai.resource.FileResourceLoaders;
 import com.nike.moirai.typesafeconfig.TypesafeConfigDecider;
 import com.nike.moirai.typesafeconfig.TypesafeConfigReader;
+
+import info.freelibrary.util.Logger;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Features;
@@ -68,11 +68,13 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
     /**
      * Sends a message to another verticle with a supplied timeout value.
      *
+     * @param aPromise A promise that the message is sent
      * @param aJsonObject A JSON message
      * @param aVerticleName A verticle name that will respond to the message
      * @param aTimeout A timeout measured in milliseconds
      */
-    protected void sendMessage(final JsonObject aJsonObject, final String aVerticleName, final long aTimeout) {
+    protected void sendMessage(final Promise<Void> aPromise, final JsonObject aJsonObject, final String aVerticleName,
+            final long aTimeout) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
 
         vertx.eventBus().request(aVerticleName, aJsonObject, options, response -> {
@@ -82,21 +84,25 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
                 } else {
                     getLogger().error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 }
+
+                aPromise.fail(response.cause());
             } else if (response.result().body().equals(Op.RETRY)) {
                 getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
-                sendMessage(aJsonObject, aVerticleName, aTimeout);
+                sendMessage(aPromise, aJsonObject, aVerticleName, aTimeout);
+            } else {
+                aPromise.complete();
             }
         });
     }
 
     /**
-     * Send a message to another verticle.
+     * Send a message to another verticle without needing to know whether the message was successfully sent.
      *
      * @param aJsonObject A JSON message
      * @param aVerticleName A verticle name that will respond to the message
      */
     protected void sendMessage(final JsonObject aJsonObject, final String aVerticleName) {
-        sendMessage(aJsonObject, aVerticleName, DeliveryOptions.DEFAULT_TIMEOUT);
+        sendMessage(Promise.promise(), aJsonObject, aVerticleName, DeliveryOptions.DEFAULT_TIMEOUT);
     }
 
     /**
