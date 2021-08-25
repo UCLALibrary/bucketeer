@@ -5,9 +5,11 @@ import io.vertx.ext.unit.Async;
 /**
  * Utilities related to working with test IDs.
  */
-
 public final class TestUtils {
 
+    /**
+    * Creates new TestUtils instance.
+    */
     private TestUtils() {
     }
 

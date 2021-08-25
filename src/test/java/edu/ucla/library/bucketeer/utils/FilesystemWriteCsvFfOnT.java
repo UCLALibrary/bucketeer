@@ -17,7 +17,6 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.DockerUtils;
 import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.TestConstants;
-// import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import info.freelibrary.util.FileUtils;
 import io.vertx.core.CompositeFuture;

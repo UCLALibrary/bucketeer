@@ -8,7 +8,6 @@ import org.junit.runner.RunWith;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Features;
-// import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
