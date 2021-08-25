@@ -21,6 +21,7 @@ import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -158,9 +159,7 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
 
                             myContext.assertEquals(myExpectedObj, response.bodyAsJsonObject());
 
-                            if (!myAsyncTask.isCompleted()) {
-                                myAsyncTask.complete();
-                            }
+                            TestUtils.complete(myAsyncTask);
                         } else {
                             myContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
                         }

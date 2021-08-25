@@ -25,6 +25,8 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 
+import edu.ucla.library.bucketeer.utils.TestUtils;
+
 /**
  * Tests the image load verticle when running with Kakadu support.
  */
@@ -87,9 +89,8 @@ public class ImageLoadUsingKakaduIT {
                 aContext.assertEquals(TEST_IMAGE_PATH, body.getString(FILE_PATH));
                 aContext.assertEquals(myImageID, body.getString(IMAGE_ID));
 
-                if (!asyncTask.isCompleted()) {
-                    asyncTask.complete();
-                }
+                TestUtils.complete(asyncTask);
+
             } else {
                 aContext.fail(submission.cause());
             }
@@ -112,7 +113,7 @@ public class ImageLoadUsingKakaduIT {
 
         webClient.get(myPort, Constants.UNSPECIFIED_HOST, path).expect(ResponsePredicate.SC_NOT_FOUND).send(test -> {
             if (test.succeeded()) {
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(test.cause());
             }

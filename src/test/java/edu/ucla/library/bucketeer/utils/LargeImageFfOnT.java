@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Features;
+// import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -51,7 +52,7 @@ public class LargeImageFfOnT {
                 aContext.assertEquals(true, features.getBoolean(Features.ENABLED, false));
                 aContext.assertEquals(true, features.getBoolean(Features.LARGE_IMAGE_ROUTING, false));
 
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(statusCheck.cause());
             }

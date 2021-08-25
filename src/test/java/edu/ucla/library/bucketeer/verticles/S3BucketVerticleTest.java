@@ -24,6 +24,7 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
@@ -110,11 +111,11 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
 
                     s3Bucket = config.getString(Config.S3_BUCKET);
                     LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
-                    asyncTask.complete();
+                    TestUtils.complete(asyncTask);
                 });
             } else {
                 aContext.fail(getConfig.cause());
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             }
         });
     }
@@ -140,7 +141,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
             // clean up our test files
             myAmazonS3.deleteObject(s3Bucket, myImageKey);
 
-            async.complete();
+            TestUtils.complete(async);
         });
     }
 
@@ -178,7 +179,7 @@ public class S3BucketVerticleTest extends AbstractBucketeerVerticle {
                 aContext.fail();
             }
 
-            asyncTask.complete();
+            TestUtils.complete(asyncTask);
         });
     }
 

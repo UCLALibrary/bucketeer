@@ -22,6 +22,7 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.JobFactory;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.ProcessingException;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.DeploymentOptions;
@@ -88,7 +89,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                         aContext.fail(message);
                     } else {
                         LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
-                        asyncTask.complete();
+                        TestUtils.complete(asyncTask);
                     }
                 });
             } else {
@@ -114,7 +115,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
                 LOGGER.error(message);
                 aContext.fail(message);
             } else {
-                async.complete();
+                TestUtils.complete(async);
             }
         });
     }
@@ -144,7 +145,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
                 aContext.fail(send.cause());
             } else {
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             }
         });
     }
@@ -181,7 +182,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
 
                 aContext.fail();
             } else {
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             }
         });
     }

@@ -12,6 +12,7 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -65,7 +66,7 @@ public class GetJobsHandlerTest extends AbstractBucketeerHandlerTest {
                                     expected.put(Constants.JOBS, new JsonArray().add(JOB_NAME));
 
                                     aContext.assertEquals(expected, found);
-                                    complete(asyncTask);
+                                    TestUtils.complete(asyncTask);
                                 } else {
                                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_114, statusCode, message));
                                 }
