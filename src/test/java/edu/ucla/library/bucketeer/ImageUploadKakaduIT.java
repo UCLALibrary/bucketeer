@@ -34,6 +34,7 @@ import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.converters.KakaduConverter;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
@@ -115,7 +116,7 @@ public class ImageUploadKakaduIT {
                 myS3Bucket = jsonConfig.getString(Config.S3_BUCKET, DEFAULT_S3_BUCKET);
                 myS3Client = builder.build();
 
-                complete(asyncTask);
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(config.cause());
             }
@@ -201,7 +202,7 @@ public class ImageUploadKakaduIT {
                         final long contentLength = metadata.getContentLength();
 
                         aContext.assertTrue(contentLength > 0, LOGGER.getMessage(MessageCodes.BUCKETEER_042, myJP2));
-                        complete(asyncTask);
+                        TestUtils.complete(asyncTask);
                     } else {
                         aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_038, myJP2));
                     }
@@ -225,7 +226,7 @@ public class ImageUploadKakaduIT {
         final Async asyncTask = aContext.async();
 
         webClient.get(PORT, Constants.UNSPECIFIED_HOST, "/12345/").expect(SC_BAD_REQUEST).send(handler -> {
-            complete(asyncTask);
+            TestUtils.complete(asyncTask);
         });
     }
 
@@ -244,7 +245,7 @@ public class ImageUploadKakaduIT {
 
         // Tests loadImage path from our OpenAPI YAML file returns an error response when given incomplete data
         webClient.get(PORT, Constants.UNSPECIFIED_HOST, filePath).expect(SC_BAD_REQUEST).send(handler -> {
-            complete(asyncTask);
+            TestUtils.complete(asyncTask);
         });
     }
 
@@ -261,14 +262,4 @@ public class ImageUploadKakaduIT {
         }
     }
 
-    /**
-     * Completes the supplied Async task.
-     *
-     * @param aAsyncTask A task to be completed
-     */
-    private void complete(final Async aAsyncTask) {
-        if (!aAsyncTask.isCompleted()) {
-            aAsyncTask.complete();
-        }
-    }
 }

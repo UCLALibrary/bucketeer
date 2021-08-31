@@ -51,7 +51,7 @@ public class FilesystemWriteCsvFfOffT {
                 aContext.assertEquals(true, features.getBoolean(Features.ENABLED, false));
                 aContext.assertEquals(false, features.getBoolean(Features.FS_WRITE_CSV, true));
 
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(statusCheck.cause());
             }

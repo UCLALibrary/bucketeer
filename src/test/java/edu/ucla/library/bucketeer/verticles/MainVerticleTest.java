@@ -16,6 +16,7 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -60,7 +61,7 @@ public class MainVerticleTest {
         myVertx.deployVerticle(MainVerticle.class.getName(), options, deployment -> {
             if (deployment.succeeded()) {
                 LOGGER.debug(MessageCodes.BUCKETEER_143, getClass().getName());
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(deployment.cause());
             }
@@ -78,7 +79,7 @@ public class MainVerticleTest {
 
         myVertx.close(close -> {
             if (close.succeeded()) {
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(close.cause());
             }
@@ -106,9 +107,7 @@ public class MainVerticleTest {
 
                     aContext.assertEquals("ok", status.getString(Constants.STATUS));
 
-                    if (!asyncTask.isCompleted()) {
-                        asyncTask.complete();
-                    }
+                    TestUtils.complete(asyncTask);
                 });
             } else {
                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_069, statusCode));

@@ -17,6 +17,7 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.DockerUtils;
 import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.TestConstants;
+
 import info.freelibrary.util.FileUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -67,7 +68,7 @@ public class FilesystemWriteCsvFfOnT {
                 aContext.assertEquals(true, features.getBoolean(Features.ENABLED, false));
                 aContext.assertEquals(true, features.getBoolean(Features.FS_WRITE_CSV, false));
 
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(statusCheck.cause());
             }
@@ -116,7 +117,7 @@ public class FilesystemWriteCsvFfOnT {
                         aContext.assertTrue(expectedFile.exists());
 
                         FileUtils.delete(expectedFile);
-                        asyncTask.complete();
+                        TestUtils.complete(asyncTask);
                     } else {
                         aContext.fail(fakeLambda.cause());
                     }

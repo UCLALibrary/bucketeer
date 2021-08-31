@@ -17,6 +17,7 @@ import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.verticles.MainVerticle;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
@@ -69,7 +70,7 @@ public abstract class AbstractBucketeerHandlerTest {
                     LOGGER.warn(MessageCodes.BUCKETEER_506, port);
                 }
 
-                complete(asyncTask);
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(deployment.cause());
             }
@@ -89,22 +90,11 @@ public abstract class AbstractBucketeerHandlerTest {
         myVertx.close(close -> {
             if (close.succeeded()) {
                 LOGGER.debug("Verticle shutdown.");
-                complete(asyncTask);
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(close.cause());
             }
         });
-    }
-
-    /**
-     * Completes an asynchronous task if it isn't already.
-     *
-     * @param aAsyncTask An asynchronous task
-     */
-    protected void complete(final Async aAsyncTask) {
-        if (!aAsyncTask.isCompleted()) {
-            aAsyncTask.complete();
-        }
     }
 
     /**

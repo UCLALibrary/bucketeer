@@ -20,6 +20,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import ch.qos.logback.classic.Level;
 import io.vertx.core.buffer.Buffer;
@@ -73,7 +74,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                 final int statusCode = response.statusCode();
 
                 if (statusCode == HTTP.METHOD_NOT_ALLOWED) {
-                    asyncTask.complete();
+                    TestUtils.complete(asyncTask);
                 } else {
                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_083, statusCode, response.statusMessage()));
                 }
@@ -109,7 +110,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
             setLogLevel(BatchJobStatusHandler.class, level);
 
             if (statusCode == HTTP.INTERNAL_SERVER_ERROR) {
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
             }
@@ -148,7 +149,7 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                                 final String message = patchResponse.statusMessage();
 
                                 if (statusCode == HTTP.OK) {
-                                    asyncTask.complete();
+                                    TestUtils.complete(asyncTask);
                                 } else {
                                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));
                                 }

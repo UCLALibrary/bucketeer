@@ -20,6 +20,7 @@ import edu.ucla.library.bucketeer.AbstractBucketeerTest;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
@@ -108,9 +109,7 @@ public class FesterVerticleTest extends AbstractBucketeerTest {
             upload = uploads.iterator().next();
             aContext.assertEquals("test-job", upload.fileName());
 
-            if (!asyncTask.isCompleted()) {
-                asyncTask.complete();
-            }
+            TestUtils.complete(asyncTask);
         };
 
         // Configure our promise to send the Fester message when server has started

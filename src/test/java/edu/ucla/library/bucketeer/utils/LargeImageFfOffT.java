@@ -51,7 +51,7 @@ public class LargeImageFfOffT {
                 aContext.assertEquals(true, features.getBoolean(Features.ENABLED, false));
                 aContext.assertEquals(false, features.getBoolean(Features.LARGE_IMAGE_ROUTING, true));
 
-                asyncTask.complete();
+                TestUtils.complete(asyncTask);
             } else {
                 aContext.fail(statusCheck.cause());
             }
