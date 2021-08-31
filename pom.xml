@@ -107,7 +107,7 @@
     <snakeyaml.version>1.26</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
     <jackson.version>2.12.1</jackson.version>
-    <jsoup.version>1.13.1</jsoup.version>
+    <jsoup.version>1.14.2</jsoup.version>
 
     <!-- Build plug-in versions -->
     <scm.plugin.version>1.11.2</scm.plugin.version>
