@@ -215,15 +215,16 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             new JsonObject()
                             .put("verb", "PurgeItemFromCache")
                             .put("identifier", imageId), send -> {
-                                if (send.succeeded()) {
-                                    final int errCode = send.result().statusCode(); 
-                                    if(errCode == 404 || errCode == ) {
+                                // if (send.succeeded()) {
+                                //     final int errCode = send.result().statusCode(); 
+                                //     if(errCode == 404 || errCode == ) {
 
-                                    }
-                                } else {
-                                    returnError(response, )
-                                } //check error code 
-                            });//handler is a lambda handler
+                                //     }
+                                // } else {
+                                //     returnError(response, )
+                                // } //check error code 
+                            }
+                        );//handler is a lambda handler
                        
                 } else {
                     // If not finished, return an acknowledgement to the image processor
