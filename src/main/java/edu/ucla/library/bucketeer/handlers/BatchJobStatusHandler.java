@@ -33,8 +33,6 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
 
 /**
  * A handler for batch job status requests.
@@ -197,35 +195,33 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
 
-                    // Let the submitter know we're done
-                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
-                    
-                    // String userCredentials = "Basic services:rDe8qZmCLJ6k9uWK";
-                    // String encoding = Base64.encodeBytes("services:rDe8qZmCLJ6k9uWK");
-                    // String basicAuth = "Basic " + new String(new Base64().encodeBytes(userCredentials.getBytes()));
-                    // String basicAuth = "Basic" + encoding;
-                    //clear cache 
-                    //look into .postAbs can jsut pull in IIF server and concatenate tasks 
+                    //clear cache
                     client
                         .post(80, "https://test-iiif.library.ucla.edu", "/tasks")
-                        .basicAuthetication("services", "rDe8qZmCLJ6k9uWK")//.basicAuthetication
+                        .basicAuthentication(Config.IIIF_CACHE_USER, Config.IIIF_CACHE_PASSWORD)
                         .putHeader("content-type", "application/json")
-                        // .putHeader("Authorization", basicAuth)
                         .sendJsonObject(
                             new JsonObject()
                             .put("verb", "PurgeItemFromCache")
                             .put("identifier", imageId), send -> {
-                                // if (send.succeeded()) {
-                                //     final int errCode = send.result().statusCode(); 
-                                //     if(errCode == 404 || errCode == ) {
-
-                                //     }
-                                // } else {
-                                //     returnError(response, )
-                                // } //check error code 
+                                final int messCode = send.result().statusCode();
+                                if (send.succeeded()) {
+                                    if (messCode != 202) {
+                                        LOGGER.info("Cantaloupe cache for item '{}' could not be cleared: '{}'",
+                                                new Object [] {imageId, messCode});
+                                    } else {
+                                        LOGGER.info("Cantaloupe cache for item '{}' cleared.", imageId);
+                                    }
+                                } else {
+                                    LOGGER.info(
+                                            "Cantaloupe cache for item '{}' could not be cleared: '{}'. Async Error.",
+                                            new Object [] {imageId, messCode});
+                                }
                             }
-                        );//handler is a lambda handler
-                       
+                        );
+
+                    // Let the submitter know we're done
+                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
                 } else {
                     // If not finished, return an acknowledgement to the image processor
                     returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));

@@ -16,6 +16,19 @@
     </encoder>
   </appender>
 
+  <appender name="FILEBATCHJOBSTATUS" class="ch.qos.logback.core.FileAppender">
+    <file>target/FileBatchJobStatus.log</file>
+    <append>false</append>
+    <encoder>
+      <pattern>[%level] %logger{45}:%X{line} | %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler" level="INFO" additivity="false">
+    <appender-ref ref="FILEBATCHJOBSTATUS" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="io.netty" level="ERROR" additivity="false">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
