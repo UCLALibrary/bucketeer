@@ -24,6 +24,11 @@
     </encoder>
   </appender>
 
+  <logger name="edu.ucla.library.bucketeer.handlers.BatchJobStatusHandlerTest" level="INFO" additivity="false">
+    <appender-ref ref="FILEBATCHJOBSTATUS" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler" level="INFO" additivity="false">
     <appender-ref ref="FILEBATCHJOBSTATUS" />
     <appender-ref ref="STDOUT" />

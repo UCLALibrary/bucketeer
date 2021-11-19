@@ -190,10 +190,15 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 }
 
                 if (finished) {
+                    LOGGER.info("Entered finsihed");
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
+                    LOGGER.info("JsonObject processed");
 
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
+
+                    LOGGER.info("SendMessage processed: myVertx: '{}', message: '{}', Finalize: '{}'",
+                        new Object [] {myVertx, message, FinalizeJobVerticle.class.getName()});
 
                     //clear cache
                     client
@@ -205,6 +210,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             .put("verb", "PurgeItemFromCache")
                             .put("identifier", imageId), send -> {
                                 final int messCode = send.result().statusCode();
+                                LOGGER.info("Entered send");
                                 if (send.succeeded()) {
                                     if (messCode != 202) {
                                         LOGGER.info("Cantaloupe cache for item '{}' could not be cleared: '{}'",
@@ -222,6 +228,9 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                     // Let the submitter know we're done
                     returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
+
+                    LOGGER.info("Check null pointer Job: '{}'", response);
+
                 } else {
                     // If not finished, return an acknowledgement to the image processor
                     returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));

@@ -137,18 +137,22 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                 final String firstItemId = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
 
                 // Add two items to the job so it doesn't complete when we update the status of one of them
-                job.setItems(Arrays.asList(new Item().setID(firstItemId), new Item().setID("item2")));
+                job.setItems(Arrays.asList(new Item().setID(firstItemId)));
 
                 // Put the job in our jobs queue so we can test against it
                 getMap.result().put(JOB_NAME, job, put -> {
                     if (put.succeeded()) {
+                        // LOGGER.info("Entered put.succeded");
                         webClient.patch(port, Constants.UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
+                            // LOGGER.info("Entered webclient send");
                             if (sendPatch.succeeded()) {
                                 final HttpResponse<Buffer> patchResponse = sendPatch.result();
                                 final int statusCode = patchResponse.statusCode();
                                 final String message = patchResponse.statusMessage();
+                                // LOGGER.info("SendPatch Succeded declaraed vars");
 
                                 if (statusCode == HTTP.OK) {
+                                    // LOGGER.info("HTTP.OK");
                                     TestUtils.complete(asyncTask);
                                 } else {
                                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));
