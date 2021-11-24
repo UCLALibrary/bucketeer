@@ -190,9 +190,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 }
 
                 if (finished) {
-                    LOGGER.info("Entered finsihed");
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
-                    LOGGER.info("JsonObject processed");
 
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
@@ -209,9 +207,9 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             new JsonObject()
                             .put("verb", "PurgeItemFromCache")
                             .put("identifier", imageId), send -> {
-                                final int messCode = send.result().statusCode();
                                 LOGGER.info("Entered send");
                                 if (send.succeeded()) {
+                                    final int messCode = send.result().statusCode();
                                     if (messCode != 202) {
                                         LOGGER.info("Cantaloupe cache for item '{}' could not be cleared: '{}'",
                                                 new Object [] {imageId, messCode});
@@ -219,9 +217,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                                         LOGGER.info("Cantaloupe cache for item '{}' cleared.", imageId);
                                     }
                                 } else {
-                                    LOGGER.info(
-                                            "Cantaloupe cache for item '{}' could not be cleared: '{}'. Async Error.",
-                                            new Object [] {imageId, messCode});
+                                    LOGGER.error(send.cause(),
+                                        "Cantaloupe cache for item '{}' could not be cleared. Async Error.", imageId);
                                 }
                             }
                         );
