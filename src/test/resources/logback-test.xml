@@ -34,6 +34,16 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
+  <logger name="edu.ucla.library.bucketeer.Job" level="INFO" additivity="false">
+    <appender-ref ref="FILEBATCHJOBSTATUS" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <logger name="edu.ucla.library.bucketeer.vericles.FinalizeJobVerticle" level="INFO" additivity="false">
+    <appender-ref ref="FILEBATCHJOBSTATUS" />
+    <appender-ref ref="STDOUT" />
+  </logger>
+
   <logger name="io.netty" level="ERROR" additivity="false">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />

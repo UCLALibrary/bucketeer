@@ -237,6 +237,7 @@ public class Job implements Serializable {
         final int additionalHeadersCount;
 
         // Find the index position of our two columns: Bucketeer State and Access URL
+        LOGGER.info("Check Metadata {}", Metadata.BUCKETEER_STATE);
         int bucketeerStateIndex = findHeader(Metadata.BUCKETEER_STATE);
         int accessUrlIndex = findHeader(Metadata.IIIF_ACCESS_URL);
 
@@ -321,8 +322,12 @@ public class Job implements Serializable {
      * @return The index of the header if it exists, otherwise -1
      */
     int findHeader(final String aHeader) {
+        LOGGER.info("Check findHeader enter");
+        LOGGER.info("myMetadataHeader value: {}", myMetadataHeader);
         Objects.requireNonNull(myMetadataHeader);
         Objects.requireNonNull(aHeader);
+        LOGGER.info("Check aHeader {}", Objects.requireNonNull(aHeader));
+
 
         for (int index = 0; index < myMetadataHeader.length; index++) {
             if (aHeader.equals(myMetadataHeader[index])) {
