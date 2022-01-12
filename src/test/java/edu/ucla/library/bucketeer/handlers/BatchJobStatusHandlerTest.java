@@ -4,6 +4,7 @@ package edu.ucla.library.bucketeer.handlers;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -135,7 +136,14 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
             if (getMap.succeeded()) {
                 final Job job = new Job(JOB_NAME);
                 final String firstItemId = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
-
+                //check meta data
+                final String metaData = "Los Angeles Daily News Negatives,ark:/13030/hb000003n9";
+                // final String[] metaDataOb = new String[] {"Los Angeles Daily News Negatives,ark:/13030/hb000003n9"};
+                // metaDataOb.add("Los Angeles Daily News Negatives,ark:/13030/hb000003n9");
+                // List<String> metaDataOb = Arrays.asList(new String[]{"Los Angeles Daily News Negatives,ark:/13030/hb000003n9"});
+                final List<String> metaDataOb = Arrays.asList("Los Angeles Daily News Negatives,ark:/13030/hb000003n9");
+                job.setMetadata(metaDataOb);
+                job.setMetadataHeader(metaData);
                 // Add two items to the job so it doesn't complete when we update the status of one of them
                 job.setItems(Arrays.asList(new Item().setID(firstItemId)));
 
