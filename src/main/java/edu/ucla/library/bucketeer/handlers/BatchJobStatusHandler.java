@@ -192,13 +192,9 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
-
-                    // Let the submitter know we're done
-                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
-                } else {
-                    // If not finished, return an acknowledgement to the image processor
-                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
                 }
+                // Let the submitter know we're done
+                returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
             } else {
                 aLock.release();
                 returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);

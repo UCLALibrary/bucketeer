@@ -25,25 +25,63 @@ public class MatchingOpNotFoundHandler implements Handler<RoutingContext> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MatchingOpNotFoundHandler.class, Constants.MESSAGES);
 
-    private static final String STATUS_UPDATE_RE = "/batch/jobs/[^\\/]+/[^\\/]+/(true|false)";
+    /**
+     * The generic pattern for batch job status requests.
+     */
+    private static final String STATUS_UPDATE_RE = "/batch/jobs/[^\\/]*/[^\\/]*/(true|false)";
+
+    /**
+     * A pattern for a batch job status update request that's missing the required item ID.
+     */
+    private static final String MISSING_ID_RE = "/batch/jobs/[^\\/]+//(true|false)";
+
+    /**
+     * A pattern for a batch job status update request that's missing the required job name.
+     */
+    private static final String MISSING_JOB_RE = "/batch/jobs//[^\\/]+/(true|false)";
+
+    /**
+     * A pattern for a batch job status update request that's missing the update status.
+     */
+    private static final String MISSING_STATUS_RE = "/batch/jobs/[^\\/]+/[^\\/]+";
 
     @Override
     public void handle(final RoutingContext aContext) {
         if (aContext.failed()) {
             final HttpServerRequest request = aContext.request();
             final String method = request.rawMethod();
+            final String path = request.path();
 
-            // If someone hits the job status update URL using a method other than PATCH, return an error
-            if (request.path().matches(STATUS_UPDATE_RE) && !HttpMethod.PATCH.name().equals(method)) {
-                final HttpServerResponse response = aContext.response();
-
-                // Set a better response code and message
-                response.setStatusCode(HTTP.METHOD_NOT_ALLOWED);
-                response.setStatusMessage(LOGGER.getMessage(MessageCodes.BUCKETEER_034, method));
-
-                // We also need to change the fail code on the routing event
-                aContext.fail(HTTP.METHOD_NOT_ALLOWED);
+            if (path.matches(STATUS_UPDATE_RE)) { // Check batch job status updates
+                if (!HttpMethod.PATCH.name().equals(method)) {
+                    error(aContext, HTTP.METHOD_NOT_ALLOWED, LOGGER.getMessage(MessageCodes.BUCKETEER_034, method));
+                } else if (path.matches(MISSING_ID_RE)) {
+                    error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_600));
+                } else if (path.matches(MISSING_JOB_RE)) {
+                    error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_601));
+                }
+            } else if (path.matches(MISSING_STATUS_RE)) { // Check that updates without a status are caught
+                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_602));
+            } else if (HttpMethod.PATCH.name().equals(method)) { // Handle other random PATCH API requests
+                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_162, path));
             }
-        }
+        } // Ignore successful contexts, their responses have been returned
+    }
+
+    /**
+     * Returns a more detailed error response when the request cannot match an item in a job because of missing
+     * information.
+     *
+     * @param aContext A routing context
+     * @param aErrorCode An HTTP response code for the error
+     * @param aMessage An HTTP response status message for the error
+     */
+    private void error(final RoutingContext aContext, final int aErrorCode, final String aMessage) {
+        final HttpServerResponse response = aContext.response();
+
+        response.setStatusCode(aErrorCode);
+        response.setStatusMessage(aMessage);
+
+        aContext.fail(aErrorCode);
     }
 }
