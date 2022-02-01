@@ -895,6 +895,7 @@
                 <configuration>
                   <checkoutDirectory>${basedir}/src/main/docker/kakadu</checkoutDirectory>
                   <connectionUrl>${kakadu.git.repo}</connectionUrl>
+                  <scmVersion>main</scmVersion>
                 </configuration>
               </execution>
             </executions>
