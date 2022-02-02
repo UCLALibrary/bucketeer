@@ -47,25 +47,23 @@ public class MatchingOpNotFoundHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(final RoutingContext aContext) {
-        if (aContext.failed()) {
-            final HttpServerRequest request = aContext.request();
-            final String method = request.rawMethod();
-            final String path = request.path();
+        final HttpServerRequest request = aContext.request();
+        final String method = request.rawMethod();
+        final String path = request.path();
 
-            if (path.matches(STATUS_UPDATE_RE)) { // Check batch job status updates
-                if (!HttpMethod.PATCH.name().equals(method)) {
-                    error(aContext, HTTP.METHOD_NOT_ALLOWED, LOGGER.getMessage(MessageCodes.BUCKETEER_034, method));
-                } else if (path.matches(MISSING_ID_RE)) {
-                    error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_600));
-                } else if (path.matches(MISSING_JOB_RE)) {
-                    error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_601));
-                }
-            } else if (path.matches(MISSING_STATUS_RE)) { // Check that updates without a status are caught
-                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_602));
-            } else if (HttpMethod.PATCH.name().equals(method)) { // Handle other random PATCH API requests
-                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_162, path));
+        if (path.matches(STATUS_UPDATE_RE)) { // Check batch job status updates
+            if (!HttpMethod.PATCH.name().equals(method)) {
+                error(aContext, HTTP.METHOD_NOT_ALLOWED, LOGGER.getMessage(MessageCodes.BUCKETEER_034, method));
+            } else if (path.matches(MISSING_ID_RE)) {
+                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_600));
+            } else if (path.matches(MISSING_JOB_RE)) {
+                error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_601));
             }
-        } // Ignore successful contexts, their responses have been returned
+        } else if (path.matches(MISSING_STATUS_RE)) { // Check that updates without a status are caught
+            error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_602));
+        } else if (HttpMethod.PATCH.name().equals(method)) { // Handle other random PATCH API requests
+            error(aContext, HTTP.BAD_REQUEST, LOGGER.getMessage(MessageCodes.BUCKETEER_162, path));
+        }
     }
 
     /**
