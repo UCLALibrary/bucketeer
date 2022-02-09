@@ -29,7 +29,7 @@
     <appender-ref ref="STDOUT" />
   </logger>
 
-  <logger name="edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler" level="INFO" additivity="false">
+  <logger name="edu.ucla.library.bucketeer.handlers.BatchJobStatusHandler" level="ERROR" additivity="false">
     <appender-ref ref="FILEBATCHJOBSTATUS" />
     <appender-ref ref="STDOUT" />
   </logger>

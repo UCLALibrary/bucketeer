@@ -137,30 +137,24 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
                 final Job job = new Job(JOB_NAME);
                 final String firstItemId = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
                 //check meta data
-                final String metaData = "Los Angeles Daily News Negatives,ark:/13030/hb000003n9";
-                // final String[] metaDataOb = new String[] {"Los Angeles Daily News Negatives,ark:/13030/hb000003n9"};
-                // metaDataOb.add("Los Angeles Daily News Negatives,ark:/13030/hb000003n9");
-                // List<String> metaDataOb = Arrays.asList(new String[]{"Los Angeles Daily News Negatives,ark:/13030/hb000003n9"});
-                final List<String> metaDataOb = Arrays.asList("Los Angeles Daily News Negatives,ark:/13030/hb000003n9");
+                final String metaDataHead = "Los Angeles Daily News Negatives,ark:/13030/hb000003n9";
+                final List<String[]> metaDataOb =
+                Arrays.asList(new String[] { "Los Angeles Daily News Negatives" }, new String[] {"ark:/13030/hb000003n9"});
                 job.setMetadata(metaDataOb);
-                job.setMetadataHeader(metaData);
+                job.setMetadataHeader(metaDataHead);
                 // Add two items to the job so it doesn't complete when we update the status of one of them
                 job.setItems(Arrays.asList(new Item().setID(firstItemId)));
 
                 // Put the job in our jobs queue so we can test against it
                 getMap.result().put(JOB_NAME, job, put -> {
                     if (put.succeeded()) {
-                        // LOGGER.info("Entered put.succeded");
                         webClient.patch(port, Constants.UNSPECIFIED_HOST, patchUri).send(sendPatch -> {
-                            // LOGGER.info("Entered webclient send");
                             if (sendPatch.succeeded()) {
                                 final HttpResponse<Buffer> patchResponse = sendPatch.result();
                                 final int statusCode = patchResponse.statusCode();
                                 final String message = patchResponse.statusMessage();
-                                // LOGGER.info("SendPatch Succeded declaraed vars");
 
                                 if (statusCode == HTTP.OK) {
-                                    // LOGGER.info("HTTP.OK");
                                     TestUtils.complete(asyncTask);
                                 } else {
                                     aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, message));

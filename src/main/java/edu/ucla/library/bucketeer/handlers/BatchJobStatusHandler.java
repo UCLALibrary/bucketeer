@@ -33,6 +33,7 @@ import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 
 /**
  * A handler for batch job status requests.
@@ -140,7 +141,11 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-        final WebClient client = WebClient.create(myVertx);
+        final WebClient client = WebClient.create(myVertx,
+            new WebClientOptions()
+                .setFollowRedirects(true)
+            );
+
 
         aJobsMap.get(jobName, getJob -> {
             if (getJob.succeeded()) {
@@ -191,11 +196,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
-
-                    // We send the name of the job to finalize to the appropriate verticle
-                    LOGGER.info("Enter FinalizeJobVerticle");
-                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
-                    LOGGER.info("Exit FinalizeJob");
+                    // LOGGER.error("Entered finished");
                     //clear cache
                     client
                         .post(80, "https://test-iiif.library.ucla.edu", "/tasks")
@@ -207,11 +208,12 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             .put("identifier", imageId), send -> {
                                 if (send.succeeded()) {
                                     final int messCode = send.result().statusCode();
+                                    LOGGER.error("Recieved response with status code '{}'", messCode);
                                     if (messCode != 202) {
-                                        LOGGER.info("Cantaloupe cache for item '{}' could not be cleared: '{}'",
-                                                new Object [] {imageId, messCode});
+                                        LOGGER.error("Cantaloupe cache for item '{}' could not be cleared: '{}'",
+                                        new Object [] {imageId, messCode});
                                     } else {
-                                        LOGGER.info("Cantaloupe cache for item '{}' cleared.", imageId);
+                                        LOGGER.error("Cantaloupe cache for item '{}' cleared.", imageId);
                                     }
                                 } else {
                                     LOGGER.error(send.cause(),
