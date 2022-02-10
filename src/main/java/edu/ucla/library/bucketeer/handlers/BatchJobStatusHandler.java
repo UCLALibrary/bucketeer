@@ -19,6 +19,7 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -217,13 +218,10 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                                         }
                                     });
 
-                    // Let the submitter know we're done
-                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
-                    LOGGER.info("FinalizeJobVerticle failure");
-                } else {
-                    // If not finished, return an acknowledgement to the image processor
-                    returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
+                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
                 }
+
+                returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
             } else {
                 aLock.release();
                 returnError(getJob.cause(), MessageCodes.BUCKETEER_076, jobName, response);

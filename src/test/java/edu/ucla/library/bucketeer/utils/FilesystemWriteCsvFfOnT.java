@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,7 +84,6 @@ public class FilesystemWriteCsvFfOnT {
      * @param aContext A test context
      */
     @Test
-    @Ignore
     public void testWriteCsv(final TestContext aContext) {
         final WebClient webClient = WebClient.create(myTestContext.vertx());
         final int port = Integer.parseInt(System.getProperty(Config.HTTP_PORT));
