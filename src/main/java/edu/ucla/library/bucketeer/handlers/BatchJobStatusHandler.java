@@ -19,7 +19,6 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -141,11 +140,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-        final WebClient client = WebClient.create(myVertx,
-            new WebClientOptions()
-                .setFollowRedirects(true)
-            );
-
+        final WebClient client = WebClient.create(myVertx, new WebClientOptions().setFollowRedirects(true));
 
         aJobsMap.get(jobName, getJob -> {
             if (getJob.succeeded()) {
@@ -197,30 +192,30 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
                     // LOGGER.error("Entered finished");
-                    //clear cache
-                    client
-                        .post(80, "https://test-iiif.library.ucla.edu", "/tasks")
-                        .basicAuthentication(Config.IIIF_CACHE_USER, Config.IIIF_CACHE_PASSWORD)
-                        .putHeader("content-type", "application/json")
-                        .sendJsonObject(
-                            new JsonObject()
-                            .put("verb", "PurgeItemFromCache")
-                            .put("identifier", imageId), send -> {
-                                if (send.succeeded()) {
-                                    final int messCode = send.result().statusCode();
-                                    LOGGER.error("Recieved response with status code '{}'", messCode);
-                                    if (messCode != 202) {
-                                        LOGGER.error("Cantaloupe cache for item '{}' could not be cleared: '{}'",
-                                        new Object [] {imageId, messCode});
-                                    } else {
-                                        LOGGER.error("Cantaloupe cache for item '{}' cleared.", imageId);
-                                    }
-                                } else {
-                                    LOGGER.error(send.cause(),
-                                        "Cantaloupe cache for item '{}' could not be cleared. Async Error.", imageId);
-                                }
-                            }
-                        );
+                    // clear cache
+                    client.post(80, "test-iiif.library.ucla.edu", "/tasks")
+                            .basicAuthentication(Config.IIIF_CACHE_USER, Config.IIIF_CACHE_PASSWORD)
+                            .putHeader("content-type", "application/json").sendJsonObject(
+                                    new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageId),
+                                    send -> {
+                                        if (send.succeeded()) {
+                                            final int messCode = send.result().statusCode();
+
+                                            LOGGER.error("Recieved response with status code '{}'", messCode);
+
+                                            if (messCode != 202) {
+                                                LOGGER.error(
+                                                        "Cantaloupe cache for item '{}' could not be cleared: '{}'",
+                                                        new Object[] { imageId, messCode });
+                                            } else {
+                                                LOGGER.error("Cantaloupe cache for item '{}' cleared.", imageId);
+                                            }
+                                        } else {
+                                            LOGGER.error(send.cause(),
+                                                    "Cantaloupe cache for item '{}' could not be cleared. Async Error.",
+                                                    imageId);
+                                        }
+                                    });
 
                     // Let the submitter know we're done
                     returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
