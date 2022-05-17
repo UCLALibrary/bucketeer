@@ -25,15 +25,21 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
 import io.vertx.core.shareddata.Lock;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+
+
 
 /**
  * A handler for batch job status requests.
@@ -109,6 +115,19 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     }
 
     /**
+     * Redirects status code
+     *
+     * @param response A client response
+     * @param statusCode A status code
+     */
+    private void setStatus(int statusCode, String url, HttpServerResponse response) {
+        response.setStatusCode(statusCode)
+                .putHeader("Location", url)
+                .end();
+    }
+
+
+    /**
      * Gets a lock for use with updates.
      *
      * @param aPromise A promise for the work being done
@@ -128,6 +147,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         });
     }
 
+
     /**
      * Sets the status of the submitted job and sends to the job finalizer if the job is done.
      *
@@ -141,7 +161,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-        final WebClient client = WebClient.create(myVertx, new WebClientOptions().setFollowRedirects(true));
+        final WebClient client = WebClient.create(myVertx);
 
         aJobsMap.get(jobName, getJob -> {
             if (getJob.succeeded()) {
@@ -192,32 +212,51 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
-                    // LOGGER.error("Entered finished");
                     // clear cache
                     client.post(80, "test-iiif.library.ucla.edu", "/tasks")
                             .basicAuthentication(Config.IIIF_CACHE_USER, Config.IIIF_CACHE_PASSWORD)
-                            .putHeader("content-type", "application/json").sendJsonObject(
-                                    new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageId),
-                                    send -> {
-                                        if (send.succeeded()) {
-                                            final int messCode = send.result().statusCode();
+                            .putHeader("content-type", "application/json")
+                            .sendJsonObject(
+                                new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageId),
+                                send -> {
+                                    if (send.succeeded()) {
+                                        final int messCode = send.result().statusCode();
+                                        LOGGER.error("Recieved response with status code '{}'", messCode);
 
-                                            LOGGER.error("Recieved response with status code '{}'", messCode);
+                                        if (messCode == 308 && send.result().getHeader("Location") != null){
+                                            LOGGER.error("Entered statusCode == 308'");
+                                            LOGGER.error(send.result().getHeader("Location"));
+                                            client.post(send.result().getHeader("Location"))//absolute url send.result().get or parse out url
+                                                    .basicAuthentication(Config.IIIF_CACHE_USER, Config.IIIF_CACHE_PASSWORD)
+                                                    .putHeader("content-type", "application/json")
+                                                    .sendJsonObject(
+                                                        new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageId),
+                                                        result -> {
+                                                            //if it is the right response as in 202 then cache cleared if it isn't then get detailed error message
+                                                            if (result.succeeded()) {
+                                                                final int newMessCode = result.result().statusCode();//response
+                                                                LOGGER.error("Recieved response with status code '{}'", messCode);
 
-                                            if (messCode != 202) {
-                                                LOGGER.error(
-                                                        "Cantaloupe cache for item '{}' could not be cleared: '{}'",
-                                                        new Object[] { imageId, messCode });
-                                            } else {
-                                                LOGGER.error("Cantaloupe cache for item '{}' cleared.", imageId);
-                                            }
-                                        } else {
-                                            LOGGER.error(send.cause(),
-                                                    "Cantaloupe cache for item '{}' could not be cleared. Async Error.",
-                                                    imageId);
+                                                                if (newMessCode == 202){
+                                                                    LOGGER.error("Entered statusCode == 202 Cache was cleared'");
+                                                                }else{
+                                                                    LOGGER.error(result.cause(),
+                                                                    "Cantaloupe cache for item '{}' could not be cleared. Async Error.",
+                                                                    imageId);//send stack trace
+                                                                }
+                                                            } else {
+                                                                LOGGER.error(result.cause(),
+                                                                    "2nd Result did not succeed. Cantaloupe cache for item '{}' could not be cleared. Async Error.",
+                                                                    imageId);//send stack trace
+                                                            }
+                                                    });
                                         }
-                                    });
-
+                                    } else {
+                                        LOGGER.error(send.cause(),
+                                            "Cantaloupe cache for item '{}' could not be cleared. Async Error.",
+                                            imageId);//send stack trace
+                                    }
+                            });
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
                 }
 
