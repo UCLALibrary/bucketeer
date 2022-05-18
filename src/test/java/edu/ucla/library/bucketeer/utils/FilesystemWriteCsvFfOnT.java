@@ -12,13 +12,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import info.freelibrary.util.FileUtils;
+
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.DockerUtils;
 import edu.ucla.library.bucketeer.Features;
 import edu.ucla.library.bucketeer.TestConstants;
 
-import info.freelibrary.util.FileUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;

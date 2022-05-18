@@ -79,13 +79,13 @@
 
     <!-- OS pinned package versions (Cf. https://ubuntuupdates.org/package_metas for latest versions) -->
     <ubuntu.tag>20.04</ubuntu.tag>
-    <openjdk.version>11.0.13+8-0ubuntu1~20.04</openjdk.version>
+    <openjdk.version>11.0.15+10-0ubuntu0.20.04.1</openjdk.version>
     <gcc.version>4:9.3.0-1ubuntu2</gcc.version>
     <make.version>4.2.1-1.2</make.version>
-    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.2</libtiff.version>
+    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.3</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
     <libopenjp2.version>2.3.1-1ubuntu4.20.04.1</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.7</curl.version>
+    <curl.version>7.68.0-1ubuntu2.11</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
@@ -102,7 +102,7 @@
     <freelib.utils.version>2.1.0</freelib.utils.version>
     <freelib.maven.version>0.1.2</freelib.maven.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
-    <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
+    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
     <snakeyaml.version>1.26</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
@@ -118,7 +118,7 @@
     <codacy.plugin.version>1.2.0</codacy.plugin.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
     <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
-    <docker.maven.plugin.version>0.33.0</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.38.1</docker.maven.plugin.version>
     <maven.download.plugin.version>1.3.0</maven.download.plugin.version>
 
     <!-- These properties provide the ability to override the running of any type of test -->

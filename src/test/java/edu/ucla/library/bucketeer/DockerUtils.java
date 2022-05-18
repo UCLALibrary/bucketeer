@@ -11,10 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 
-import edu.ucla.library.bucketeer.converters.KakaduConverter;
-
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+
+import edu.ucla.library.bucketeer.converters.KakaduConverter;
 
 /**
  * Utility methods for running Docker commands on our test containers.
