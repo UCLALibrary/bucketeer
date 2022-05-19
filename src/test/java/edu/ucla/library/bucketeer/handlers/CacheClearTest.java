@@ -46,6 +46,11 @@ public class CacheClearTest {
      */
     private String myPassword;
 
+    /**
+     * Sets up the tests.
+     *
+     * @param aContext A testing environment
+     */
     @Before
     public final void setup(final TestContext aContext) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(Vertx.vertx());
@@ -57,6 +62,7 @@ public class CacheClearTest {
             } else {
                 final JsonObject config = configuration.result();
 
+                // Gives a way to pull these from the test's full runtime environment
                 myUsername = config.getString(Config.IIIF_CACHE_USER);
                 myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
