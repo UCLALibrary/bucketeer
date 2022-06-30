@@ -1,24 +1,38 @@
 
-package edu.ucla.library.bucketeer.handlers;
+package edu.ucla.library.bucketeer.verticles;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Rule;
 import org.junit.runner.RunWith;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
 
-import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.unit.junit.RunTestOnContext;
+
+
+
+
+/**
+ * Questions: Should I move this file into Verticles?
+ *Do I need a teardown?
+ * What do I pass in as the promise?
+ */
+
 
 /**
  * Testing the mechanism used to clear Cantaloupe's cache.
@@ -47,6 +61,14 @@ public class CacheClearTest {
     private String myPassword;
 
     /**
+     * Verticle ID for undeploying ClearCacheVerticle
+     */
+    private String myVertID;
+
+    @Rule
+    public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
+
+    /**
      * Sets up the tests.
      *
      * @param aContext A testing environment
@@ -56,25 +78,59 @@ public class CacheClearTest {
         final ConfigRetriever configRetriever = ConfigRetriever.create(Vertx.vertx());
         final Async asyncTask = aContext.async();
 
+
+
         configRetriever.getConfig(configuration -> {
             if (configuration.failed()) {
                 aContext.fail(configuration.cause());
             } else {
                 final JsonObject config = configuration.result();
 
-                // Gives a way to pull these from the test's full runtime environment
-                myUsername = config.getString(Config.IIIF_CACHE_USER);
-                myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
-
-                // Gives a way to supply these manually at test time in the code; just don't check values into VC!
-                if (myUsername == null || myPassword == null) {
-                    myUsername = "";
-                    myPassword = "";
-                }
-
+                final DeploymentOptions options = new DeploymentOptions().setConfig(config);
+                //use this in actual test to deploy
+                myRunTestOnContextRule.vertx()
+                    .deployVerticle(ClearCacheVerticle.class.getName(), options, deployment -> {
+                        if (deployment.succeeded()) {
+                            myVertID = deployment.result();
+                            LOGGER.info(myVertID);
+                        } else {
+                            LOGGER.error(deployment.cause(), "Deployment failure");
+                        }
+                    });
                 asyncTask.complete();
             }
         });
+
+
+    }
+
+
+    /**
+     * Tear down the testing environment.
+     *
+     * @param aContext A test context
+     */
+    @After
+    public void tearDown(final TestContext aContext) {
+
+        if (myVertID != null) {
+            final Async async = aContext.async();
+            LOGGER.info(myVertID);
+            LOGGER.info("Entered teardown");
+            myRunTestOnContextRule.vertx().undeploy(myVertID, undeployment -> {
+                if (undeployment.failed()) {
+                    aContext.fail(undeployment.cause());
+                } else {
+                    async.complete();
+                }
+            });
+        } else {
+            LOGGER.info("Verticle id was null");
+        }
+
+
+
+       //in tear down get verticle id and shut down the verticle by referencing the ID
     }
 
     /**
@@ -84,22 +140,28 @@ public class CacheClearTest {
      */
     @Test
     public void testCacheClear(final TestContext aContext) {
+
         final WebClient client = WebClient.create(Vertx.vertx());
-        final Async asyncTask = aContext.async();
 
         // These are just the property names, not values
         LOGGER.info("Connecting with Cantaloupe user: {}", StringUtils.trimToNull(myUsername));
+        int i = 0;
+        for (i = 0; i < 500; i++) {
+            final Async asyncTask = aContext.async();
+            myRunTestOnContextRule.vertx()
+                .eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject().put("imageID", "ARK-12345678"),
+                    response -> {
+                        if (response.failed()) {
+                            aContext.fail(response.cause());
+                        } else {
+                            LOGGER.info("Test response handler");
+                            TestUtils.complete(asyncTask);
+                        }
+                    });
+            i++;
+        }
 
-        client.postAbs("https://test-iiif.library.ucla.edu/tasks").basicAuthentication(myUsername, myPassword)
-                .putHeader("content-type", "application/json")
-                .sendJsonObject(new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", "blah"), post -> {
-                    if (post.succeeded()) {
-                        LOGGER.info(Integer.toString(post.result().statusCode()));
-                    } else {
-                        LOGGER.error(post.cause(), post.cause().getMessage());
-                    }
+        // asyncTask.complete();
 
-                    asyncTask.complete();
-                });
     }
 }

@@ -85,7 +85,7 @@
     <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.3</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
     <libopenjp2.version>2.3.1-1ubuntu4.20.04.1</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.11</curl.version>
+    <curl.version>7.68.0-1ubuntu2.12</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
@@ -211,8 +211,8 @@
 
     <!-- put definition of username and password in here as well as the base URL put fake password and
     username and then put the real username and password in settings.xml in mvn-->
-    <bucketeer.iiif.cache.user>CACHE_USERNAME</bucketeer.iiif.cache.user>
-    <bucketeer.iiif.cache.password>CACHE_PASSWORD</bucketeer.iiif.cache.password>
+    <bucketeer.iiif.cache.user>IIIF_CACHE_USERNAME</bucketeer.iiif.cache.user>
+    <bucketeer.iiif.cache.password>IIIF_CACHE_PASSWORD</bucketeer.iiif.cache.password>
 
   </properties>
 
@@ -1143,6 +1143,8 @@
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
                 <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
                 <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
+                <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
+                <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
               </systemPropertyVariables>
               <skipTests>${skipUTs}</skipTests>
               <argLine>${jacoco.agent.arg}</argLine>
@@ -1161,6 +1163,8 @@
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
                 <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
                 <http.port>${http.port}</http.port>
+                <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
+                <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
               </systemPropertyVariables>
               <argLine>${jacoco.agent.arg}</argLine>
             </configuration>

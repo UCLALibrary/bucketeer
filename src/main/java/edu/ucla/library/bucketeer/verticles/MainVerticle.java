@@ -251,6 +251,7 @@ public class MainVerticle extends AbstractVerticle {
         futures.add(deployVerticle(FinalizeJobVerticle.class.getName(), basicOpts, Promise.promise()));
         futures.add(deployVerticle(LargeImageVerticle.class.getName(), basicOpts, Promise.promise()));
         futures.add(deployVerticle(FesterVerticle.class.getName(), basicOpts, Promise.promise()));
+        futures.add(deployVerticle(ClearCacheVerticle.class.getName(), basicOpts, Promise.promise()));
 
         // Confirm all our verticles were successfully deployed
         CompositeFuture.all(futures).onComplete(handler -> {

@@ -136,14 +136,9 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
             if (getMap.succeeded()) {
                 final Job job = new Job(JOB_NAME);
                 final String firstItemId = URLDecoder.decode(TEST_ARK, StandardCharsets.UTF_8);
-                // check meta data
-                final String metaDataHead = "Los Angeles Daily News Negatives,ark:/13030/hb000003n9";
-                final List<String[]> metaDataOb = Arrays.asList(new String[] { "Los Angeles Daily News Negatives" },
-                        new String[] { "ark:/13030/hb000003n9" });
-                job.setMetadata(metaDataOb);
-                job.setMetadataHeader(metaDataHead);
+
                 // Add two items to the job so it doesn't complete when we update the status of one of them
-                job.setItems(Arrays.asList(new Item().setID(firstItemId)));
+                job.setItems(Arrays.asList(new Item().setID(firstItemId), new Item().setID("item2")));
 
                 // Put the job in our jobs queue so we can test against it
                 getMap.result().put(JOB_NAME, job, put -> {
