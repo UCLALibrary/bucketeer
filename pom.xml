@@ -89,14 +89,14 @@
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
-    <vertx.version>3.9.7</vertx.version>
+    <vertx.version>3.9.12</vertx.version>
     <vertx.super.s3.version>1.3.3</vertx.super.s3.version>
-    <slf4j.ext.version>1.7.26</slf4j.ext.version>
-    <aws.sdk.version>1.11.1017</aws.sdk.version>
+    <slf4j.ext.version>1.7.32</slf4j.ext.version>
+    <aws.sdk.version>1.12.139</aws.sdk.version>
     <commons.codec.version>1.14</commons.codec.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
-    <moirai.version>2.0.0</moirai.version>
+    <moirai.version>2.1.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
     <freelib.utils.version>2.1.0</freelib.utils.version>
@@ -104,10 +104,10 @@
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
-    <snakeyaml.version>1.26</snakeyaml.version>
+    <snakeyaml.version>1.30</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
-    <jackson.version>2.12.1</jackson.version>
-    <jsoup.version>1.13.1</jsoup.version>
+    <jackson.version>2.13.1</jackson.version>
+    <jsoup.version>1.14.3</jsoup.version>
 
     <!-- Build plug-in versions -->
     <scm.plugin.version>1.11.2</scm.plugin.version>
@@ -678,7 +678,9 @@
                   <exclude>io.netty:netty-handler</exclude>
                   <exclude>io.netty:netty-resolver-dns</exclude>
                   <exclude>io.netty:netty-resolver</exclude>
+                  <exclude>io.netty:netty-tcnative-classes</exclude>
                   <exclude>io.netty:netty-transport</exclude>
+                  <exclude>io.netty:netty-transport-classes-epoll</exclude>
                   <exclude>io.netty:netty-transport-native-epoll</exclude>
                   <exclude>io.netty:netty-transport-native-unix-common</exclude>
                   <exclude>io.swagger.core.v3:swagger-annotations</exclude>
@@ -899,6 +901,8 @@
                 <configuration>
                   <checkoutDirectory>${basedir}/src/main/docker/kakadu</checkoutDirectory>
                   <connectionUrl>${kakadu.git.repo}</connectionUrl>
+                  <scmVersionType>branch</scmVersionType>
+                  <scmVersion>main</scmVersion>
                 </configuration>
               </execution>
             </executions>

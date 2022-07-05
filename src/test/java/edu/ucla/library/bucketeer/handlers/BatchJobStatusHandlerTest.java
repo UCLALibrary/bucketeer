@@ -1,6 +1,8 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
+import static edu.ucla.library.bucketeer.Constants.EMPTY;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -24,8 +26,6 @@ import edu.ucla.library.bucketeer.utils.TestUtils;
 
 import ch.qos.logback.classic.Level;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -89,32 +89,170 @@ public class BatchJobStatusHandlerTest extends AbstractBucketeerHandlerTest {
      *
      * @param aContext A testing context
      */
-
     @Test
-    @SuppressWarnings("deprecation")
     public final void testInternalServerErrorResponse(final TestContext aContext) {
-        final Async asyncTask = aContext.async();
-        final int port = aContext.get(Config.HTTP_PORT);
-        final RequestOptions options = new RequestOptions();
         final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, TRUE);
-        final HttpClient client = myVertx.createHttpClient();
         final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
 
         LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
-        options.setPort(port).setHost(Constants.UNSPECIFIED_HOST).setURI(uri);
 
-        client.request(HttpMethod.PATCH, options, response -> {
-            final int statusCode = response.statusCode();
-            final String statusMessage = response.statusMessage();
-
-            setLogLevel(BatchJobStatusHandler.class, level);
-
-            if (statusCode == HTTP.INTERNAL_SERVER_ERROR) {
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, uri).send(send -> {
+            if (send.succeeded()) {
+                aContext.assertEquals(HTTP.INTERNAL_SERVER_ERROR, send.result().statusCode());
+                setLogLevel(BatchJobStatusHandler.class, level);
                 TestUtils.complete(asyncTask);
             } else {
-                aContext.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_022, statusCode, statusMessage));
+                aContext.fail(send.cause());
             }
-        }).end();
+        });
+    }
+
+    /**
+     * Tests whether a request with a missing item ID is handled correctly.
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public final void testBadRequestMissingID(final TestContext aContext) {
+        final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, EMPTY, TRUE);
+        final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, uri).send(send -> {
+            if (send.succeeded()) {
+                final HttpResponse<Buffer> response = send.result();
+
+                aContext.assertEquals(HTTP.BAD_REQUEST, response.statusCode());
+                aContext.assertEquals(LOGGER.getMessage(MessageCodes.BUCKETEER_600), response.statusMessage());
+
+                setLogLevel(BatchJobStatusHandler.class, level);
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail(send.cause());
+            }
+        });
+    }
+
+    /**
+     * Tests whether a request with a missing job name is handled correctly.
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public final void testBadRequestMissingJobName(final TestContext aContext) {
+        final String uri = StringUtils.format(PATCH_BATCH_URI, EMPTY, TEST_ARK, TRUE);
+        final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, uri).send(send -> {
+            if (send.succeeded()) {
+                final HttpResponse<Buffer> response = send.result();
+
+                aContext.assertEquals(HTTP.BAD_REQUEST, response.statusCode());
+                aContext.assertEquals(LOGGER.getMessage(MessageCodes.BUCKETEER_601), response.statusMessage());
+
+                setLogLevel(BatchJobStatusHandler.class, level);
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail(send.cause());
+            }
+        });
+    }
+
+    /**
+     * Tests whether a request with a missing status update is handled correctly.
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public final void testBadRequestMissingStatusUpdateWithSlash(final TestContext aContext) {
+        final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, EMPTY);
+        final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, uri).send(send -> {
+            if (send.succeeded()) {
+                final HttpResponse<Buffer> response = send.result();
+
+                aContext.assertEquals(HTTP.BAD_REQUEST, response.statusCode());
+                aContext.assertEquals("Bad Request", response.statusMessage());
+
+                setLogLevel(BatchJobStatusHandler.class, level);
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail(send.cause());
+            }
+        });
+    }
+
+    /**
+     * Tests whether a request with a missing status update is handled correctly.
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public final void testBadRequestMissingStatusUpdateWithoutSlash(final TestContext aContext) {
+        final String uri = StringUtils.format(PATCH_BATCH_URI, JOB_NAME, TEST_ARK, EMPTY);
+        final String slashlessURI = uri.substring(0, uri.length() - 1);
+        final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, slashlessURI).send(send -> {
+            if (send.succeeded()) {
+                final HttpResponse<Buffer> response = send.result();
+
+                aContext.assertEquals(HTTP.BAD_REQUEST, response.statusCode());
+                aContext.assertEquals(LOGGER.getMessage(MessageCodes.BUCKETEER_602), response.statusMessage());
+
+                setLogLevel(BatchJobStatusHandler.class, level);
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail(send.cause());
+            }
+        });
+    }
+
+    /**
+     * Tests whether a request with a bogus PATCH API endpoint is handled correctly.
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public final void testBadRequestToBogusEndpoint(final TestContext aContext) {
+        final String uri = StringUtils.format("/this/does/not/exist");
+        final Level level = setLogLevel(BatchJobStatusHandler.class, Level.OFF);
+        final WebClient client = WebClient.create(myVertx);
+        final Async asyncTask = aContext.async();
+
+        LOGGER.debug(MessageCodes.BUCKETEER_017, myTestName.getMethodName());
+
+        client.patch(aContext.get(Config.HTTP_PORT), Constants.UNSPECIFIED_HOST, uri).send(send -> {
+            if (send.succeeded()) {
+                final HttpResponse<Buffer> response = send.result();
+
+                aContext.assertEquals(HTTP.BAD_REQUEST, response.statusCode());
+                aContext.assertEquals(LOGGER.getMessage(MessageCodes.BUCKETEER_162, uri), response.statusMessage());
+
+                setLogLevel(BatchJobStatusHandler.class, level);
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail(send.cause());
+            }
+        });
     }
 
     /**
