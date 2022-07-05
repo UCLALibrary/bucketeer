@@ -45,18 +45,26 @@ public class ClearCacheVerticle extends AbstractVerticle {
             final String imageID = response.body().getString("imageID");
             LOGGER.info(imageID);
 
-            client.postAbs("https://test.iiif.library.ucla.edu/tasks").basicAuthentication(myUsername, myPassword)
-                .putHeader("content-type", "application/json")
-                .sendJsonObject(new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
-                    if (post.succeeded()) {
-                        LOGGER.info("Post succeeded");
-                        LOGGER.info(Integer.toString(post.result().statusCode()));
-                        response.reply(response.body());
-                    } else {
-                        LOGGER.error(post.cause(), post.cause().getMessage());
-                        response.fail(post.result().statusCode(), post.cause().getMessage());
-                    }
-            });
+            //This will eventually be a feature flag but this solves the issue for now
+            if (myUsername == null && myPassword == null) {
+                response.reply("Username and Password are purposefully not set.");
+            } else if (imageID == null) {
+                response.reply("imageID was null");
+            } else {
+                client.postAbs("https://test.iiif.library.ucla.edu/tasks")
+                    .basicAuthentication(myUsername, myPassword)
+                    .putHeader("content-type", "application/json")
+                    .sendJsonObject(new JsonObject()
+                    .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
+                        if (post.succeeded()) {
+                            LOGGER.info(Integer.toString(post.result().statusCode()));
+                            response.reply(response.body());
+                        } else {
+                            LOGGER.error(post.cause(), post.cause().getMessage());
+                            response.fail(post.result().statusCode(), post.cause().getMessage());
+                        }
+                    });
+            }
 
         });
 

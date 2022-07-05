@@ -4,7 +4,6 @@ package edu.ucla.library.bucketeer.handlers;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Rule;
 import org.junit.Test;

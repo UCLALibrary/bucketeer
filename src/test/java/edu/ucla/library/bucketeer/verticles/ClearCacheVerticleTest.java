@@ -24,21 +24,11 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.unit.junit.RunTestOnContext;
 
-
-
-
-/**
- * Questions: Should I move this file into Verticles?
- *Do I need a teardown?
- * What do I pass in as the promise?
- */
-
-
 /**
  * Testing the mechanism used to clear Cantaloupe's cache.
  */
 @RunWith(VertxUnitRunner.class)
-public class CacheClearTest {
+public class ClearCacheVerticleTest {
 
     static {
         // For running this test independently, we need to configure the logging config source
@@ -46,9 +36,15 @@ public class CacheClearTest {
     }
 
     /**
-     * Logger for the <code>CacheClearTest</code>.
+     * Logger for the <code>ClearCacheVerticleTest</code>.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(CacheClearTest.class, Constants.MESSAGES);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClearCacheVerticleTest.class, Constants.MESSAGES);
+
+    /**
+    * A test context from which references to Vert.x can be retrieved.
+    */
+    @Rule
+    public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
     /**
      * Cantaloupe username for testing Cantaloupe cache clearing.
@@ -65,9 +61,6 @@ public class CacheClearTest {
      */
     private String myVertID;
 
-    @Rule
-    public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
-
     /**
      * Sets up the tests.
      *
@@ -77,8 +70,6 @@ public class CacheClearTest {
     public final void setup(final TestContext aContext) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(Vertx.vertx());
         final Async asyncTask = aContext.async();
-
-
 
         configRetriever.getConfig(configuration -> {
             if (configuration.failed()) {
@@ -93,11 +84,13 @@ public class CacheClearTest {
                         if (deployment.succeeded()) {
                             myVertID = deployment.result();
                             LOGGER.info(myVertID);
+                            TestUtils.complete(asyncTask);
                         } else {
                             LOGGER.error(deployment.cause(), "Deployment failure");
+                            aContext.fail(deployment.cause());
                         }
+
                     });
-                asyncTask.complete();
             }
         });
 
@@ -145,23 +138,20 @@ public class CacheClearTest {
 
         // These are just the property names, not values
         LOGGER.info("Connecting with Cantaloupe user: {}", StringUtils.trimToNull(myUsername));
-        int i = 0;
-        for (i = 0; i < 500; i++) {
+
+        //Sends multiple messges over eventBus to see if correct response is recieved each time
+        for (int i = 0; i < 500; i++) {
             final Async asyncTask = aContext.async();
             myRunTestOnContextRule.vertx()
-                .eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject().put("imageID", "ARK-12345678"),
-                    response -> {
-                        if (response.failed()) {
-                            aContext.fail(response.cause());
-                        } else {
-                            LOGGER.info("Test response handler");
-                            TestUtils.complete(asyncTask);
-                        }
-                    });
+                .eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject()
+                .put("imageID", "ARK-12345678"), response -> {
+                    if (response.failed()) {
+                        aContext.fail(response.cause());
+                    } else {
+                        TestUtils.complete(asyncTask);
+                    }
+                });
             i++;
         }
-
-        // asyncTask.complete();
-
     }
 }
