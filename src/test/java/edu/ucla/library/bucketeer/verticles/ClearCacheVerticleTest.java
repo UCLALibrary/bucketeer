@@ -13,6 +13,7 @@ import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.utils.TestUtils;
+import edu.ucla.library.bucketeer.MessageCodes;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
@@ -76,17 +77,14 @@ public class ClearCacheVerticleTest {
                 aContext.fail(configuration.cause());
             } else {
                 final JsonObject config = configuration.result();
-
                 final DeploymentOptions options = new DeploymentOptions().setConfig(config);
-                //use this in actual test to deploy
+
                 myRunTestOnContextRule.vertx()
                     .deployVerticle(ClearCacheVerticle.class.getName(), options, deployment -> {
                         if (deployment.succeeded()) {
                             myVertID = deployment.result();
-                            LOGGER.info(myVertID);
                             TestUtils.complete(asyncTask);
                         } else {
-                            LOGGER.error(deployment.cause(), "Deployment failure");
                             aContext.fail(deployment.cause());
                         }
 
@@ -108,8 +106,6 @@ public class ClearCacheVerticleTest {
 
         if (myVertID != null) {
             final Async async = aContext.async();
-            LOGGER.info(myVertID);
-            LOGGER.info("Entered teardown");
             myRunTestOnContextRule.vertx().undeploy(myVertID, undeployment -> {
                 if (undeployment.failed()) {
                     aContext.fail(undeployment.cause());
@@ -118,7 +114,7 @@ public class ClearCacheVerticleTest {
                 }
             });
         } else {
-            LOGGER.info("Verticle id was null");
+            LOGGER.info(MessageCodes.BUCKETEER_605);
         }
 
 
@@ -137,7 +133,7 @@ public class ClearCacheVerticleTest {
         final WebClient client = WebClient.create(Vertx.vertx());
 
         // These are just the property names, not values
-        LOGGER.info("Connecting with Cantaloupe user: {}", StringUtils.trimToNull(myUsername));
+        LOGGER.info(MessageCodes.BUCKETEER_606, StringUtils.trimToNull(myUsername));
 
         //Sends multiple messges over eventBus to see if correct response is recieved each time
         for (int i = 0; i < 500; i++) {

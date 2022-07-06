@@ -47,9 +47,9 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
             //This will eventually be a feature flag but this solves the issue for now
             if (myUsername == null && myPassword == null) {
-                response.reply("Username and Password are purposefully not set.");
+                response.reply(MessageCodes.BUCKETEER_603);
             } else if (imageID == null) {
-                response.reply("imageID was null");
+                response.reply(MessageCodes.BUCKETEER_604);
             } else {
                 client.postAbs("https://test.iiif.library.ucla.edu/tasks")
                     .basicAuthentication(myUsername, myPassword)
@@ -67,8 +67,6 @@ public class ClearCacheVerticle extends AbstractVerticle {
             }
 
         });
-
-        LOGGER.info("Verticle finished");
 
     }
 
