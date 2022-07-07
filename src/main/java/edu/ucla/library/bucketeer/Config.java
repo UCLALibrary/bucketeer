@@ -22,7 +22,7 @@ public final class Config {
     public static final String S3_BUCKET = "bucketeer.s3.bucket";
 
     // The IIIF server URL in which the JPEG 2000 images end up
-    public static final String IIIF_URL = "bucketeer.iiif.url"; //could also use this and add tasks to it
+    public static final String IIIF_URL = "bucketeer.iiif.url";
 
     // The local large image Bucketeer server
     public static final String LARGE_IMAGE_URL = "large.image.url";
@@ -76,9 +76,10 @@ public final class Config {
     // A configuration option for turning on or off feature flags
     public static final String FEATURE_FLAGS = "feature.flags";
 
-    //The username and password for the bucketeer cache
+    // The username for the Bucketeer cache
     public static final String IIIF_CACHE_USER = "bucketeer.iiif.cache.user";
 
+    // The password for the Bucketeer cache
     public static final String IIIF_CACHE_PASSWORD = "bucketeer.iiif.cache.password";
 
     /**

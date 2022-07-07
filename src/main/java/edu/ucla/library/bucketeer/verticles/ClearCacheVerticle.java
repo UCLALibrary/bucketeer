@@ -18,7 +18,6 @@ import io.vertx.ext.web.client.WebClient;
 /**
  * A verticle to clear cantaloupe cache
  */
-
 public class ClearCacheVerticle extends AbstractVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearCacheVerticle.class, Constants.MESSAGES);
@@ -27,9 +26,8 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
     private String myPassword;
 
-     /**
+    /**
      * Clears cantaloupe cache and sends message if failure
-     *
      */
     @Override
     public void start() throws Exception {
@@ -43,9 +41,8 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
         getJsonConsumer().handler(response -> {
             final String imageID = response.body().getString("imageID");
-            LOGGER.info(imageID);
 
-            //This will eventually be a feature flag but this solves the issue for now
+            // This will eventually be a feature flag but this solves the issue for now
             if (myUsername == null && myPassword == null) {
                 response.reply(MessageCodes.BUCKETEER_603);
             } else if (imageID == null) {
@@ -65,19 +62,18 @@ public class ClearCacheVerticle extends AbstractVerticle {
                         }
                     });
             }
-
         });
-
-    }
-
-
-    //processes message from handler and event bus
-    protected MessageConsumer<JsonObject> getJsonConsumer() {
-        getLogger().debug(MessageCodes.BUCKETEER_025, ClearCacheVerticle.class.getName());
-        return vertx.eventBus().<JsonObject>consumer(ClearCacheVerticle.class.getName());
     }
 
     protected Logger getLogger() {
         return LOGGER;
+    }
+
+    /**
+     * Processes message from handler and event bus
+     */
+    protected MessageConsumer<JsonObject> getJsonConsumer() {
+        getLogger().debug(MessageCodes.BUCKETEER_025, ClearCacheVerticle.class.getName());
+        return vertx.eventBus().<JsonObject>consumer(ClearCacheVerticle.class.getName());
     }
 }

@@ -99,8 +99,8 @@
     <moirai.version>2.1.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.1.0</woodstox.version>
-    <freelib.utils.version>2.1.0</freelib.utils.version>
-    <freelib.maven.version>0.1.2</freelib.maven.version>
+    <freelib.utils.version>3.0.1</freelib.utils.version>
+    <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.37.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <jslack.version>1.7.8</jslack.version>
@@ -209,8 +209,7 @@
     <!-- The artifact is qualified if it's built with Kakadu -->
     <artifact.qualifier></artifact.qualifier>
 
-    <!-- put definition of username and password in here as well as the base URL put fake password and
-    username and then put the real username and password in settings.xml in mvn-->
+    <!-- The Bucketeer IIIF cache username and password-->
     <bucketeer.iiif.cache.user>IIIF_CACHE_USERNAME</bucketeer.iiif.cache.user>
     <bucketeer.iiif.cache.password>IIIF_CACHE_PASSWORD</bucketeer.iiif.cache.password>
 

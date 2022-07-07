@@ -69,6 +69,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
             // Announce the finalization of the supplied batch job
             LOGGER.debug(MessageCodes.BUCKETEER_131, jobName);
+
             removeJob(jobName, removeJob -> {
                 if (removeJob.succeeded()) {
                     final Job job = removeJob.result();
@@ -78,7 +79,6 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
                     try {
                         // Update the job's metadata and serialize it to CSV format
-                        LOGGER.info("Has not entered job.updateMetadat().toCSV()");
                         csvData = job.updateMetadata().toCSV();
                         //check value of csvDATA
                         LOGGER.info("FinalzeJobVerticle csvData null check {}", csvData);
@@ -211,7 +211,6 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         final Promise<Job> promise = Promise.<Job>promise();
 
         promise.future().onComplete(aHandler);
-        LOGGER.info("Inside removeJob");
         vertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
                 final AsyncMap<String, Job> map = getMap.result();

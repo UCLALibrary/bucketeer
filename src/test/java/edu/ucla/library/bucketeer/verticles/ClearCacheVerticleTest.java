@@ -87,14 +87,10 @@ public class ClearCacheVerticleTest {
                         } else {
                             aContext.fail(deployment.cause());
                         }
-
                     });
             }
         });
-
-
     }
-
 
     /**
      * Tear down the testing environment.
@@ -116,10 +112,6 @@ public class ClearCacheVerticleTest {
         } else {
             LOGGER.info(MessageCodes.BUCKETEER_605);
         }
-
-
-
-       //in tear down get verticle id and shut down the verticle by referencing the ID
     }
 
     /**
@@ -135,8 +127,11 @@ public class ClearCacheVerticleTest {
         // These are just the property names, not values
         LOGGER.info(MessageCodes.BUCKETEER_606, StringUtils.trimToNull(myUsername));
 
-        //Sends multiple messges over eventBus to see if correct response is recieved each time
-        for (int i = 0; i < 500; i++) {
+        /* An issue popped up during initial testing that gave different results when multiple
+         * requests are queued so multiple messages are sent over the evenBus to see if the correct
+         * response is received
+         */
+        for (int index = 0; index < 500; index++) {
             final Async asyncTask = aContext.async();
             myRunTestOnContextRule.vertx()
                 .eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject()
@@ -147,7 +142,6 @@ public class ClearCacheVerticleTest {
                         TestUtils.complete(asyncTask);
                     }
                 });
-            i++;
         }
     }
 }

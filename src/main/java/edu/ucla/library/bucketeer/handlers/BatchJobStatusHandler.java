@@ -35,8 +35,6 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 
-
-
 /**
  * A handler for batch job status requests.
  */
@@ -130,7 +128,6 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         });
     }
 
-
     /**
      * Sets the status of the submitted job and sends to the job finalizer if the job is done.
      *
@@ -196,11 +193,11 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
-                    // clear cache
+                    // Clear Cantaloupe cache of already processed images
                     myVertx.eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject()
-                           .put("imageID", imageId), resp -> {
-                                if (resp.failed()) {
-                                    aContext.fail(resp.cause());
+                           .put("imageID", imageId), reply -> {
+                                if (reply.failed()) {
+                                    LOGGER.error(MessageCodes.BUCKETEER_607, reply.cause());
                                 }
                            });
 

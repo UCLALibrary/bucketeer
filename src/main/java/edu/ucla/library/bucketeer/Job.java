@@ -286,12 +286,9 @@ public class Job implements Serializable {
             setMetadataHeader(newHeader);
         }
 
-        // LOGGER.info("myMetadata.size() '{}'", myMetadata.size());
-
         // Then let's loop through the metadata and add or update columns as needed
         for (int index = 0; index < myMetadata.size(); index++) {
             final Item item = items.get(index);
-            // LOGGER.info("Item index '{}'", item);
 
             String[] row = myMetadata.get(index);
 
