@@ -1148,6 +1148,10 @@
                 <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
                 <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
                 <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
+                <bucketeer.s3.region>${bucketeer.s3.region}</bucketeer.s3.region>
+                <bucketeer.s3.bucket>${bucketeer.s3.bucket}</bucketeer.s3.bucket>
+                <bucketeer.s3.access_key>${bucketeer.s3.access_key}</bucketeer.s3.access_key>
+                <bucketeer.s3.secret_key>${bucketeer.s3.secret_key}</bucketeer.s3.secret_key>
               </systemPropertyVariables>
               <skipTests>${skipUTs}</skipTests>
               <argLine>${jacoco.agent.arg}</argLine>
@@ -1168,6 +1172,10 @@
                 <http.port>${http.port}</http.port>
                 <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
                 <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
+                <bucketeer.s3.region>${bucketeer.s3.region}</bucketeer.s3.region>
+                <bucketeer.s3.bucket>${bucketeer.s3.bucket}</bucketeer.s3.bucket>
+                <bucketeer.s3.access_key>${bucketeer.s3.access_key}</bucketeer.s3.access_key>
+                <bucketeer.s3.secret_key>${bucketeer.s3.secret_key}</bucketeer.s3.secret_key>
               </systemPropertyVariables>
               <argLine>${jacoco.agent.arg}</argLine>
             </configuration>

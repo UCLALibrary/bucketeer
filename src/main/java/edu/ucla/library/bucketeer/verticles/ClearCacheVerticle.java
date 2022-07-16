@@ -2,6 +2,7 @@ package edu.ucla.library.bucketeer.verticles;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.HTTP;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
@@ -39,14 +40,14 @@ public class ClearCacheVerticle extends AbstractVerticle {
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
-        getJsonConsumer().handler(response -> {
-            final String imageID = response.body().getString("imageID");
+        getJsonConsumer().handler(message -> {
+            final String imageID = message.body().getString("imageID");
 
             // This will eventually be a feature flag but this solves the issue for now
             if (myUsername == null && myPassword == null) {
-                response.reply(MessageCodes.BUCKETEER_603);
+                message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_603));
             } else if (imageID == null) {
-                response.reply(MessageCodes.BUCKETEER_604);
+                message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_604));
             } else {
                 client.postAbs("https://test.iiif.library.ucla.edu/tasks")
                     .basicAuthentication(myUsername, myPassword)
@@ -54,11 +55,14 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     .sendJsonObject(new JsonObject()
                     .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                         if (post.succeeded()) {
-                            LOGGER.info(Integer.toString(post.result().statusCode()));
-                            response.reply(response.body());
+                            if(post.result().statusCode() == HTTP.ACCEPTED){
+                                message.reply(message.body());
+                            } else {
+                                message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));
+                            }
                         } else {
                             LOGGER.error(post.cause(), post.cause().getMessage());
-                            response.fail(post.result().statusCode(), post.cause().getMessage());
+                            message.fail(post.result().statusCode(), post.cause().getMessage());
                         }
                     });
             }

@@ -141,7 +141,6 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
         final String imageId = request.getParam(Constants.IMAGE_ID);
         final String jobName = request.getParam(Constants.JOB_NAME);
         final boolean success = Boolean.parseBoolean(request.getParam(Op.SUCCESS));
-        final WebClient client = WebClient.create(myVertx);
 
         aJobsMap.get(jobName, getJob -> {
             if (getJob.succeeded()) {

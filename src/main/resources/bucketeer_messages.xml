@@ -209,4 +209,5 @@
   <entry key="BUCKETEER-605">Verticle ID is null</entry>
   <entry key="BUCKETEER-606">Connecting with Cantaloupe user: {}</entry>
   <entry key="BUCKETEER-607">Cantalope cache could not be cleared: {}</entry>
+  <entry key="BUCKETEER-608">Response to clear Cantalope cache is not 202</entry>
 </properties>

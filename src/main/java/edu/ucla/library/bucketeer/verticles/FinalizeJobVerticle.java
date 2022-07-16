@@ -80,8 +80,6 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
                     try {
                         // Update the job's metadata and serialize it to CSV format
                         csvData = job.updateMetadata().toCSV();
-                        //check value of csvDATA
-                        LOGGER.info("FinalzeJobVerticle csvData null check {}", csvData);
                         Future.<Boolean>future(writeAttempt -> {
                             // Determine if we should try to write the CSV to the local file system
                             if (myFeatureChecker.isPresent() &&

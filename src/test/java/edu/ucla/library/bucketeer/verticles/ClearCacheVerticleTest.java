@@ -10,10 +10,24 @@ import org.junit.runner.RunWith;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.StringUtils;
+import info.freelibrary.util.HTTP;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.utils.TestUtils;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.Config;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.core.Vertx;
@@ -24,6 +38,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.web.codec.BodyCodec;
+import io.vertx.core.eventbus.ReplyException;
 
 /**
  * Testing the mechanism used to clear Cantaloupe's cache.
@@ -40,6 +56,24 @@ public class ClearCacheVerticleTest {
      * Logger for the <code>ClearCacheVerticleTest</code>.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearCacheVerticleTest.class, Constants.MESSAGES);
+
+    /**
+     * Verticle name that tests are run for
+     */
+    private static final String VERTICLE_NAME = ClearCacheVerticle.class.getName();
+
+    private static final String TIFFVERT_PATH = "src/test/resources/images/testVert.tiff";
+
+    private static final String TIFFHORI_PATH = "src/test/resources/images/testHori.tiff";
+
+    private static final String imageIDKey = "ark://12345678";
+
+    /**
+     * Individual AWS credential
+     */
+    private static AWSCredentials myAWSCredentials;
+
+    private static String s3Bucket = "unconfigured";
 
     /**
     * A test context from which references to Vert.x can be retrieved.
@@ -63,6 +97,11 @@ public class ClearCacheVerticleTest {
     private String myVertID;
 
     /**
+     * We can't, as of yet, execute these tests without a non-default S3 configuration
+     */
+    private AmazonS3 myAmazonS3;
+
+    /**
      * Sets up the tests.
      *
      * @param aContext A testing environment
@@ -80,10 +119,29 @@ public class ClearCacheVerticleTest {
                 final DeploymentOptions options = new DeploymentOptions().setConfig(config);
 
                 myRunTestOnContextRule.vertx()
-                    .deployVerticle(ClearCacheVerticle.class.getName(), options, deployment -> {
+                    .deployVerticle(VERTICLE_NAME, options, deployment -> {
                         if (deployment.succeeded()) {
                             myVertID = deployment.result();
                             TestUtils.complete(asyncTask);
+
+                            if (myAmazonS3 == null) {
+                                final String s3AccessKey = config.getString(Config.S3_ACCESS_KEY);
+                                final String s3SecretKey = config.getString(Config.S3_SECRET_KEY);
+
+                                // get myAWSCredentials ready
+                                myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+
+                                // instantiate the myAmazonS3 client
+                                myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+                            }
+
+                            s3Bucket = config.getString(Config.S3_BUCKET);
+
+                            try {
+                                myAmazonS3.putObject(s3Bucket, imageIDKey, TIFFVERT_PATH);
+                            } catch(AmazonServiceException e) {
+                                LOGGER.error(e.getErrorMessage());
+                            }
                         } else {
                             aContext.fail(deployment.cause());
                         }
@@ -91,6 +149,14 @@ public class ClearCacheVerticleTest {
             }
         });
     }
+
+    //Look into how Junit runs things serially
+    // Test 1 just do deployVerticle without any config
+    // Test 2 create Json Object with wrong config options
+    //Test 3 Test without image ID *
+    //Test 4 if given a fake response what is the result
+    //look into S3 bucketVerticleTest and create AWS and put something into the S3 bucket
+    //clear the cache and then put it into the bucket again and check it again myAmazonS3.put()
 
     /**
      * Tear down the testing environment.
@@ -121,27 +187,86 @@ public class ClearCacheVerticleTest {
      */
     @Test
     public void testCacheClear(final TestContext aContext) {
-
-        final WebClient client = WebClient.create(Vertx.vertx());
-
-        // These are just the property names, not values
-        LOGGER.info(MessageCodes.BUCKETEER_606, StringUtils.trimToNull(myUsername));
-
         /* An issue popped up during initial testing that gave different results when multiple
-         * requests are queued so multiple messages are sent over the evenBus to see if the correct
+         * requests are queued so multiple messages are sent over the eventBus to see if the correct
          * response is received
          */
-        for (int index = 0; index < 500; index++) {
+        // for (int index = 0; index < 500; index++) {
             final Async asyncTask = aContext.async();
-            myRunTestOnContextRule.vertx()
-                .eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject()
-                .put("imageID", "ARK-12345678"), response -> {
-                    if (response.failed()) {
-                        aContext.fail(response.cause());
+
+            //reply code should be 202
+            sendMessage(imageIDKey, asyncTask, HTTP.ACCEPTED, aContext);
+        // }
+        final WebClient client = WebClient.create(Vertx.vertx());
+
+        // HttpClient client = HttpClient.newHttpClient();
+        // HttpRequest request = HttpRequest.newBuilder()
+        //                                  .uri(URI.create("https://test.iiif.ucla.edu/iiif/2/ark://12345678/info.json"))
+        //                                  .build();
+        client.getAbs("http://test.iiif.ucla.edu/iiif/2/ark://12345678/info.json")
+              .putHeader("content-type", "application/json")
+              .as(BodyCodec.jsonObject())
+              .send(res -> {
+                if(res.succeeded()) {
+                    JsonObject body = res.result().body();
+                } else {
+                    LOGGER.error(res.cause(), res.cause().getMessage());
+                }
+              });
+
+        // response -> {
+        //         if (response.succeeded()){
+        //             JsonObject myObject = new JsonObject(response.body());
+        //         } else {
+        //             LOGGER.error(response.cause(), response.cause().getMessage());
+        //         }
+        // });
+        // try {
+        //     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        //     JsonObject myObject = new JsonObject(response.body());
+        // } catch (IOException e) {
+        //     e.printStackTrace();
+        // } catch (InterruptedException e) {
+        //     e.printStackTrace();
+        // }
+
+        // clean up our test files
+        myAmazonS3.deleteObject(s3Bucket, imageIDKey);
+    }
+
+    /**
+     * Tests clearing Cantaloupe's cache with null imageID
+     *
+     * @param aContext
+     */
+    @Test
+    public void testNoImageID(final TestContext aContext) {
+
+        final String imageIDNull = null;
+        final Async asyncTask = aContext.async();
+
+        sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext);
+    }
+
+    /**
+     * Sends message over eventBus to ClearCacheVerticle and verifies expected code is returned with failure
+     */
+    private void sendMessage(final String imageID, final Async asyncTask, final Integer replyCode, final TestContext aContext){
+        myRunTestOnContextRule.vertx()
+                .eventBus().<JsonObject>send(VERTICLE_NAME, new JsonObject()
+                .put("imageID", imageID), reply -> {
+                    if (reply.failed()) {
+                        ReplyException re = (ReplyException) reply.cause();
+
+                        LOGGER.info(String.valueOf(re.failureCode()));
+                        if (replyCode != re.failureCode()) {
+                            aContext.fail(re.getMessage());
+                        } else {
+                            TestUtils.complete(asyncTask);
+                        }
                     } else {
                         TestUtils.complete(asyncTask);
                     }
                 });
-        }
     }
 }
