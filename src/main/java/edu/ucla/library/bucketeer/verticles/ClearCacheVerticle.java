@@ -56,6 +56,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                         if (post.succeeded()) {
                             if(post.result().statusCode() == HTTP.ACCEPTED){
+                                LOGGER.info(Integer.toString(post.result().statusCode()));
                                 message.reply(message.body());
                             } else {
                                 message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));
