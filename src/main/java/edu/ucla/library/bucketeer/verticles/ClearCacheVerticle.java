@@ -42,6 +42,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
         getJsonConsumer().handler(message -> {
             final String imageID = message.body().getString("imageID");
+            LOGGER.info(imageID);
 
             // This will eventually be a feature flag but this solves the issue for now
             if (myUsername == null && myPassword == null) {
