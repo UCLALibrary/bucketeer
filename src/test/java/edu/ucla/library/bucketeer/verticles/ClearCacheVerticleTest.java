@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -23,6 +25,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.TimeUnit;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -50,6 +53,7 @@ import io.vertx.core.Promise;
  * Testing the mechanism used to clear Cantaloupe's cache.
  */
 @RunWith(VertxUnitRunner.class)
+// @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ClearCacheVerticleTest {
 
     static {
@@ -71,7 +75,9 @@ public class ClearCacheVerticleTest {
 
     private static final String TIFFHORI_PATH = "src/test/resources/images/keyRotate.jpx";
 
-    private static final String imageIDKey = "clearCacheTest.jpx";
+    private static final String imageIDKeyJPX = "newKeyTest2.jpx";
+
+    private static final String imageIDKey = "newKeyTest2";
 
     /**
      * Individual AWS credential
@@ -141,12 +147,6 @@ public class ClearCacheVerticleTest {
                             }
 
                             s3Bucket = config.getString(Config.S3_BUCKET);
-
-                            try {
-                                myAmazonS3.putObject(s3Bucket, imageIDKey, new File(TIFFVERT_PATH));
-                            } catch(AmazonServiceException e) {
-                                LOGGER.error(e.getErrorMessage());
-                            }
                         } else {
                             aContext.fail(deployment.cause());
                         }
@@ -162,6 +162,7 @@ public class ClearCacheVerticleTest {
     //Test 4 if given a fake response what is the result
     //look into S3 bucketVerticleTest and create AWS and put something into the S3 bucket
     //clear the cache and then put it into the bucket again and check it again myAmazonS3.put()
+    //p
 
     /**
      * Tear down the testing environment.
@@ -199,118 +200,75 @@ public class ClearCacheVerticleTest {
 
         final WebClient client = WebClient.create(Vertx.vertx());
         final Async asyncTask = aContext.async();
+        final Future<Integer> vertImageWidth = putObjectS3(TIFFVERT_PATH).compose(success -> {
+            return getInfoJsonObject();
+        });
 
-        //look into futures and compose
-        // for (int index = 0; index < 500; index++) {
-
-            //reply code should be 202
-            // sendMessage(imageIDKey, asyncTask, HTTP.ACCEPTED, aContext);
-        // }
-
-        Future.<Void>future(getInfo -> {
-            LOGGER.info("Entered getInfoJsonObject");
-            getInfoJsonObject(getInfo);
-        })
-        .compose(success -> {
-            return Future.<Void>future(sendMessage -> {
-                myRunTestOnContextRule.vertx()
-                .eventBus().<JsonObject>send(VERTICLE_NAME, new JsonObject()
-                .put("imageID", imageIDKey), reply -> {
-                    if (reply.failed()) {
-                        ReplyException re = (ReplyException) reply.cause();
-
-                        LOGGER.info(String.valueOf(re.failureCode()));
-                        aContext.fail(re.getMessage());
-                    } else {
-                        sendMessage.complete();
-                    }
-                });
+        vertImageWidth.compose(width -> {
+            final Future<Integer> horiImageWidth = sendMessage(imageIDKey).compose(success -> {
+                return putObjectS3(TIFFHORI_PATH);
+            }).compose(success -> {
+                return getInfoJsonObject();
             });
-        })
-        .compose(success -> {
-            return Future.<Void>future(putObS3 -> {
-                try {
-                    myAmazonS3.putObject(s3Bucket, imageIDKey, new File(TIFFHORI_PATH));
-                    putObS3.complete();
-                } catch(AmazonServiceException e) {
-                    LOGGER.error(e.getErrorMessage());
-                    putObS3.fail(e.getErrorMessage());
+
+            return horiImageWidth.compose(horiWidth -> {
+                if(horiWidth == width) {
+                    return sendMessage(imageIDKey).compose(success -> {
+                            return Future.failedFuture("Cantaloupe cache was not properly cleared. Image remained the same after attempt of clearing.");
+                        });
+                } else {
+                    return sendMessage(imageIDKey);
                 }
-                LOGGER.info("Entered into putObjectS3");
             });
-        })
-        .compose(success -> {
-            return Future.<Void>future(getInfo -> {
-                LOGGER.info("Entered getInfoJsonObject");
-                getInfoJsonObject(getInfo);
-            });
-        })
-        .compose(success -> {
-            return Future.<Void>future(finish -> {
-                LOGGER.info("Enter into final compose success");
-                TestUtils.complete(asyncTask);
-            });
+
+        }).onSuccess(result -> {
+            myAmazonS3.deleteObject(s3Bucket, imageIDKeyJPX);
+            TestUtils.complete(asyncTask);
+        }).onFailure(failure -> {
+            myAmazonS3.deleteObject(s3Bucket, imageIDKeyJPX);
+            LOGGER.error(failure.getMessage());
+            aContext.fail();
         });
-
-
-        // .compose(success -> {
-        //     return putObjectS3();
-        // }).compose(success -> {
-        //     return getInfoJsonObject();
-        // })
-
-        // sendMessage(imageIDKey, asyncTask, HTTP.ACCEPTED, aContext);
-
-
-        myAmazonS3.deleteObject(s3Bucket, imageIDKey);
-
-        // response -> {
-        //         if (response.succeeded()){
-        //             JsonObject myObject = new JsonObject(response.body());
-        //         } else {
-        //             LOGGER.error(response.cause(), response.cause().getMessage());
-        //         }
-        // });
-        // try {
-        //     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        //     JsonObject myObject = new JsonObject(response.body());
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // } catch (InterruptedException e) {
-        //     e.printStackTrace();
-        // }
-
-        // clean up our test files
     }
 
-    private void getInfoJsonObject(final Promise<Void> promise) {
+    /**
+     * Gets info.json from Cantaloupe of specific image
+     *
+     * @param aContext
+     */
+    private Future<Integer> getInfoJsonObject() {
         final WebClient client = WebClient.create(Vertx.vertx());
-        LOGGER.info("Entered getInfoJsonObject");
-        client.getAbs("https://test.iiif.library.ucla.edu/iiif/2/ClearCacheTest/info.json")
+        final Promise<Integer> promise = Promise.promise();
+
+        client.getAbs("https://test.iiif.library.ucla.edu/iiif/2/newKeyTest2/info.json")
         .putHeader("content-type", "application/json")
-        .send(res -> {
-          if(res.succeeded()) {
-            //   JsonObject body = res.result().body().toJsonObject();
-            LOGGER.info("Result succeeeded");
-            LOGGER.info(res.result().body().toString());
-            promise.complete();
-          } else {
-            LOGGER.error(res.cause(), res.cause().getMessage());
-            promise.complete();
-          }
+        .send(result -> {
+            if (result.succeeded()){
+                // final HttpResponse response = result.result();
+                LOGGER.info(result.result().body().toJsonObject().getInteger("width").toString());
+                promise.complete(result.result().body().toJsonObject().getInteger("width"));
+            }
         });
 
-    }
+        return promise.future();
+   }
 
-    private Future<String> putObjectS3() {
-        Future<String> future = Future.future();
+    private Future<Void> putObjectS3(final String path) {
+        final Promise<Void> promise = Promise.promise();
         try {
-            myAmazonS3.putObject(s3Bucket, imageIDKey, new File(TIFFHORI_PATH));
+            myAmazonS3.putObject(s3Bucket, imageIDKeyJPX, new File(path));
+            promise.complete();
+            // try {
+            //     TimeUnit.SECONDS.sleep(10);
+            // } catch (final InterruptedException details) {
+            //     aContext.fail(details);
+            // }
         } catch(AmazonServiceException e) {
             LOGGER.error(e.getErrorMessage());
+            promise.fail(e.getErrorMessage());
         }
         LOGGER.info("Entered into putObjectS3");
-        return future;
+        return promise.future();
     }
 
     /**
@@ -324,28 +282,68 @@ public class ClearCacheVerticleTest {
         final String imageIDNull = null;
         final Async asyncTask = aContext.async();
 
-        sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext);
+        // sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext, null);
+        sendMessage(imageIDNull).onFailure(failure -> {
+            if (Integer.parseInt(failure.getMessage()) == HTTP.INTERNAL_SERVER_ERROR){
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail();
+            }
+        }).onSuccess(success -> {
+            aContext.fail();
+        });
     }
 
     /**
      * Sends message over eventBus to ClearCacheVerticle and verifies expected code is returned with failure
      */
-    private void sendMessage(final String imageID, final Async asyncTask, final Integer replyCode, final TestContext aContext){
+    private Future<Void> sendMessage(final String imageID) {
+        final Promise<Void> promise = Promise.promise();
         myRunTestOnContextRule.vertx()
                 .eventBus().<JsonObject>send(VERTICLE_NAME, new JsonObject()
                 .put("imageID", imageID), reply -> {
                     if (reply.failed()) {
                         ReplyException re = (ReplyException) reply.cause();
-
                         LOGGER.info(String.valueOf(re.failureCode()));
-                        if (replyCode != re.failureCode()) {
-                            aContext.fail(re.getMessage());
-                        } else {
-                            TestUtils.complete(asyncTask);
-                        }
+                        promise.fail(String.valueOf(re.failureCode()));
                     } else {
-                        TestUtils.complete(asyncTask);
+                        promise.complete();
                     }
                 });
+        return promise.future();
     }
+
+    // private void configRetriever() {
+    //     final ConfigRetriever configRetriever = ConfigRetriever.create(Vertx.vertx());
+
+    //     configRetriever.getConfig(configuration -> {
+    //         if (configuration.failed()) {
+    //             aContext.fail(configuration.cause());
+    //         } else {
+    //             final JsonObject config = configuration.result();
+    //             final DeploymentOptions options = new DeploymentOptions().setConfig(config);
+
+    //             myRunTestOnContextRule.vertx()
+    //                 .deployVerticle(VERTICLE_NAME, options, deployment -> {
+    //                     if (deployment.succeeded()) {
+    //                         myVertID = deployment.result();
+    //                         TestUtils.complete(asyncTask);
+
+    //                         if (myAmazonS3 == null) {
+    //                             final String s3AccessKey = ""
+    //                             final String s3SecretKey = "";
+
+    //                             // get myAWSCredentials ready
+    //                             myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
+
+    //                             // instantiate the myAmazonS3 client
+    //                             myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+    //                         }
+    //                     } else {
+    //                         aContext.fail(deployment.cause());
+    //                     }
+    //                 });
+    //         }
+    //     });
+    // }
 }

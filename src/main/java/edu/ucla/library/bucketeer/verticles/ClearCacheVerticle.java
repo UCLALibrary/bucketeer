@@ -40,14 +40,18 @@ public class ClearCacheVerticle extends AbstractVerticle {
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
+        //check values aren't nullnand if they aren't null then request to status endpoint of canta
+        // if (myUsername == null || myPassword == null) {
+            //throw an exception
+        //     message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_603));
+        // }
+
         getJsonConsumer().handler(message -> {
             final String imageID = message.body().getString("imageID");
             LOGGER.info(imageID);
 
             // This will eventually be a feature flag but this solves the issue for now
-            if (myUsername == null && myPassword == null) {
-                message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_603));
-            } else if (imageID == null) {
+            if (imageID == null) {
                 message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_604));
             } else {
                 client.postAbs("https://test.iiif.library.ucla.edu/tasks")
