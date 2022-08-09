@@ -13,6 +13,8 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.core.VertxException;
+import io.vertx.core.Promise;
 
 
 
@@ -31,7 +33,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
      * Clears cantaloupe cache and sends message if failure
      */
     @Override
-    public void start() throws Exception {
+    public void start(final Promise<Void> aPromise) throws Exception {
         super.start();
 
         final WebClient client = WebClient.create(Vertx.vertx());
@@ -40,11 +42,18 @@ public class ClearCacheVerticle extends AbstractVerticle {
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
-        //check values aren't nullnand if they aren't null then request to status endpoint of canta
-        // if (myUsername == null || myPassword == null) {
-            //throw an exception
-        //     message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_603));
-        // }
+        //check values aren't null and if they aren't null then request to status endpoint of cantaloupe
+        if (myUsername == null || myPassword == null) {
+            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
+        } else {
+            client.postAbs("https://test.iiif.library.ucla.edu/tasks")
+                  .basicAuthentication(myUsername, myPassword)
+                  .send(post -> {
+                      if(post.failed()) {
+                        aPromise.fail(post.cause());
+                      }
+                  });
+        }
 
         getJsonConsumer().handler(message -> {
             final String imageID = message.body().getString("imageID");
@@ -73,6 +82,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     });
             }
         });
+        aPromise.complete();
     }
 
     protected Logger getLogger() {

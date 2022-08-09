@@ -193,11 +193,6 @@ public class ClearCacheVerticleTest {
      */
     @Test
     public void testCacheClear(final TestContext aContext) {
-        /* An issue popped up during initial testing that gave different results when multiple
-         * requests are queued so multiple messages are sent over the eventBus to see if the correct
-         * response is received
-         */
-
         final WebClient client = WebClient.create(Vertx.vertx());
         final Async asyncTask = aContext.async();
         final Future<Integer> vertImageWidth = putObjectS3(TIFFVERT_PATH).compose(success -> {
@@ -232,6 +227,29 @@ public class ClearCacheVerticleTest {
     }
 
     /**
+     * Tests clearing Cantaloupe's cache with null imageID
+     *
+     * @param aContext
+     */
+    @Test
+    public void testNoImageID(final TestContext aContext) {
+
+        final String imageIDNull = null;
+        final Async asyncTask = aContext.async();
+
+        // sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext, null);
+        sendMessage(imageIDNull).onFailure(failure -> {
+            if (Integer.parseInt(failure.getMessage()) == HTTP.INTERNAL_SERVER_ERROR){
+                TestUtils.complete(asyncTask);
+            } else {
+                aContext.fail();
+            }
+        }).onSuccess(success -> {
+            aContext.fail();
+        });
+    }
+
+    /**
      * Gets info.json from Cantaloupe of specific image
      *
      * @param aContext
@@ -258,40 +276,12 @@ public class ClearCacheVerticleTest {
         try {
             myAmazonS3.putObject(s3Bucket, imageIDKeyJPX, new File(path));
             promise.complete();
-            // try {
-            //     TimeUnit.SECONDS.sleep(10);
-            // } catch (final InterruptedException details) {
-            //     aContext.fail(details);
-            // }
         } catch(AmazonServiceException e) {
             LOGGER.error(e.getErrorMessage());
             promise.fail(e.getErrorMessage());
         }
         LOGGER.info("Entered into putObjectS3");
         return promise.future();
-    }
-
-    /**
-     * Tests clearing Cantaloupe's cache with null imageID
-     *
-     * @param aContext
-     */
-    @Test
-    public void testNoImageID(final TestContext aContext) {
-
-        final String imageIDNull = null;
-        final Async asyncTask = aContext.async();
-
-        // sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext, null);
-        sendMessage(imageIDNull).onFailure(failure -> {
-            if (Integer.parseInt(failure.getMessage()) == HTTP.INTERNAL_SERVER_ERROR){
-                TestUtils.complete(asyncTask);
-            } else {
-                aContext.fail();
-            }
-        }).onSuccess(success -> {
-            aContext.fail();
-        });
     }
 
     /**
@@ -312,38 +302,4 @@ public class ClearCacheVerticleTest {
                 });
         return promise.future();
     }
-
-    // private void configRetriever() {
-    //     final ConfigRetriever configRetriever = ConfigRetriever.create(Vertx.vertx());
-
-    //     configRetriever.getConfig(configuration -> {
-    //         if (configuration.failed()) {
-    //             aContext.fail(configuration.cause());
-    //         } else {
-    //             final JsonObject config = configuration.result();
-    //             final DeploymentOptions options = new DeploymentOptions().setConfig(config);
-
-    //             myRunTestOnContextRule.vertx()
-    //                 .deployVerticle(VERTICLE_NAME, options, deployment -> {
-    //                     if (deployment.succeeded()) {
-    //                         myVertID = deployment.result();
-    //                         TestUtils.complete(asyncTask);
-
-    //                         if (myAmazonS3 == null) {
-    //                             final String s3AccessKey = ""
-    //                             final String s3SecretKey = "";
-
-    //                             // get myAWSCredentials ready
-    //                             myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
-
-    //                             // instantiate the myAmazonS3 client
-    //                             myAmazonS3 = new AmazonS3Client(myAWSCredentials);
-    //                         }
-    //                     } else {
-    //                         aContext.fail(deployment.cause());
-    //                     }
-    //                 });
-    //         }
-    //     });
-    // }
 }
