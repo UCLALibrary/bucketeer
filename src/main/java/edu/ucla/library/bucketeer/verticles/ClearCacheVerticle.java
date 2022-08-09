@@ -46,11 +46,16 @@ public class ClearCacheVerticle extends AbstractVerticle {
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
-            client.postAbs("https://test.iiif.library.ucla.edu/tasks")
+            client.getAbs("https://test.iiif.library.ucla.edu/configuration")
                   .basicAuthentication(myUsername, myPassword)
                   .send(post -> {
                       if(post.failed()) {
-                        aPromise.fail(post.cause());
+                          aPromise.fail(post.cause());
+                      } else {
+                        if(post.result().statusCode() != HTTP.OK){
+                            LOGGER.info(Integer.toString(post.result().statusCode()));
+                            aPromise.fail(post.cause());
+                        }
                       }
                   });
         }
@@ -70,7 +75,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                         if (post.succeeded()) {
                             if(post.result().statusCode() == HTTP.ACCEPTED){
-                                LOGGER.info(Integer.toString(post.result().statusCode()));
+                                // LOGGER.info(Integer.toString(post.result().statusCode()));
                                 message.reply(message.body());
                             } else {
                                 message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));

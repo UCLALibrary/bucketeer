@@ -263,7 +263,7 @@ public class ClearCacheVerticleTest {
         .send(result -> {
             if (result.succeeded()){
                 // final HttpResponse response = result.result();
-                LOGGER.info(result.result().body().toJsonObject().getInteger("width").toString());
+                // LOGGER.info(result.result().body().toJsonObject().getInteger("width").toString());
                 promise.complete(result.result().body().toJsonObject().getInteger("width"));
             }
         });
