@@ -49,20 +49,18 @@ public class ClearCacheVerticle extends AbstractVerticle {
             client.getAbs("https://test.iiif.library.ucla.edu/configuration")
                   .basicAuthentication(myUsername, myPassword)
                   .send(post -> {
-                      if(post.failed()) {
-                          aPromise.fail(post.cause());
-                      } else {
-                        if(post.result().statusCode() != HTTP.OK){
-                            LOGGER.info(Integer.toString(post.result().statusCode()));
-                            aPromise.fail(post.cause());
+                        if(post.failed()) {
+                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                        } else if(post.result().statusCode() != HTTP.OK) {
+                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                        } else {
+                            aPromise.complete();
                         }
-                      }
                   });
         }
 
         getJsonConsumer().handler(message -> {
             final String imageID = message.body().getString("imageID");
-            LOGGER.info(imageID);
 
             // This will eventually be a feature flag but this solves the issue for now
             if (imageID == null) {
@@ -75,7 +73,6 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                         if (post.succeeded()) {
                             if(post.result().statusCode() == HTTP.ACCEPTED){
-                                // LOGGER.info(Integer.toString(post.result().statusCode()));
                                 message.reply(message.body());
                             } else {
                                 message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));
@@ -87,7 +84,6 @@ public class ClearCacheVerticle extends AbstractVerticle {
                     });
             }
         });
-        aPromise.complete();
     }
 
     protected Logger getLogger() {

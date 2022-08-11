@@ -204,10 +204,11 @@
   <entry key="BUCKETEER-600">Bad Request: No item ID supplied</entry>
   <entry key="BUCKETEER-601">Bad Request: No job name supplied</entry>
   <entry key="BUCKETEER-602">Bad Request: Status update must be 'true' or 'false'</entry>
-  <entry key="BUCKETEER-603">Username and Password are purposefully not set in the ClearCacheVerticle.</entry>
+  <entry key="BUCKETEER-603">Username or password is null</entry>
   <entry key="BUCKETEER-604">The imageID cannot be null: will cause nullptr excpetion</entry>
   <entry key="BUCKETEER-605">Verticle ID is null</entry>
   <entry key="BUCKETEER-606">Connecting with Cantaloupe user: {}</entry>
   <entry key="BUCKETEER-607">Cantalope cache could not be cleared: {}</entry>
   <entry key="BUCKETEER-608">Response to clear Cantalope cache is not 202</entry>
+  <entry key="BUCKETEER-609">Username or password is not valid</entry>
 </properties>

@@ -25,7 +25,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -87,6 +88,12 @@ public class ClearCacheVerticleTest {
     private static String s3Bucket = "unconfigured";
 
     /**
+     * Deployment options for this test
+     */
+    // private static DeploymentOptions options;
+    private JsonObject configs;
+
+    /**
     * A test context from which references to Vert.x can be retrieved.
     */
     @Rule
@@ -112,6 +119,8 @@ public class ClearCacheVerticleTest {
      */
     private AmazonS3 myAmazonS3;
 
+    // private List<String> vertIDs = new ArrayList<>();
+
     /**
      * Sets up the tests.
      *
@@ -126,31 +135,19 @@ public class ClearCacheVerticleTest {
             if (configuration.failed()) {
                 aContext.fail(configuration.cause());
             } else {
-                final JsonObject config = configuration.result();
-                final DeploymentOptions options = new DeploymentOptions().setConfig(config);
+                configs = configuration.result();
+                TestUtils.complete(asyncTask);
+                if (myAmazonS3 == null) {
+                    final String s3AccessKey = configs.getString(Config.S3_ACCESS_KEY);
+                    final String s3SecretKey = configs.getString(Config.S3_SECRET_KEY);
 
-                myRunTestOnContextRule.vertx()
-                    .deployVerticle(VERTICLE_NAME, options, deployment -> {
-                        if (deployment.succeeded()) {
-                            myVertID = deployment.result();
-                            TestUtils.complete(asyncTask);
+                    // get myAWSCredentials ready
+                    myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
 
-                            if (myAmazonS3 == null) {
-                                final String s3AccessKey = config.getString(Config.S3_ACCESS_KEY);
-                                final String s3SecretKey = config.getString(Config.S3_SECRET_KEY);
-
-                                // get myAWSCredentials ready
-                                myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
-
-                                // instantiate the myAmazonS3 client
-                                myAmazonS3 = new AmazonS3Client(myAWSCredentials);
-                            }
-
-                            s3Bucket = config.getString(Config.S3_BUCKET);
-                        } else {
-                            aContext.fail(deployment.cause());
-                        }
-                    });
+                    // instantiate the myAmazonS3 client
+                    myAmazonS3 = new AmazonS3Client(myAWSCredentials);
+                }
+                s3Bucket = configs.getString(Config.S3_BUCKET);
             }
         });
     }
@@ -171,7 +168,6 @@ public class ClearCacheVerticleTest {
      */
     @After
     public void tearDown(final TestContext aContext) {
-
         if (myVertID != null) {
             final Async async = aContext.async();
             myRunTestOnContextRule.vertx().undeploy(myVertID, undeployment -> {
@@ -195,8 +191,12 @@ public class ClearCacheVerticleTest {
     public void testCacheClear(final TestContext aContext) {
         final WebClient client = WebClient.create(Vertx.vertx());
         final Async asyncTask = aContext.async();
-        final Future<Integer> vertImageWidth = putObjectS3(TIFFVERT_PATH).compose(success -> {
-            return getInfoJsonObject();
+        // final Future<String> deployThisVerticle = deployNewVerticle(options);
+        final Future<Integer> vertImageWidth = deployNewVerticle(configs).compose(verticleID -> {
+            myVertID = verticleID;
+            return putObjectS3(TIFFVERT_PATH).compose(success -> {
+                return getInfoJsonObject();
+            });
         });
 
         vertImageWidth.compose(width -> {
@@ -233,13 +233,15 @@ public class ClearCacheVerticleTest {
      */
     @Test
     public void testNoImageID(final TestContext aContext) {
-
         final String imageIDNull = null;
         final Async asyncTask = aContext.async();
-
-        // sendMessage(imageIDNull, asyncTask, HTTP.INTERNAL_SERVER_ERROR, aContext, null);
-        sendMessage(imageIDNull).onFailure(failure -> {
+        // final Future<String> deployThisVerticle = deployNewVerticle(options);
+        deployNewVerticle(configs).compose(verticleID -> {
+            myVertID = verticleID;
+            return sendMessage(imageIDNull);
+        }).onFailure(failure -> {
             if (Integer.parseInt(failure.getMessage()) == HTTP.INTERNAL_SERVER_ERROR){
+                LOGGER.info(failure.getMessage());
                 TestUtils.complete(asyncTask);
             } else {
                 aContext.fail();
@@ -247,6 +249,50 @@ public class ClearCacheVerticleTest {
         }).onSuccess(success -> {
             aContext.fail();
         });
+    }
+
+    /**
+     * Tests that verticles fails when given null credentials
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public void testNullCredential(final TestContext aContext) {
+        final Async asyncTask = aContext.async();
+        final JsonObject nullConfigs = configs;
+
+        nullConfigs.put("bucketeer.iiif.cache.user", (String) null);
+        nullConfigs.put("bucketeer.iiif.cache.password", (String) null);
+
+        deployNewVerticle(nullConfigs)
+            .onFailure(failure -> {
+                LOGGER.info(failure.getMessage());
+                TestUtils.complete(asyncTask);
+            }).onSuccess(success ->{
+                aContext.fail();
+            });
+    }
+
+    /**
+     * Tests that verticles fails when given invalid credentials
+     *
+     * @param aContext A testing context
+     */
+    @Test
+    public void testInvalidCredential(final TestContext aContext) {
+        final Async asyncTask = aContext.async();
+        final JsonObject newConfigs = configs;
+
+        newConfigs.put("bucketeer.iiif.cache.user", "username");
+        newConfigs.put("bucketeer.iiif.cache.password", "password");
+
+        deployNewVerticle(newConfigs)
+            .onFailure(failure -> {
+                LOGGER.info(failure.getMessage());
+                TestUtils.complete(asyncTask);
+            }).onSuccess(success ->{
+                aContext.fail();
+            });
     }
 
     /**
@@ -262,8 +308,6 @@ public class ClearCacheVerticleTest {
         .putHeader("content-type", "application/json")
         .send(result -> {
             if (result.succeeded()){
-                // final HttpResponse response = result.result();
-                // LOGGER.info(result.result().body().toJsonObject().getInteger("width").toString());
                 promise.complete(result.result().body().toJsonObject().getInteger("width"));
             }
         });
@@ -271,6 +315,9 @@ public class ClearCacheVerticleTest {
         return promise.future();
    }
 
+    /**
+     * Puts image into AmazonS3 bucket
+     */
     private Future<Void> putObjectS3(final String path) {
         final Promise<Void> promise = Promise.promise();
         try {
@@ -280,7 +327,6 @@ public class ClearCacheVerticleTest {
             LOGGER.error(e.getErrorMessage());
             promise.fail(e.getErrorMessage());
         }
-        LOGGER.info("Entered into putObjectS3");
         return promise.future();
     }
 
@@ -294,12 +340,28 @@ public class ClearCacheVerticleTest {
                 .put("imageID", imageID), reply -> {
                     if (reply.failed()) {
                         ReplyException re = (ReplyException) reply.cause();
-                        LOGGER.info(String.valueOf(re.failureCode()));
                         promise.fail(String.valueOf(re.failureCode()));
                     } else {
                         promise.complete();
                     }
                 });
+        return promise.future();
+    }
+
+    /**
+     * Deploys ClearCache verticle
+     */
+    private Future<String> deployNewVerticle(final JsonObject config) {
+        final Promise<String> promise = Promise.promise();
+        final DeploymentOptions option = new DeploymentOptions().setConfig(config);
+        myRunTestOnContextRule.vertx()
+            .deployVerticle(VERTICLE_NAME, option, deployment -> {
+                if (deployment.succeeded()) {
+                    promise.complete(deployment.result());
+                } else {
+                    promise.fail(deployment.cause());
+                }
+            });
         return promise.future();
     }
 }
