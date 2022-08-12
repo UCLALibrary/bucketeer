@@ -974,6 +974,8 @@
                       <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
                       <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
                       <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                       <HEAP_SIZE>1g</HEAP_SIZE>
                     </env>
                     <wait>
@@ -1013,6 +1015,8 @@
                       <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
                       <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-off.conf</FEATURE_FLAGS>
                       <HEAP_SIZE>300m</HEAP_SIZE>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                     </env>
                     <wait>
                       <http>
@@ -1052,6 +1056,8 @@
                       <BUCKETEER_FS_CSV_MOUNT>${bucketeer.fs.csv.mount}</BUCKETEER_FS_CSV_MOUNT>
                       <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-on.conf</FEATURE_FLAGS>
                       <HEAP_SIZE>300m</HEAP_SIZE>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                     </env>
                     <wait>
                       <http>

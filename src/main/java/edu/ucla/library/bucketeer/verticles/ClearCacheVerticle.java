@@ -13,10 +13,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.core.VertxException;
 import io.vertx.core.Promise;
-
-
 
 /**
  * A verticle to clear cantaloupe cache
@@ -38,24 +35,25 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
         final WebClient client = WebClient.create(Vertx.vertx());
         final JsonObject config = config();
+        final String IIIFUrl = config.getString(Config.IIIF_URL);
 
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
-        //check values aren't null and if they aren't null then request to status endpoint of cantaloupe
+        //Vertify credentials are valid
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
-            client.getAbs("https://test.iiif.library.ucla.edu/configuration")
+            client.getAbs(IIIFUrl + "/configuration")
                   .basicAuthentication(myUsername, myPassword)
                   .send(post -> {
-                        if(post.failed()) {
-                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
-                        } else if(post.result().statusCode() != HTTP.OK) {
-                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
-                        } else {
-                            aPromise.complete();
-                        }
+                      if (post.failed()) {
+                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                      } else if (post.result().statusCode() != HTTP.OK) {
+                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                      } else {
+                          aPromise.complete();
+                      }
                   });
         }
 
@@ -66,13 +64,13 @@ public class ClearCacheVerticle extends AbstractVerticle {
             if (imageID == null) {
                 message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_604));
             } else {
-                client.postAbs("https://test.iiif.library.ucla.edu/tasks")
+                client.postAbs(IIIFUrl + "/tasks")
                     .basicAuthentication(myUsername, myPassword)
-                    .putHeader("content-type", "application/json")
+                    .putHeader(Constants.CONTENT_TYPE, "application/json")
                     .sendJsonObject(new JsonObject()
                     .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                         if (post.succeeded()) {
-                            if(post.result().statusCode() == HTTP.ACCEPTED){
+                            if (post.result().statusCode() == HTTP.ACCEPTED) {
                                 message.reply(message.body());
                             } else {
                                 message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));
