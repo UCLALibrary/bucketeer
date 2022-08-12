@@ -60,3 +60,4 @@ jobs:
             -Dbucketeer.iiif.url="${{ secrets.BUCKETEER_IIIF_URL }}"
             -Dbucketeer.iiif.cache.password="${{ secrets.BUCKETEER_IIIF_CACHE_PASSWORD }}"
             -Dbucketeer.iiif.cache.user="${{ secrets.BUCKETEER_IIIF_CACHE_USER }}"
+            
