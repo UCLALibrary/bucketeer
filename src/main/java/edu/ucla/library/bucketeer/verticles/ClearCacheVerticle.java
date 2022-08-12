@@ -48,9 +48,9 @@ public class ClearCacheVerticle extends AbstractVerticle {
                   .basicAuthentication(myUsername, myPassword)
                   .send(post -> {
                       if (post.failed()) {
-                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
                       } else if (post.result().statusCode() != HTTP.OK) {
-                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609));
+                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
                       } else {
                           aPromise.complete();
                       }

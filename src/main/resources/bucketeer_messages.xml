@@ -210,6 +210,6 @@
   <entry key="BUCKETEER-606">Connecting with Cantaloupe user: {}</entry>
   <entry key="BUCKETEER-607">Cantalope cache could not be cleared: {}</entry>
   <entry key="BUCKETEER-608">Response to clear Cantalope cache is not 202</entry>
-  <entry key="BUCKETEER-609">Username or password is not valid</entry>
+  <entry key="BUCKETEER-609">Username or password is not valid; Username: '{}'</entry>
   <entry key="BUCKETEER-610">Cantaloupe cache was not properly cleared; image remained the same after attempt of clearing</entry>
 </properties>
