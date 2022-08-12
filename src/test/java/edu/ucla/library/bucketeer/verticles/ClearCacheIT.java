@@ -217,7 +217,6 @@ public class ClearCacheIT {
             return sendMessage(imageIDNull);
         }).onFailure(failure -> {
             if (Integer.parseInt(failure.getMessage()) == HTTP.INTERNAL_SERVER_ERROR) {
-                LOGGER.info(failure.getMessage());
                 TestUtils.complete(asyncTask);
             } else {
                 aContext.fail();
@@ -242,7 +241,6 @@ public class ClearCacheIT {
 
         deployNewVerticle(nullConfigs)
             .onFailure(failure -> {
-                LOGGER.info(failure.getMessage());
                 TestUtils.complete(asyncTask);
             }).onSuccess(success -> {
                 aContext.fail();
@@ -264,7 +262,6 @@ public class ClearCacheIT {
 
         deployNewVerticle(newConfigs)
             .onFailure(failure -> {
-                LOGGER.info(failure.getMessage());
                 TestUtils.complete(asyncTask);
             }).onSuccess(success -> {
                 aContext.fail();
