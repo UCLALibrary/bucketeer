@@ -177,7 +177,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                                 }
 
                                 // Make sure the prefix ends with a slash if there is one
-                                if (iiifPrefix.charAt(prefix.length() - 1) != Constants.SLASH) {
+                                if (iiifPrefix.charAt(iiifPrefix.length() - 1) != Constants.SLASH) {
                                     iiifPrefix.append(Constants.SLASH);
                                 }
 
