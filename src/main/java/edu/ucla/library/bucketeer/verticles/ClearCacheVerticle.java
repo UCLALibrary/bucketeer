@@ -1,19 +1,19 @@
 package edu.ucla.library.bucketeer.verticles;
 
+import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
-import info.freelibrary.util.HTTP;
 
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.core.Promise;
 
 /**
  * A verticle to clear cantaloupe cache
@@ -40,17 +40,16 @@ public class ClearCacheVerticle extends AbstractVerticle {
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
 
-        //Vertify credentials are valid
+        // Verify credentials are valid
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
             client.getAbs(IIIFUrl + "/configuration")
                   .basicAuthentication(myUsername, myPassword)
                   .send(post -> {
-                      if (post.failed()) {
-                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
-                      } else if (post.result().statusCode() != HTTP.OK) {
-                          aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
+                      if (post.failed() || (post.result().statusCode() != HTTP.OK)) {
+                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609,
+                                    new StringBuilder(myUsername).reverse()));
                       } else {
                           aPromise.complete();
                       }
