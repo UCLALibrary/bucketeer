@@ -244,11 +244,21 @@ public class ClearCacheIT {
         nullConfigs.put(IIIIF_USERNAME, (String) null);
         nullConfigs.put(IIIIF_PASSWORD, (String) null);
 
+<<<<<<< HEAD
+        deployNewVerticle(nullConfigs)
+            .onFailure(failure -> {
+                TestUtils.complete(asyncTask);
+            }).onSuccess(success -> {
+                aContext.fail();
+            });
+=======
         deployNewVerticle(nullConfigs).onFailure(failure -> {
+            LOGGER.info(failure.getMessage());
             TestUtils.complete(asyncTask);
         }).onSuccess(success -> {
             aContext.fail();
         });
+>>>>>>> 034216e ([WIP] Small cleanup)
     }
 
     /**
@@ -264,11 +274,21 @@ public class ClearCacheIT {
         newConfigs.put(IIIIF_USERNAME, "username");
         newConfigs.put(IIIIF_PASSWORD, "password");
 
+<<<<<<< HEAD
+        deployNewVerticle(newConfigs)
+            .onFailure(failure -> {
+                TestUtils.complete(asyncTask);
+            }).onSuccess(success -> {
+                aContext.fail();
+            });
+=======
         deployNewVerticle(newConfigs).onFailure(failure -> {
+            LOGGER.info(failure.getMessage());
             TestUtils.complete(asyncTask);
         }).onSuccess(success -> {
             aContext.fail();
         });
+>>>>>>> 034216e ([WIP] Small cleanup)
     }
 
     /**
