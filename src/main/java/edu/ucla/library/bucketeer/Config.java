@@ -21,8 +21,11 @@ public final class Config {
 
     public static final String S3_BUCKET = "bucketeer.s3.bucket";
 
-    // The IIIF server URL in which the JPEG 2000 images end up
+    /** The IIIF server URL in which the JPEG 2000 images end up */
     public static final String IIIF_URL = "bucketeer.iiif.url";
+
+    /** The IIIF URL prefix configuration variable */
+    public static final String IIIF_PREFIX = "bucketeer.iiif.url.prefix";
 
     // The local large image Bucketeer server
     public static final String LARGE_IMAGE_URL = "large.image.url";

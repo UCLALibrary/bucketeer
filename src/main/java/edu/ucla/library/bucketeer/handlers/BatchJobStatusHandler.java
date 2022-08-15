@@ -19,8 +19,8 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
-import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.verticles.ClearCacheVerticle;
+import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -161,10 +161,27 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             item.setWorkflowState(WorkflowState.FAILED);
                         } else if (item.hasFile()) {
                             final StringBuilder iiif = new StringBuilder(myConfig.getString(Config.IIIF_URL, EMPTY));
+                            final String prefix = myConfig.getString(Config.IIIF_PREFIX, EMPTY);
 
                             // Just confirm the config value ends with a slash
                             if (iiif.charAt(iiif.length() - 1) != Constants.SLASH) {
                                 iiif.append(Constants.SLASH);
+                            }
+
+                            if (!EMPTY.equals(prefix)) {
+                                final StringBuilder iiifPrefix = new StringBuilder(prefix);
+
+                                // We ensure the IIIF URL ends with a slash
+                                if (iiifPrefix.charAt(0) == Constants.SLASH) {
+                                    iiifPrefix.deleteCharAt(0);
+                                }
+
+                                // Make sure the prefix ends with a slash if there is one
+                                if (iiifPrefix.charAt(prefix.length() - 1) != Constants.SLASH) {
+                                    iiifPrefix.append(Constants.SLASH);
+                                }
+
+                                iiif.append(iiifPrefix);
                             }
 
                             item.setWorkflowState(WorkflowState.SUCCEEDED);
@@ -192,12 +209,12 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
                     // Clear Cantaloupe cache of already processed images
-                    myVertx.eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(), new JsonObject()
-                           .put("imageID", imageId), reply -> {
+                    myVertx.eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(),
+                            new JsonObject().put("imageID", imageId), reply -> {
                                 if (reply.failed()) {
                                     LOGGER.error(MessageCodes.BUCKETEER_607, reply.cause());
                                 }
-                           });
+                            });
 
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
                 }

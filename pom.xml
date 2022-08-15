@@ -171,8 +171,11 @@
     <!-- The number of threads per instance; a number <= 0 sets to total logical cores minus one -->
     <s3.uploader.threads>1</s3.uploader.threads>
 
-    <!-- IIIF server URL (including the prefix, if there is one) -->
+    <!-- IIIF server URL -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
+
+    <!-- The IIIF server URL prefix (if there is one; e.g., /iiif/2/) -->
+    <bucketeer.iiif.url.prefix></bucketeer.iiif.url.prefix>
 
     <!-- Bucketeer server configured to handle large images -->
     <large.image.url>http://localhost:8888</large.image.url>

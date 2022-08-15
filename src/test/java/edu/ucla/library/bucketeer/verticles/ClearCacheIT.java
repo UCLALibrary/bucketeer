@@ -70,8 +70,6 @@ public class ClearCacheIT {
 
     private static final String IIIIF_PASSWORD = "bucketeer.iiif.cache.password";
 
-    private static String IIIF_URL;
-
     /**
      * Individual AWS credential
      */
@@ -84,6 +82,8 @@ public class ClearCacheIT {
      */
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
+
+    private static String myIiifURL;
 
     /**
      * Deployment options for this test
@@ -125,7 +125,7 @@ public class ClearCacheIT {
                 aContext.fail(configuration.cause());
             } else {
                 myConfigs = configuration.result();
-                IIIF_URL = myConfigs.getString(Config.IIIF_URL);
+                myIiifURL = myConfigs.getString(Config.IIIF_URL);
 
                 if (myAmazonS3 == null) {
                     final String s3AccessKey = myConfigs.getString(Config.S3_ACCESS_KEY);
@@ -283,7 +283,7 @@ public class ClearCacheIT {
         final WebClient client = WebClient.create(Vertx.vertx());
         final Promise<Integer> promise = Promise.promise();
 
-        client.getAbs(IIIF_URL + "/iiif/2/newKeyTest2/info.json").putHeader(CONTENT_TYPE, JSON).send(result -> {
+        client.getAbs(myIiifURL + "/iiif/2/newKeyTest2/info.json").putHeader(CONTENT_TYPE, JSON).send(result -> {
             if (result.succeeded()) {
                 promise.complete(result.result().body().toJsonObject().getInteger("width"));
             } else {

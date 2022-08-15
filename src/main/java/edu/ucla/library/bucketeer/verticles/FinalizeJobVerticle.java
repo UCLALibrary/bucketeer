@@ -187,7 +187,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     /**
      * Extract a simple URL, throwing out extra path/query/etc elements.
      *
-     * @param aLongURL The source URL to be stripped dowwn
+     * @param aLongURL The source URL to be stripped down
      */
     private String getSimpleURL(final String aLongURL) {
         final String colon = ":";
