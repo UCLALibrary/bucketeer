@@ -1,3 +1,4 @@
+
 package edu.ucla.library.bucketeer.verticles;
 
 import info.freelibrary.util.HTTP;
@@ -44,16 +45,14 @@ public class ClearCacheVerticle extends AbstractVerticle {
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
-            client.getAbs(IIIFUrl + "/configuration")
-                  .basicAuthentication(myUsername, myPassword)
-                  .send(post -> {
-                      if (post.failed() || (post.result().statusCode() != HTTP.OK)) {
-                            aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609,
-                                    new StringBuilder(myUsername).reverse()));
-                      } else {
-                          aPromise.complete();
-                      }
-                  });
+            client.getAbs(IIIFUrl + "/configuration").basicAuthentication(myUsername, myPassword).send(post -> {
+                if (post.failed() || (post.result().statusCode() != HTTP.OK)) {
+                    aPromise.fail(
+                            LOGGER.getMessage(MessageCodes.BUCKETEER_609, new StringBuilder(myUsername).reverse()));
+                } else {
+                    aPromise.complete();
+                }
+            });
         }
 
         getJsonConsumer().handler(message -> {
@@ -63,22 +62,21 @@ public class ClearCacheVerticle extends AbstractVerticle {
             if (imageID == null) {
                 message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_604));
             } else {
-                client.postAbs(IIIFUrl + "/tasks")
-                    .basicAuthentication(myUsername, myPassword)
-                    .putHeader(Constants.CONTENT_TYPE, "application/json")
-                    .sendJsonObject(new JsonObject()
-                    .put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
-                        if (post.succeeded()) {
-                            if (post.result().statusCode() == HTTP.ACCEPTED) {
-                                message.reply(message.body());
-                            } else {
-                                message.fail(post.result().statusCode(), LOGGER.getMessage(MessageCodes.BUCKETEER_608));
-                            }
-                        } else {
-                            LOGGER.error(post.cause(), post.cause().getMessage());
-                            message.fail(post.result().statusCode(), post.cause().getMessage());
-                        }
-                    });
+                client.postAbs(IIIFUrl + "/tasks").basicAuthentication(myUsername, myPassword)
+                        .putHeader(Constants.CONTENT_TYPE, "application/json").sendJsonObject(
+                                new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
+                                    if (post.succeeded()) {
+                                        if (post.result().statusCode() == HTTP.ACCEPTED) {
+                                            message.reply(message.body());
+                                        } else {
+                                            message.fail(post.result().statusCode(),
+                                                    LOGGER.getMessage(MessageCodes.BUCKETEER_608));
+                                        }
+                                    } else {
+                                        LOGGER.error(post.cause(), post.cause().getMessage());
+                                        message.fail(post.result().statusCode(), post.cause().getMessage());
+                                    }
+                                });
             }
         });
     }
