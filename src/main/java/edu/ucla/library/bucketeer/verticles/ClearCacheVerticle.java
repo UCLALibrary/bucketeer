@@ -36,7 +36,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
 
         final WebClient client = WebClient.create(Vertx.vertx());
         final JsonObject config = config();
-        final String IIIFUrl = config.getString(Config.IIIF_URL);
+        final String iiifURL = config.getString(Config.IIIF_URL);
 
         myUsername = config.getString(Config.IIIF_CACHE_USER);
         myPassword = config.getString(Config.IIIF_CACHE_PASSWORD);
@@ -45,10 +45,9 @@ public class ClearCacheVerticle extends AbstractVerticle {
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
-            client.getAbs(IIIFUrl + "/configuration").basicAuthentication(myUsername, myPassword).send(post -> {
+            client.getAbs(iiifURL + "/configuration").basicAuthentication(myUsername, myPassword).send(post -> {
                 if (post.failed() || (post.result().statusCode() != HTTP.OK)) {
-                    aPromise.fail(
-                            LOGGER.getMessage(MessageCodes.BUCKETEER_609, new StringBuilder(myUsername).reverse()));
+                    aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
                 } else {
                     aPromise.complete();
                 }
@@ -62,7 +61,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
             if (imageID == null) {
                 message.fail(HTTP.INTERNAL_SERVER_ERROR, LOGGER.getMessage(MessageCodes.BUCKETEER_604));
             } else {
-                client.postAbs(IIIFUrl + "/tasks").basicAuthentication(myUsername, myPassword)
+                client.postAbs(iiifURL + "/tasks").basicAuthentication(myUsername, myPassword)
                         .putHeader(Constants.CONTENT_TYPE, "application/json").sendJsonObject(
                                 new JsonObject().put("verb", "PurgeItemFromCache").put("identifier", imageID), post -> {
                                     if (post.succeeded()) {

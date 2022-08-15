@@ -83,7 +83,10 @@ public class ClearCacheIT {
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
-    private static String myIiifURL;
+    /**
+     * The URL for the IIIF image server.
+     */
+    private String myIiifURL;
 
     /**
      * Deployment options for this test
@@ -130,8 +133,6 @@ public class ClearCacheIT {
                 if (myAmazonS3 == null) {
                     final String s3AccessKey = myConfigs.getString(Config.S3_ACCESS_KEY);
                     final String s3SecretKey = myConfigs.getString(Config.S3_SECRET_KEY);
-
-                    LOGGER.debug("S3 Access Key: {}", s3AccessKey.replace('C', 'D'));
 
                     // get myAWSCredentials ready
                     myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
