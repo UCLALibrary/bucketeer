@@ -126,10 +126,12 @@ public class ClearCacheIT {
             } else {
                 myConfigs = configuration.result();
                 IIIF_URL = myConfigs.getString(Config.IIIF_URL);
-                TestUtils.complete(asyncTask);
+
                 if (myAmazonS3 == null) {
                     final String s3AccessKey = myConfigs.getString(Config.S3_ACCESS_KEY);
                     final String s3SecretKey = myConfigs.getString(Config.S3_SECRET_KEY);
+
+                    LOGGER.debug("S3 Access Key: {}", s3AccessKey.replace('C', 'D'));
 
                     // get myAWSCredentials ready
                     myAWSCredentials = new BasicAWSCredentials(s3AccessKey, s3SecretKey);
@@ -137,7 +139,9 @@ public class ClearCacheIT {
                     // instantiate the myAmazonS3 client
                     myAmazonS3 = new AmazonS3Client(myAWSCredentials);
                 }
+
                 s3Bucket = myConfigs.getString(Config.S3_BUCKET);
+                TestUtils.complete(asyncTask);
             }
         });
     }
@@ -150,12 +154,13 @@ public class ClearCacheIT {
     @After
     public void tearDown(final TestContext aContext) {
         if (myVertID != null) {
-            final Async async = aContext.async();
+            final Async asyncTask = aContext.async();
+
             myRunTestOnContextRule.vertx().undeploy(myVertID, undeployment -> {
                 if (undeployment.failed()) {
                     aContext.fail(undeployment.cause());
                 } else {
-                    async.complete();
+                    asyncTask.complete();
                 }
             });
         } else {
