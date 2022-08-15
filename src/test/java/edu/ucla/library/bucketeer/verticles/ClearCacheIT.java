@@ -1,21 +1,16 @@
+
 package edu.ucla.library.bucketeer.verticles;
+
+import static edu.ucla.library.bucketeer.Constants.CONTENT_TYPE;
+import static edu.ucla.library.bucketeer.Constants.JSON;
+
+import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import info.freelibrary.util.Logger;
-import info.freelibrary.util.LoggerFactory;
-import info.freelibrary.util.HTTP;
-
-import edu.ucla.library.bucketeer.Constants;
-import edu.ucla.library.bucketeer.utils.TestUtils;
-import edu.ucla.library.bucketeer.MessageCodes;
-import edu.ucla.library.bucketeer.Config;
-
-import java.io.File;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
@@ -23,18 +18,27 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 
+import info.freelibrary.util.HTTP;
+import info.freelibrary.util.Logger;
+import info.freelibrary.util.LoggerFactory;
+
+import edu.ucla.library.bucketeer.Config;
+import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.utils.TestUtils;
+
 import io.vertx.config.ConfigRetriever;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.DeploymentOptions;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.unit.junit.RunTestOnContext;
-import io.vertx.core.eventbus.ReplyException;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.client.WebClient;
 
 /**
  * Testing the mechanism used to clear Cantaloupe's cache.
@@ -170,6 +174,7 @@ public class ClearCacheIT {
         final Async asyncTask = aContext.async();
         final Future<Integer> vertImageWidth = deployNewVerticle(myConfigs).compose(verticleID -> {
             myVertID = verticleID;
+
             return putObjectS3(TIFFVERT_PATH).compose(success -> {
                 return getInfoJsonObject();
             });
@@ -183,13 +188,13 @@ public class ClearCacheIT {
             });
 
             return horiImageWidth.compose(horiWidth -> {
-                if (horiWidth == width) {
-                    return sendMessage(IMAGE_KEY).compose(success -> {
-                        return Future.failedFuture(LOGGER.getMessage(MessageCodes.BUCKETEER_610));
-                    });
-                } else {
+                if (horiWidth != width) {
                     return sendMessage(IMAGE_KEY);
                 }
+
+                return sendMessage(IMAGE_KEY).compose(success -> {
+                    return Future.failedFuture(LOGGER.getMessage(MessageCodes.BUCKETEER_610));
+                });
             });
 
         }).onSuccess(result -> {
@@ -239,12 +244,11 @@ public class ClearCacheIT {
         nullConfigs.put(IIIIF_USERNAME, (String) null);
         nullConfigs.put(IIIIF_PASSWORD, (String) null);
 
-        deployNewVerticle(nullConfigs)
-            .onFailure(failure -> {
-                TestUtils.complete(asyncTask);
-            }).onSuccess(success -> {
-                aContext.fail();
-            });
+        deployNewVerticle(nullConfigs).onFailure(failure -> {
+            TestUtils.complete(asyncTask);
+        }).onSuccess(success -> {
+            aContext.fail();
+        });
     }
 
     /**
@@ -260,12 +264,11 @@ public class ClearCacheIT {
         newConfigs.put(IIIIF_USERNAME, "username");
         newConfigs.put(IIIIF_PASSWORD, "password");
 
-        deployNewVerticle(newConfigs)
-            .onFailure(failure -> {
-                TestUtils.complete(asyncTask);
-            }).onSuccess(success -> {
-                aContext.fail();
-            });
+        deployNewVerticle(newConfigs).onFailure(failure -> {
+            TestUtils.complete(asyncTask);
+        }).onSuccess(success -> {
+            aContext.fail();
+        });
     }
 
     /**
@@ -275,13 +278,13 @@ public class ClearCacheIT {
         final WebClient client = WebClient.create(Vertx.vertx());
         final Promise<Integer> promise = Promise.promise();
 
-        client.getAbs(IIIF_URL + "/iiif/2/newKeyTest2/info.json")
-            .putHeader(Constants.CONTENT_TYPE, "application/json")
-            .send(result -> {
-                if (result.succeeded()) {
-                    promise.complete(result.result().body().toJsonObject().getInteger("width"));
-                }
-            });
+        client.getAbs(IIIF_URL + "/iiif/2/newKeyTest2/info.json").putHeader(CONTENT_TYPE, JSON).send(result -> {
+            if (result.succeeded()) {
+                promise.complete(result.result().body().toJsonObject().getInteger("width"));
+            } else {
+                promise.fail(result.cause());
+            }
+        });
         return promise.future();
     }
 
@@ -290,13 +293,15 @@ public class ClearCacheIT {
      */
     private Future<Void> putObjectS3(final String aPath) {
         final Promise<Void> promise = Promise.promise();
+
         try {
             myAmazonS3.putObject(s3Bucket, IMAGE_JPX, new File(aPath));
             promise.complete();
-        } catch (AmazonServiceException e) {
+        } catch (final AmazonServiceException e) {
             LOGGER.error(e.getErrorMessage());
             promise.fail(e.getErrorMessage());
         }
+
         return promise.future();
     }
 
@@ -305,9 +310,8 @@ public class ClearCacheIT {
      */
     private Future<Void> sendMessage(final String aImageID) {
         final Promise<Void> promise = Promise.promise();
-        myRunTestOnContextRule.vertx()
-                .eventBus().<JsonObject>send(VERTICLE_NAME, new JsonObject()
-                .put("imageID", aImageID), reply -> {
+        myRunTestOnContextRule.vertx().eventBus().<JsonObject>send(VERTICLE_NAME,
+                new JsonObject().put("imageID", aImageID), reply -> {
                     if (reply.failed()) {
                         final ReplyException re = (ReplyException) reply.cause();
                         promise.fail(String.valueOf(re.failureCode()));
@@ -324,14 +328,15 @@ public class ClearCacheIT {
     private Future<String> deployNewVerticle(final JsonObject aConfig) {
         final Promise<String> promise = Promise.promise();
         final DeploymentOptions option = new DeploymentOptions().setConfig(aConfig);
-        myRunTestOnContextRule.vertx()
-            .deployVerticle(VERTICLE_NAME, option, deployment -> {
-                if (deployment.succeeded()) {
-                    promise.complete(deployment.result());
-                } else {
-                    promise.fail(deployment.cause());
-                }
-            });
+
+        myRunTestOnContextRule.vertx().deployVerticle(VERTICLE_NAME, option, deployment -> {
+            if (deployment.succeeded()) {
+                promise.complete(deployment.result());
+            } else {
+                promise.fail(deployment.cause());
+            }
+        });
+
         return promise.future();
     }
 }
