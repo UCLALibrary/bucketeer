@@ -71,6 +71,8 @@ public class ClearCacheIT {
 
     private static final String IIIIF_PASSWORD = "bucketeer.iiif.cache.password";
 
+    private static final String IIIF_RESOURCE = "/iiif/2/newKeyTest2/info.json";
+
     /**
      * Individual AWS credential
      */
@@ -285,7 +287,9 @@ public class ClearCacheIT {
         final WebClient client = WebClient.create(Vertx.vertx());
         final Promise<Integer> promise = Promise.promise();
 
-        client.getAbs(myIiifURL + "/iiif/2/newKeyTest2/info.json").putHeader(CONTENT_TYPE, JSON).send(result -> {
+        LOGGER.debug(myIiifURL + IIIF_RESOURCE);
+
+        client.getAbs(myIiifURL + IIIF_RESOURCE).putHeader(CONTENT_TYPE, JSON).send(result -> {
             if (result.succeeded()) {
                 final String body = result.result().bodyAsString();
 
