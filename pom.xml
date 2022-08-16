@@ -971,6 +971,7 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
@@ -1010,6 +1011,7 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
@@ -1050,6 +1052,7 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>

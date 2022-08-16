@@ -57,6 +57,7 @@ jobs:
             -Dbucketeer.s3.secret_key="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
             -Dbucketeer.s3.region="${{ secrets.BUCKETEER_S3_REGION }}"
             -Dbucketeer.s3.bucket="${{ secrets.BUCKETEER_S3_BUCKET }}"
+            -Dbucketeer.s3.bucket="${{ secrets.LAMBDA_S3_BUCKET }}"
             -Dbucketeer.iiif.url="${{ secrets.BUCKETEER_IIIF_URL }}"
             -Dbucketeer.iiif.url.prefix="${{ secrets.BUCKETEER_IIIF_URL_PREFIX }}"
             -Dbucketeer.iiif.cache.password="${{ secrets.BUCKETEER_IIIF_CACHE_PASSWORD }}"
