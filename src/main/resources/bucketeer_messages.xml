@@ -212,5 +212,4 @@
   <entry key="BUCKETEER-608">Response to clear Cantalope cache is not 202</entry>
   <entry key="BUCKETEER-609">Username or password is not valid; Username: '{}'</entry>
   <entry key="BUCKETEER-610">Cantaloupe cache was not properly cleared; image remained the same after attempt of clearing</entry>
-  <entry key="BUCKETEER-611">Unexpected S3 reponse: {}</entry>
 </properties>
