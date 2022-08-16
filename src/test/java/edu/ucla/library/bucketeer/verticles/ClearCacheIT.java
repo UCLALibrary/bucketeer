@@ -289,11 +289,10 @@ public class ClearCacheIT {
             if (result.succeeded()) {
                 final String body = result.result().bodyAsString();
 
-                LOGGER.debug("BODY: {}", body);
-
                 try {
                     promise.complete(new JsonObject(body).getInteger("width"));
                 } catch (final DecodeException details) {
+                    LOGGER.error(details, MessageCodes.BUCKETEER_611, body);
                     promise.fail(details);
                 }
             } else {
