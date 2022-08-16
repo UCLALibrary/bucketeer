@@ -33,6 +33,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.ReplyException;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -286,11 +287,20 @@ public class ClearCacheIT {
 
         client.getAbs(myIiifURL + "/iiif/2/newKeyTest2/info.json").putHeader(CONTENT_TYPE, JSON).send(result -> {
             if (result.succeeded()) {
-                promise.complete(result.result().body().toJsonObject().getInteger("width"));
+                final String body = result.result().bodyAsString();
+
+                LOGGER.debug("BODY: {}", body);
+
+                try {
+                    promise.complete(new JsonObject(body).getInteger("width"));
+                } catch (final DecodeException details) {
+                    promise.fail(details);
+                }
             } else {
                 promise.fail(result.cause());
             }
         });
+
         return promise.future();
     }
 
