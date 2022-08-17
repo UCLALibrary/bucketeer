@@ -5,7 +5,6 @@ import static edu.ucla.library.bucketeer.Constants.MESSAGES;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 
 import com.github.seratch.jslack.Slack;
@@ -63,7 +62,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             if (json.containsKey(Constants.CSV_DATA)) {
                 final String jobName = json.getString(Constants.JOB_NAME);
                 final byte[] bytes = json.getString(Constants.CSV_DATA).getBytes(StandardCharsets.UTF_8);
-                final List<String> channels = Arrays.asList(new String[] { slackChannelID });
+                final List<String> channels = List.of(slackChannelID);
 
                 LOGGER.debug(MessageCodes.BUCKETEER_091, slackMessageText, slackChannelID);
 
