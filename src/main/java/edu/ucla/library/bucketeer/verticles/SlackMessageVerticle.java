@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.MethodsClient;
 import com.github.seratch.jslack.api.methods.SlackApiException;
@@ -23,6 +24,7 @@ import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
+
 import io.vertx.core.json.JsonObject;
 
 /**
