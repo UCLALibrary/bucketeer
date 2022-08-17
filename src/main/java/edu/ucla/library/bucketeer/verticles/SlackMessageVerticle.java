@@ -8,9 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import com.github.seratch.jslack.Slack;
+import com.github.seratch.jslack.api.methods.MethodsClient;
 import com.github.seratch.jslack.api.methods.SlackApiException;
-import com.github.seratch.jslack.api.methods.response.chat.ChatPostMessageResponse;
-import com.github.seratch.jslack.api.methods.response.files.FilesUploadResponse;
+import com.github.seratch.jslack.api.methods.SlackApiResponse;
+import com.github.seratch.jslack.api.methods.request.chat.ChatPostMessageRequest;
+import com.github.seratch.jslack.api.methods.request.files.FilesUploadRequest;
+
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
@@ -50,6 +53,8 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             final String slackMessageText = json.getString(Constants.SLACK_MESSAGE_TEXT);
             final String slackChannelID = json.getString(Config.SLACK_CHANNEL_ID);
             final String botToken = config.getString(Config.SLACK_OAUTH_TOKEN);
+            final MethodsClient client = slack.methods(botToken);
+            final SlackApiResponse response;
 
             if (json.containsKey(Constants.CSV_DATA)) {
                 final String jobName = json.getString(Constants.JOB_NAME);
@@ -59,36 +64,28 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                 try {
                     final byte[] bytes = json.getString(Constants.CSV_DATA).getBytes(StandardCharsets.UTF_8);
                     final List<String> channels = Arrays.asList(new String[] { slackChannelID });
-                    final FilesUploadResponse response = slack.methods(botToken).filesUpload(post -> post.channels(
-                            channels).fileData(bytes).filename(jobName + ".csv").filetype("csv").initialComment(
-                                    slackMessageText).title(jobName));
-                    // The above 'filetype' comes from --> https://api.slack.com/types/file#file_types
 
-                    if (response.isOk()) {
-                        LOGGER.debug(MessageCodes.BUCKETEER_087, slackChannelID, response.toString());
-                        message.reply(Op.SUCCESS);
-                    } else {
-                        message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
-                    }
+                    response = client.filesUpload(post -> post.channels(channels).fileData(bytes).filename(jobName + ".csv").filetype("csv").initialComment(slackMessageText).title(jobName));
+                    // The above 'filetype' comes from --> https://api.slack.com/types/file#file_types
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
+                    return;
                 }
             } else {
                 try {
-                    final ChatPostMessageResponse response = slack.methods(botToken).chatPostMessage(post -> post
-                            .channel(slackChannelID).text(slackMessageText));
-
-                    if (response.isOk()) {
-                        LOGGER.debug(MessageCodes.BUCKETEER_087, slackChannelID, response.toString());
-                        message.reply(Op.SUCCESS);
-                    } else {
-                        message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
-                    }
+                    response = client.chatPostMessage(post -> post.channel(slackChannelID).text(slackMessageText));
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
+                    return;
                 }
             }
 
+            if (response.isOk()) {
+                LOGGER.debug(MessageCodes.BUCKETEER_087, slackChannelID, response.toString());
+                message.reply(Op.SUCCESS);
+            } else {
+                message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_090), response.getError());
+            }
         });
     }
 
