@@ -55,7 +55,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             final String slackMessageText = json.getString(Constants.SLACK_MESSAGE_TEXT);
             final String slackChannelID = json.getString(Config.SLACK_CHANNEL_ID);
             final String botToken = config.getString(Config.SLACK_OAUTH_TOKEN);
-            final MethodsClient client = slack.methods(botToken);
+            final MethodsClient slackClient = slack.methods(botToken);
             final SlackApiRequest request;
             final SlackApiResponse response;
 
@@ -67,10 +67,11 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                 LOGGER.debug(MessageCodes.BUCKETEER_091, slackMessageText, slackChannelID);
 
                 // The 'filetype' comes from --> https://api.slack.com/types/file#file_types
-                request = FilesUploadRequest.builder().channels(channels).fileData(bytes).filename(jobName + ".csv").filetype("csv").initialComment(slackMessageText).title(jobName).build();
+                request = FilesUploadRequest.builder().channels(channels).fileData(bytes).filename(jobName + ".csv")
+                        .filetype("csv").initialComment(slackMessageText).title(jobName).build();
 
                 try {
-                    response = client.filesUpload((FilesUploadRequest) request);
+                    response = slackClient.filesUpload((FilesUploadRequest) request);
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                     return;
@@ -79,7 +80,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                 request = ChatPostMessageRequest.builder().channel(slackChannelID).text(slackMessageText).build();
 
                 try {
-                    response = client.chatPostMessage((ChatPostMessageRequest) request);
+                    response = slackClient.chatPostMessage((ChatPostMessageRequest) request);
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                     return;
