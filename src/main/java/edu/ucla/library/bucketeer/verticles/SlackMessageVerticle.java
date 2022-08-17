@@ -10,6 +10,7 @@ import java.util.List;
 import com.github.seratch.jslack.Slack;
 import com.github.seratch.jslack.api.methods.MethodsClient;
 import com.github.seratch.jslack.api.methods.SlackApiException;
+import com.github.seratch.jslack.api.methods.SlackApiRequest;
 import com.github.seratch.jslack.api.methods.SlackApiResponse;
 import com.github.seratch.jslack.api.methods.request.chat.ChatPostMessageRequest;
 import com.github.seratch.jslack.api.methods.request.files.FilesUploadRequest;
@@ -54,6 +55,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             final String slackChannelID = json.getString(Config.SLACK_CHANNEL_ID);
             final String botToken = config.getString(Config.SLACK_OAUTH_TOKEN);
             final MethodsClient client = slack.methods(botToken);
+            final SlackApiRequest request;
             final SlackApiResponse response;
 
             if (json.containsKey(Constants.CSV_DATA)) {
@@ -65,7 +67,8 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                     final byte[] bytes = json.getString(Constants.CSV_DATA).getBytes(StandardCharsets.UTF_8);
                     final List<String> channels = Arrays.asList(new String[] { slackChannelID });
 
-                    response = client.filesUpload(post -> post.channels(channels).fileData(bytes).filename(jobName + ".csv").filetype("csv").initialComment(slackMessageText).title(jobName));
+                    request = FilesUploadRequest.builder().channels(channels).fileData(bytes).filename(jobName + ".csv").filetype("csv").initialComment(slackMessageText).title(jobName).build();
+                    response = client.filesUpload((FilesUploadRequest) request);
                     // The above 'filetype' comes from --> https://api.slack.com/types/file#file_types
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
@@ -73,7 +76,8 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
                 }
             } else {
                 try {
-                    response = client.chatPostMessage(post -> post.channel(slackChannelID).text(slackMessageText));
+                    request = ChatPostMessageRequest.builder().channel(slackChannelID).text(slackMessageText).build();
+                    response = client.chatPostMessage((ChatPostMessageRequest) request);
                 } catch (IOException | SlackApiException details) {
                     message.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), details.getMessage());
                     return;
