@@ -67,6 +67,11 @@ public final class Config {
     // The Slack channel for errors
     public static final String SLACK_ERROR_CHANNEL_ID = "bucketeer.slack.error_channel_id";
 
+    // Configuration options for the Slack verticle
+    public static final String SLACK_MAX_RETRIES = "slack.max.retries";
+
+    public static final String SLACK_RETRY_DELAY = "slack.retry.delay";
+
     // The Slack OAuth token that Bucketeer uses to post to Slack channels
     public static final String SLACK_OAUTH_TOKEN = "bucketeer.slack.oauth_token";
 

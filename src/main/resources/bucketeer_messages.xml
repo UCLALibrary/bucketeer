@@ -201,6 +201,7 @@
   <entry key="BUCKETEER-520">The CSV '{}' could not be written to the mounted filesystem: {}.</entry>
   <entry key="BUCKETEER-521">There are spaces (" ") in one or more "File Name" entries in CSV {} for job {}</entry>
   <entry key="BUCKETEER-522">Bucketeer was not able to send a message through Slack so the CSV was not delivered</entry>
+  <entry key="BUCKETEER-523">Slack API request failed after {} tries</entry>
   <entry key="BUCKETEER-600">Bad Request: No item ID supplied</entry>
   <entry key="BUCKETEER-601">Bad Request: No job name supplied</entry>
   <entry key="BUCKETEER-602">Bad Request: Status update must be 'true' or 'false'</entry>

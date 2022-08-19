@@ -171,6 +171,12 @@
     <!-- The number of threads per instance; a number <= 0 sets to total logical cores minus one -->
     <s3.uploader.threads>1</s3.uploader.threads>
 
+    <!-- The maximum number of attempts we'll make to send a Slack API request -->
+    <slack.max.retries>30</slack.max.retries>
+
+    <!-- The number of seconds to wait between Slack API request retries -->
+    <slack.retry.delay>1</slack.retry.delay>
+
     <!-- IIIF server URL (including the prefix, if there is one) -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
 
