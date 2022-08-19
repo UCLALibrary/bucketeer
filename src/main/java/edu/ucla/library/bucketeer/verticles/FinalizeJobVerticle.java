@@ -28,6 +28,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
@@ -47,6 +48,8 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
     private String myFilesystemCsvMount;
 
+    private long mySlackMessageVerticleSendTimeout;
+
     @Override
     public void start() throws Exception {
         super.start();
@@ -56,6 +59,14 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         myIiifURL = getSimpleURL(myConfig.getString(Config.IIIF_URL));
         mySlackChannelID = myConfig.getString(Config.SLACK_CHANNEL_ID);
         myFilesystemCsvMount = myConfig.getString(Config.FILESYSTEM_CSV_MOUNT);
+
+        // Scale the {@link SlackMessageVerticle} send timeout with its retry configuration
+        if (config().containsKey(Config.SLACK_MAX_RETRIES) && myConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
+            mySlackMessageVerticleSendTimeout = 1000 * myConfig.getInteger(Config.SLACK_MAX_RETRIES) *
+                    myConfig.getInteger(Config.SLACK_RETRY_DELAY);
+        } else {
+            mySlackMessageVerticleSendTimeout = DeliveryOptions.DEFAULT_TIMEOUT;
+        }
 
         // Throw an error if the CSV filesystem mount feature is turned on but we don't have the path configured
         if (myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV) &&
@@ -307,6 +318,6 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             LOGGER.error(MessageCodes.BUCKETEER_522);
         });
 
-        sendMessage(promise, message, SlackMessageVerticle.class.getName(), Integer.MAX_VALUE);
+        sendMessage(promise, message, SlackMessageVerticle.class.getName(), mySlackMessageVerticleSendTimeout);
     }
 }
