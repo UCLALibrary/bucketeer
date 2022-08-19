@@ -35,7 +35,7 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
     private static final String FINALIZER = FinalizeJobVerticle.class.getName();
 
-    private long myFinalizeJobVerticleSendTimeout;
+    private long mySlackRetryDuration;
 
     @Override
     public void start() throws Exception {
@@ -43,10 +43,10 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
         // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
         if (config().containsKey(Config.SLACK_MAX_RETRIES) && config().containsKey(Config.SLACK_RETRY_DELAY)) {
-            myFinalizeJobVerticleSendTimeout = 1000 * config().getInteger(Config.SLACK_MAX_RETRIES) *
+            mySlackRetryDuration = 1000 * config().getInteger(Config.SLACK_MAX_RETRIES) *
                     config().getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            myFinalizeJobVerticleSendTimeout = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
         }
 
         getJsonConsumer().handler(message -> {
@@ -161,7 +161,7 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
                 if (finished) {
                     sendMessage(Promise.promise(), new JsonObject().put(Constants.JOB_NAME, job.getName()), FINALIZER,
-                            myFinalizeJobVerticleSendTimeout);
+                            mySlackRetryDuration);
                 }
 
                 aMessage.reply(Op.SUCCESS);

@@ -43,7 +43,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private final JsonObject myConfig;
 
-    private final long myFinalizeJobVerticleSendTimeout;
+    private final long mySlackRetryDuration;
 
     private Vertx myVertx;
 
@@ -57,10 +57,10 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
         // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
         if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
-            myFinalizeJobVerticleSendTimeout = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
+            mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
                      aConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            myFinalizeJobVerticleSendTimeout = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
         }
     }
 
@@ -203,7 +203,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName(),
-                            myFinalizeJobVerticleSendTimeout);
+                            mySlackRetryDuration);
                 }
                 // Let the submitter know we're done
                 returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
