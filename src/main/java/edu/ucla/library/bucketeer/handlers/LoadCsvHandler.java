@@ -76,6 +76,8 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
     private final long myRequeueDelay;
 
+    private final long mySlackRetryDuration;
+
     /**
      * Creates a handler to ingest CSV files.
      *
@@ -89,6 +91,14 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 StandardCharsets.UTF_8);
 
         myRequeueDelay = (myConfig = aConfig).getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
+
+        // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
+        if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
+            mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
+                    aConfig.getInteger(Config.SLACK_RETRY_DELAY);
+        } else {
+            mySlackRetryDuration = 0;
+        }
     }
 
     /**
@@ -309,7 +319,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
         if (!processing) {
             sendMessage(myVertx,
                     new JsonObject().put(Constants.JOB_NAME, aJob.getName()).put(Constants.NOTHING_PROCESSED, true),
-                    JOB_FINALIZER);
+                    JOB_FINALIZER, Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
         }
     }
 
@@ -361,7 +371,9 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 }
 
                 // If we have a failure in processing this item, mark it as a failure
-                sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName());
+                // {@link ItemFailureVerticle} sends a message to {@link FinalizeJobVerticle}, so use that timeout
+                sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName(),
+                        Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
             } else if (response.result().body().equals(Op.RETRY)) {
                 myVertx.setTimer(myRequeueDelay, timer -> {
                     sendImageRequest(aListener, aJsonObject);

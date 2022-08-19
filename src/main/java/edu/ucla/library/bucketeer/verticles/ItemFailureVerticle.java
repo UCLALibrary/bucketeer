@@ -7,6 +7,7 @@ import java.util.Set;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
+import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
@@ -18,6 +19,7 @@ import edu.ucla.library.bucketeer.utils.CodeUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
@@ -33,9 +35,19 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
     private static final String FINALIZER = FinalizeJobVerticle.class.getName();
 
+    private long mySlackRetryDuration;
+
     @Override
     public void start() throws Exception {
         super.start();
+
+        // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
+        if (config().containsKey(Config.SLACK_MAX_RETRIES) && config().containsKey(Config.SLACK_RETRY_DELAY)) {
+            mySlackRetryDuration = 1000 * config().getInteger(Config.SLACK_MAX_RETRIES) *
+                    config().getInteger(Config.SLACK_RETRY_DELAY);
+        } else {
+            mySlackRetryDuration = 0;
+        }
 
         getJsonConsumer().handler(message -> {
             final JsonObject json = message.body();
@@ -148,7 +160,8 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
                 }
 
                 if (finished) {
-                    sendMessage(new JsonObject().put(Constants.JOB_NAME, job.getName()), FINALIZER);
+                    sendMessage(Promise.promise(), new JsonObject().put(Constants.JOB_NAME, job.getName()), FINALIZER,
+                            Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
                 }
 
                 aMessage.reply(Op.SUCCESS);

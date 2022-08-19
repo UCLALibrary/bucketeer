@@ -25,6 +25,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -42,6 +43,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
     private final JsonObject myConfig;
 
+    private final long mySlackRetryDuration;
+
     private Vertx myVertx;
 
     /**
@@ -51,6 +54,14 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      */
     public BatchJobStatusHandler(final JsonObject aConfig) {
         myConfig = aConfig;
+
+        // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
+        if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
+            mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
+                     aConfig.getInteger(Config.SLACK_RETRY_DELAY);
+        } else {
+            mySlackRetryDuration = 0;
+        }
     }
 
     @Override
@@ -191,7 +202,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
                     // We send the name of the job to finalize to the appropriate verticle
-                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName());
+                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName(),
+                            Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
                 }
                 // Let the submitter know we're done
                 returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
