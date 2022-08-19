@@ -65,7 +65,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             mySlackRetryDuration = 1000 * myConfig.getInteger(Config.SLACK_MAX_RETRIES) *
                     myConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = 0;
         }
 
         // Throw an error if the CSV filesystem mount feature is turned on but we don't have the path configured
@@ -318,6 +318,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             LOGGER.error(MessageCodes.BUCKETEER_522);
         });
 
-        sendMessage(promise, message, SlackMessageVerticle.class.getName(), mySlackRetryDuration);
+        sendMessage(promise, message, SlackMessageVerticle.class.getName(),
+                Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
     }
 }

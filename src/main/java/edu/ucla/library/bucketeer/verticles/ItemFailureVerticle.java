@@ -46,7 +46,7 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
             mySlackRetryDuration = 1000 * config().getInteger(Config.SLACK_MAX_RETRIES) *
                     config().getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = 0;
         }
 
         getJsonConsumer().handler(message -> {
@@ -161,7 +161,7 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
                 if (finished) {
                     sendMessage(Promise.promise(), new JsonObject().put(Constants.JOB_NAME, job.getName()), FINALIZER,
-                            mySlackRetryDuration);
+                            Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
                 }
 
                 aMessage.reply(Op.SUCCESS);

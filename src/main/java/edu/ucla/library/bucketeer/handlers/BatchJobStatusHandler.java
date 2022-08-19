@@ -60,7 +60,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
             mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
                      aConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = 0;
         }
     }
 
@@ -203,7 +203,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
                     // We send the name of the job to finalize to the appropriate verticle
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName(),
-                            mySlackRetryDuration);
+                            Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
                 }
                 // Let the submitter know we're done
                 returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));

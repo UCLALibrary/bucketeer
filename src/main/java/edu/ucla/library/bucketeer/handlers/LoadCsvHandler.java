@@ -97,7 +97,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
             mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
                     aConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
-            mySlackRetryDuration = DeliveryOptions.DEFAULT_TIMEOUT;
+            mySlackRetryDuration = 0;
         }
     }
 
@@ -319,7 +319,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
         if (!processing) {
             sendMessage(myVertx,
                     new JsonObject().put(Constants.JOB_NAME, aJob.getName()).put(Constants.NOTHING_PROCESSED, true),
-                    JOB_FINALIZER, mySlackRetryDuration);
+                    JOB_FINALIZER, Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
         }
     }
 
@@ -373,7 +373,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 // If we have a failure in processing this item, mark it as a failure
                 // {@link ItemFailureVerticle} sends a message to {@link FinalizeJobVerticle}, so use that timeout
                 sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName(),
-                        mySlackRetryDuration);
+                        Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
             } else if (response.result().body().equals(Op.RETRY)) {
                 myVertx.setTimer(myRequeueDelay, timer -> {
                     sendImageRequest(aListener, aJsonObject);
