@@ -33,6 +33,8 @@ public final class JobFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JobFactory.class, Constants.MESSAGES);
 
+    private static final String MISSING = "[MISSING]";
+
     private static JobFactory myJobFactory;
 
     private IFilePathPrefix myFilePathPrefix;
@@ -165,11 +167,9 @@ public final class JobFactory {
                             if (fileNameIndex == -1) {
                                 // File Name is a required header, if we don't find it complain
                                 error.addMessage(MessageCodes.BUCKETEER_122);
-                                break;
                             } else if (itemIdIndex == -1) {
                                 // Item ID/ARK is a required header, if we don't find it complain
                                 error.addMessage(MessageCodes.BUCKETEER_123);
-                                break;
                             } else if (fileNameIndex == columnIndex) {
                                 if (columns[columnIndex].trim().contains(" ")) {
                                     final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_521,
@@ -234,13 +234,14 @@ public final class JobFactory {
 
                         // If it's supposed to have a file, check to see if it does and fail if it doesn't
                         if (item.hasFile() && WorkflowState.EMPTY.equals(item.getWorkflowState())) {
+                            final Optional<String> itemID = Optional.ofNullable(item.getID());
                             final Optional<File> file = item.getFile();
 
                             if (file.isEmpty()) {
                                 item.setWorkflowState(WorkflowState.MISSING);
-                                error.addMessage(MessageCodes.BUCKETEER_125, item.getID(), job.getName());
+                                error.addMessage(MessageCodes.BUCKETEER_125, itemID.orElse(MISSING), job.getName());
                             } else if (!file.get().exists()) {
-                                error.addMessage(MessageCodes.BUCKETEER_146, item.getID(), file.get());
+                                error.addMessage(MessageCodes.BUCKETEER_146, itemID.orElse(MISSING), file.get());
                             }
                         }
 
