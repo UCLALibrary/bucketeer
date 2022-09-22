@@ -7,6 +7,7 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Config;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -42,6 +43,7 @@ public class GetConfigHandler extends AbstractBucketeerHandler {
         final String s3Region = myConfig.getString(Config.S3_REGION);
 
         if (iiifURL != null) {
+            // Going to ignore the IIIF prefix for this display
             viewableConfig.put("bucketeer-iiif-url", iiifURL);
         }
 
