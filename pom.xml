@@ -89,25 +89,28 @@
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
-    <vertx.version>3.9.12</vertx.version>
+    <vertx.version>3.9.13</vertx.version>
     <vertx.super.s3.version>1.3.3</vertx.super.s3.version>
     <slf4j.ext.version>1.7.32</slf4j.ext.version>
-    <aws.sdk.version>1.12.281</aws.sdk.version>
+    <aws.sdk.version>1.12.261</aws.sdk.version>
     <commons.codec.version>1.14</commons.codec.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
     <moirai.version>2.1.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
-    <woodstox.version>5.1.0</woodstox.version>
+    <woodstox.version>5.3.0</woodstox.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
-    <jslack.version>1.7.8</jslack.version>
-    <snakeyaml.version>1.31</snakeyaml.version>
+    <jslack.version>1.8.1</jslack.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
-    <jackson.version>2.13.1</jackson.version>
+    <jackson.version>2.13.4</jackson.version>
     <jsoup.version>1.14.3</jsoup.version>
+
+    <!-- Dependencies updated for security issues; may be able to fold back in in the future -->
+    <logback.version>1.2.7</logback.version>
 
     <!-- Build plug-in versions -->
     <scm.plugin.version>1.11.2</scm.plugin.version>
@@ -271,6 +274,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
       <scope>compile</scope>
     </dependency>
 
