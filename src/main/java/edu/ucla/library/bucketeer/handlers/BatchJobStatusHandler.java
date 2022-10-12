@@ -19,6 +19,7 @@ import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
+import edu.ucla.library.bucketeer.verticles.ClearCacheVerticle;
 import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 
 import io.vertx.core.AsyncResult;
@@ -144,6 +145,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aJobsMap The jobs map
      * @param aContext A routing context
      */
+    @SuppressWarnings("deprecation")
     private void setJobStatus(final Lock aLock, final AsyncMap<String, Job> aJobsMap, final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
@@ -171,10 +173,27 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                             item.setWorkflowState(WorkflowState.FAILED);
                         } else if (item.hasFile()) {
                             final StringBuilder iiif = new StringBuilder(myConfig.getString(Config.IIIF_URL, EMPTY));
+                            final String prefix = myConfig.getString(Config.IIIF_PREFIX, EMPTY);
 
                             // Just confirm the config value ends with a slash
                             if (iiif.charAt(iiif.length() - 1) != Constants.SLASH) {
                                 iiif.append(Constants.SLASH);
+                            }
+
+                            if (!EMPTY.equals(prefix)) {
+                                final StringBuilder iiifPrefix = new StringBuilder(prefix);
+
+                                // We ensure the IIIF URL ends with a slash
+                                if (iiifPrefix.charAt(0) == Constants.SLASH) {
+                                    iiifPrefix.deleteCharAt(0);
+                                }
+
+                                // Make sure the prefix ends with a slash if there is one
+                                if (iiifPrefix.charAt(iiifPrefix.length() - 1) != Constants.SLASH) {
+                                    iiifPrefix.append(Constants.SLASH);
+                                }
+
+                                iiif.append(iiifPrefix);
                             }
 
                             item.setWorkflowState(WorkflowState.SUCCEEDED);
@@ -201,11 +220,18 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
-                    // We send the name of the job to finalize to the appropriate verticle
+                    // Clear Cantaloupe cache of already processed images
+                    myVertx.eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(),
+                            new JsonObject().put(Constants.IMAGE_ID, imageId), reply -> {
+                                if (reply.failed()) {
+                                    LOGGER.error(MessageCodes.BUCKETEER_607, reply.cause());
+                                }
+                            });
+
                     sendMessage(myVertx, message, FinalizeJobVerticle.class.getName(),
                             Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
                 }
-                // Let the submitter know we're done
+
                 returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));
             } else {
                 aLock.release();
