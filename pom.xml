@@ -82,32 +82,35 @@
     <openjdk.version>11.0.16+8-0ubuntu1~20.04</openjdk.version>
     <gcc.version>4:9.3.0-1ubuntu2</gcc.version>
     <make.version>4.2.1-1.2</make.version>
-    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.3</libtiff.version>
+    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.5</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
     <libopenjp2.version>2.3.1-1ubuntu4.20.04.1</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.12</curl.version>
+    <curl.version>7.68.0-1ubuntu2.13</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
-    <vertx.version>3.9.12</vertx.version>
+    <vertx.version>3.9.13</vertx.version>
     <vertx.super.s3.version>1.3.3</vertx.super.s3.version>
     <slf4j.ext.version>1.7.32</slf4j.ext.version>
-    <aws.sdk.version>1.12.139</aws.sdk.version>
+    <aws.sdk.version>1.12.311</aws.sdk.version>
     <commons.codec.version>1.14</commons.codec.version>
     <aws.v4.signer.version>1.3</aws.v4.signer.version>
     <opencsv.version>4.6</opencsv.version>
     <moirai.version>2.1.0</moirai.version>
     <beanutils.version>1.9.4</beanutils.version>
-    <woodstox.version>5.1.0</woodstox.version>
+    <woodstox.version>5.3.0</woodstox.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
-    <maven.failsafe.plugin.version>2.18.1</maven.failsafe.plugin.version>
-    <jslack.version>1.7.8</jslack.version>
-    <snakeyaml.version>1.30</snakeyaml.version>
+    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
+    <jslack.version>1.8.1</jslack.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
     <jackson.version>2.13.1</jackson.version>
     <jsoup.version>1.14.3</jsoup.version>
+
+    <!-- Dependencies updated for security issues; may be able to fold back in in the future -->
+    <logback.version>1.2.7</logback.version>
 
     <!-- Build plug-in versions -->
     <scm.plugin.version>1.11.2</scm.plugin.version>
@@ -118,7 +121,7 @@
     <codacy.plugin.version>1.2.0</codacy.plugin.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
     <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
-    <docker.maven.plugin.version>0.33.0</docker.maven.plugin.version>
+    <docker.maven.plugin.version>0.38.1</docker.maven.plugin.version>
     <maven.download.plugin.version>1.3.0</maven.download.plugin.version>
 
     <!-- These properties provide the ability to override the running of any type of test -->
@@ -177,8 +180,11 @@
     <!-- The number of seconds to wait between Slack API request retries -->
     <slack.retry.delay>1</slack.retry.delay>
 
-    <!-- IIIF server URL (including the prefix, if there is one) -->
+    <!-- IIIF server URL -->
     <bucketeer.iiif.url>YOUR_IIIF_SERVER_URL</bucketeer.iiif.url>
+
+    <!-- The IIIF server URL prefix (if there is one; e.g., /iiif/2/) -->
+    <bucketeer.iiif.url.prefix></bucketeer.iiif.url.prefix>
 
     <!-- Bucketeer server configured to handle large images -->
     <large.image.url>http://localhost:8888</large.image.url>
@@ -214,6 +220,11 @@
 
     <!-- The artifact is qualified if it's built with Kakadu -->
     <artifact.qualifier></artifact.qualifier>
+
+    <!-- The Bucketeer IIIF cache username and password-->
+    <bucketeer.iiif.cache.user>IIIF_CACHE_USERNAME</bucketeer.iiif.cache.user>
+    <bucketeer.iiif.cache.password>IIIF_CACHE_PASSWORD</bucketeer.iiif.cache.password>
+
   </properties>
 
   <dependencies>
@@ -263,6 +274,7 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
       <scope>compile</scope>
     </dependency>
 
@@ -969,12 +981,15 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
                       <BUCKETEER_SLACK_CHANNEL_ID>${bucketeer.slack.channel_id}</BUCKETEER_SLACK_CHANNEL_ID>
                       <BUCKETEER_FS_IMAGE_PREFIX>GenericFilePathPrefix</BUCKETEER_FS_IMAGE_PREFIX>
                       <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                       <HEAP_SIZE>1g</HEAP_SIZE>
                     </env>
                     <wait>
@@ -1006,6 +1021,7 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
@@ -1014,6 +1030,8 @@
                       <BUCKETEER_FS_IMAGE_MOUNT>/images/</BUCKETEER_FS_IMAGE_MOUNT>
                       <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-off.conf</FEATURE_FLAGS>
                       <HEAP_SIZE>300m</HEAP_SIZE>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                     </env>
                     <wait>
                       <http>
@@ -1044,6 +1062,7 @@
                       <BUCKETEER_S3_ACCESS_KEY>${bucketeer.s3.access_key}</BUCKETEER_S3_ACCESS_KEY>
                       <BUCKETEER_S3_SECRET_KEY>${bucketeer.s3.secret_key}</BUCKETEER_S3_SECRET_KEY>
                       <BUCKETEER_IIIF_URL>${bucketeer.iiif.url}</BUCKETEER_IIIF_URL>
+                      <BUCKETEER_IIIF_URL_PREFIX>${bucketeer.iiif.url.prefix}</BUCKETEER_IIIF_URL_PREFIX>
                       <SLACK_TEST_USER_HANDLE>${bucketeer.slack.test_user_handle}</SLACK_TEST_USER_HANDLE>
                       <BUCKETEER_SLACK_OAUTH_TOKEN>${bucketeer.slack.oauth_token}</BUCKETEER_SLACK_OAUTH_TOKEN>
                       <BUCKETEER_SLACK_ERROR_CHANNEL_ID>${bucketeer.slack.error_channel_id}</BUCKETEER_SLACK_ERROR_CHANNEL_ID>
@@ -1053,6 +1072,8 @@
                       <BUCKETEER_FS_CSV_MOUNT>${bucketeer.fs.csv.mount}</BUCKETEER_FS_CSV_MOUNT>
                       <FEATURE_FLAGS>https://iiif-manifest-store.s3.amazonaws.com/test-bucketeer-features-on.conf</FEATURE_FLAGS>
                       <HEAP_SIZE>300m</HEAP_SIZE>
+                      <BUCKETEER_IIIF_CACHE_USER>${bucketeer.iiif.cache.user}</BUCKETEER_IIIF_CACHE_USER>
+                      <BUCKETEER_IIIF_CACHE_PASSWORD>${bucketeer.iiif.cache.password}</BUCKETEER_IIIF_CACHE_PASSWORD>
                     </env>
                     <wait>
                       <http>
@@ -1147,6 +1168,12 @@
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
                 <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
                 <bucketeer.slack.error_channel_id>dev-null</bucketeer.slack.error_channel_id>
+                <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
+                <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
+                <bucketeer.s3.region>${bucketeer.s3.region}</bucketeer.s3.region>
+                <bucketeer.s3.bucket>${bucketeer.s3.bucket}</bucketeer.s3.bucket>
+                <bucketeer.s3.access_key>${bucketeer.s3.access_key}</bucketeer.s3.access_key>
+                <bucketeer.s3.secret_key>${bucketeer.s3.secret_key}</bucketeer.s3.secret_key>
               </systemPropertyVariables>
               <skipTests>${skipUTs}</skipTests>
               <argLine>${jacoco.agent.arg}</argLine>
@@ -1165,6 +1192,12 @@
                 <vertx-config-path>${project.basedir}/target/test-classes/test-config.properties</vertx-config-path>
                 <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
                 <http.port>${http.port}</http.port>
+                <bucketeer.iiif.cache.user>${bucketeer.iiif.cache.user}</bucketeer.iiif.cache.user>
+                <bucketeer.iiif.cache.password>${bucketeer.iiif.cache.password}</bucketeer.iiif.cache.password>
+                <bucketeer.s3.region>${bucketeer.s3.region}</bucketeer.s3.region>
+                <bucketeer.s3.bucket>${bucketeer.s3.bucket}</bucketeer.s3.bucket>
+                <bucketeer.s3.access_key>${bucketeer.s3.access_key}</bucketeer.s3.access_key>
+                <bucketeer.s3.secret_key>${bucketeer.s3.secret_key}</bucketeer.s3.secret_key>
               </systemPropertyVariables>
               <argLine>${jacoco.agent.arg}</argLine>
             </configuration>
@@ -1299,4 +1332,3 @@
   </parent>
 
 </project>
-
