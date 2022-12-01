@@ -2,7 +2,7 @@
 # The first stage of our multi-stage build builds the kakadu libraries and binaries
 FROM ubuntu:${ubuntu.tag} AS KAKADU_TOOL_CHAIN
 
-ENV JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
 
 # First we build the Kakadu code (if we've been given a Kakadu version)
 WORKDIR /build/kakadu/
@@ -10,7 +10,7 @@ COPY kakadu /build/kakadu/
 RUN if [ -n "${kakadu.version}" ]; then \
       apt-get update -qq && \
       DEBIAN_FRONTEND=noninteractive apt-get install -qq --no-install-recommends \
-      openjdk-11-jdk-headless=${openjdk.version} \
+      openjdk-17-jdk-headless=${openjdk.version} \
       gcc=${gcc.version} \
       make=${make.version} \
       build-essential=${build.essential.version} \
@@ -54,7 +54,7 @@ RUN apt-get update -qq && \
     libtiff-tools=${libtiff.version} \
     libtiff5=${libtiff.version} \
     libopenjp2-tools=${libopenjp2.version} \
-    openjdk-11-jre-headless=${openjdk.version} \
+    openjdk-17-jre-headless=${openjdk.version} \
     curl=${curl.version} \
     python2=${python2.version} \
     < /dev/null > /dev/null && \
