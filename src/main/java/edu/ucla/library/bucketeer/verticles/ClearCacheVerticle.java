@@ -21,16 +21,20 @@ import io.vertx.ext.web.client.WebClient;
  */
 public class ClearCacheVerticle extends AbstractVerticle {
 
+    /** This verticle's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearCacheVerticle.class, Constants.MESSAGES);
 
+    /** The Cantaloupe API username. */
     private String myUsername;
 
+    /** The Cantaloupe API password. */
     private String myPassword;
 
     /**
      * Clears cantaloupe cache and sends message if failure
      */
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void start(final Promise<Void> aPromise) throws Exception {
         super.start();
 
@@ -46,7 +50,7 @@ public class ClearCacheVerticle extends AbstractVerticle {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
             client.getAbs(iiifURL + "/configuration").basicAuthentication(myUsername, myPassword).send(post -> {
-                if (post.failed() || (post.result().statusCode() != HTTP.OK)) {
+                if (post.failed() || post.result().statusCode() != HTTP.OK) {
                     aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
                 } else {
                     aPromise.complete();
@@ -85,7 +89,9 @@ public class ClearCacheVerticle extends AbstractVerticle {
     }
 
     /**
-     * Processes message from handler and event bus
+     * Processes message from handler and event bus.
+     *
+     * @return A JSON message consumer
      */
     protected MessageConsumer<JsonObject> getJsonConsumer() {
         getLogger().debug(MessageCodes.BUCKETEER_025, ClearCacheVerticle.class.getName());

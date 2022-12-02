@@ -24,11 +24,14 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class DeleteJobHandler extends AbstractBucketeerHandler {
 
+    /** This handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteJobHandler.class, Constants.MESSAGES);
 
+    /** The Vert.x instance. */
     private Vertx myVertx;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final String jobName = aContext.request().getParam(Constants.JOB_NAME);
@@ -87,6 +90,7 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
      * @param aJobsMap The map of jobs in which the job is found
      * @param aHandler A handler for the result of the removal
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void removeJob(final String aJobName, final AsyncMap<String, Job> aJobsMap,
             final Handler<AsyncResult<Job>> aHandler) {
         final Promise<Job> promise = Promise.<Job>promise();

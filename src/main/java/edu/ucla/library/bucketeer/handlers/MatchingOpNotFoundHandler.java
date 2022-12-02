@@ -23,6 +23,7 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class MatchingOpNotFoundHandler implements Handler<RoutingContext> {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(MatchingOpNotFoundHandler.class, Constants.MESSAGES);
 
     /**

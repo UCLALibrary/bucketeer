@@ -19,6 +19,7 @@ public class KakaduNotFoundException extends I18nRuntimeException {
      * Creates a new <code>KakaduNotFoundException</code>.
      */
     public KakaduNotFoundException() {
+        // This is intentionally left empty
     }
 
     /**

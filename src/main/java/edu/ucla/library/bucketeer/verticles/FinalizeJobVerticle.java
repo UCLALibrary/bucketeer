@@ -38,19 +38,26 @@ import io.vertx.core.shareddata.AsyncMap;
  */
 public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
+    /** This verticle's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(FinalizeJobVerticle.class, Constants.MESSAGES);
 
+    /** The configuration for this verticle. */
     private JsonObject myConfig;
 
+    /** The URL for the IIIF server. */
     private String myIiifURL;
 
+    /** The ID for the Slack channel this verticle reports to. */
     private String mySlackChannelID;
 
+    /** The file system mount for the CSV. */
     private String myFilesystemCsvMount;
 
+    /** How long Slack retries to send its message. */
     private long mySlackRetryDuration;
 
     @Override
+    @SuppressWarnings({ "PMD.NPathComplexity", "PMD.CognitiveComplexity", "PMD.ExcessiveMethodLength" })
     public void start() throws Exception {
         super.start();
 
@@ -200,6 +207,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
      * Extract a simple URL, throwing out extra path/query/etc elements.
      *
      * @param aLongURL The source URL to be stripped down
+     * @return A simple URL
      */
     private String getSimpleURL(final String aLongURL) {
         final String colon = ":";
@@ -214,9 +222,9 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
      * The dirty work of actually getting the job from the shared data cache.
      *
      * @param aJobName The name of a job we want to retrieve
-     * @param aPromise A promise for the work being done
      * @param aHandler A handler to handle the result of the promise
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void removeJob(final String aJobName, final Handler<AsyncResult<Job>> aHandler) {
         final Promise<Job> promise = Promise.<Job>promise();
 

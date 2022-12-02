@@ -14,13 +14,13 @@ import info.freelibrary.util.LoggerFactory;
  */
 public class ProcessingException extends Exception {
 
+    /** The exception's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessingException.class, Constants.MESSAGES);
 
-    /**
-     * The <code>serialVersionUID</code> for ProcessingException.
-     */
+    /** The <code>serialVersionUID</code> for ProcessingException. */
     private static final long serialVersionUID = -4725879946862646567L;
 
+    /** The detail messages associated with this exception. */
     private List<String> myMessages;
 
     /**

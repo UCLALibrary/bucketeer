@@ -25,24 +25,29 @@ import io.vertx.core.json.JsonObject;
 @JsonPropertyOrder({ "id", "filePath", "accessURL", "workflowState", "filePathPrefix" })
 public class Item implements Serializable {
 
-    /**
-     * The <code>serialVersionUID</code> of the Item.
-     */
+    /** The <code>serialVersionUID</code> of the Item. */
     private static final long serialVersionUID = 2062164135217237338L;
 
+    /** An item's ID. */
     private String myID;
 
+    /** An item's file path. */
     private Optional<String> myFilePath;
 
+    /** The items' prefixed file path. */
     private Optional<String> myPrefixedFilePath;
 
+    /** The item's image access URL. */
     private String myAccessURL;
 
+    /** A flag indicating whether the item has an image file associated with it. */
     private boolean hasImageFile = true;
 
+    /** The current workflow state of the item. */
     @JsonProperty("workflowState")
     private String myWorkflowState = WorkflowState.EMPTY.toString();
 
+    /** The image file path prefix for this item's image. */
     @JsonProperty("filePathPrefix")
     private IFilePathPrefix myFilePathPrefix;
 
@@ -50,7 +55,6 @@ public class Item implements Serializable {
      * Creates new item.
      */
     public Item() {
-        // Used in deserialization and testing
         myFilePath = Optional.empty();
     }
 
@@ -63,9 +67,11 @@ public class Item implements Serializable {
     @JsonIgnore
     public Item(final String aID, final String aFilePath) {
         myFilePath = Optional.ofNullable(aFilePath);
+
         if (myFilePath.isEmpty()) {
             hasImageFile = false;
         }
+
         myID = aID;
     }
 
@@ -98,7 +104,7 @@ public class Item implements Serializable {
      * @throws IllegalArgumentException If the value from the CSV isn't a valid state
      */
     @JsonIgnore
-    public WorkflowState getWorkflowState() throws IllegalArgumentException {
+    public WorkflowState getWorkflowState() {
         return StringUtils.trimToNull(myWorkflowState) == null ? WorkflowState.EMPTY
                 : WorkflowState.valueOf(myWorkflowState.toUpperCase(Locale.US));
     }
@@ -167,16 +173,16 @@ public class Item implements Serializable {
 
         if (!hasFile() || myFilePath.isEmpty()) {
             return Optional.empty();
-        } else {
-            if (myFilePathPrefix != null) {
-                filePath = myFilePath.get();
-                file = Paths.get(myFilePathPrefix.getPrefix(new File(filePath)), filePath).toFile();
-            } else {
-                file = new File(myFilePath.get());
-            }
-
-            return Optional.of(file);
         }
+
+        if (myFilePathPrefix != null) {
+            filePath = myFilePath.get();
+            file = Paths.get(myFilePathPrefix.getPrefix(new File(filePath)), filePath).toFile();
+        } else {
+            file = new File(myFilePath.get());
+        }
+
+        return Optional.of(file);
     }
 
     /**
@@ -214,6 +220,7 @@ public class Item implements Serializable {
      * @param aFilePath A file path
      * @return The item
      */
+    @SuppressWarnings("PMD.NullAssignment")
     public Item setFilePath(final Optional<String> aFilePath) {
         myFilePath = Objects.requireNonNull(aFilePath);
         myPrefixedFilePath = null;
@@ -238,7 +245,7 @@ public class Item implements Serializable {
      * @return The item
      */
     @JsonIgnore
-    public Item isStructural(final boolean aStructuralObj) {
+    public Item setStructural(final boolean aStructuralObj) {
         if (aStructuralObj) {
             myWorkflowState = WorkflowState.STRUCTURAL.toString();
         }

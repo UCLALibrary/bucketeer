@@ -31,8 +31,10 @@ import io.vertx.core.json.JsonObject;
 /**
  * Accepts and forwards messages to a configured Slack channel.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals") // For other SuppressWarnings' text
 public class SlackMessageVerticle extends AbstractBucketeerVerticle {
 
+    /** The SlackMessageVerticle's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageVerticle.class, MESSAGES);
 
     @Override
@@ -106,6 +108,7 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
      * @param aMessageData An object containing the Slack message details (whether or not a CSV is attached, etc.)
      * @return A Future that completes if the Slack API request was successful
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private Future<SlackApiResponse> sendSlackApiRequest(final MethodsClient aSlackClient,
             final JsonObject aMessageData) {
         final Promise<SlackApiResponse> promise = Promise.promise();

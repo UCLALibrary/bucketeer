@@ -25,23 +25,28 @@ import io.vertx.core.json.JsonObject;
 @JsonPropertyOrder({ "jobName", "slackHandle", "isSubsequentRun", "items", "metadataHeader", "metadata" })
 public class Job implements Serializable {
 
+    /** The job logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(Job.class, Constants.MESSAGES);
 
-    /**
-     * The <code>serialVersionUID</code> for Job.
-     */
+    /** The <code>serialVersionUID</code> for Job. */
     private static final long serialVersionUID = -2430620678602342169L;
 
+    /** The Slack user handle associated with this job. */
     private String mySlackHandle;
 
+    /** The list of items associated with this job. */
     private List<Item> myItems;
 
+    /** The name of the job. */
     private String myJobName;
 
+    /** The metadata associated with this job. */
     private List<String[]> myMetadata;
 
+    /** The metadata headers associated with this job. */
     private String[] myMetadataHeader;
 
+    /** A flag indicating if this job has been run before. */
     private boolean myJobIsSubsequentRun;
 
     /**
@@ -227,6 +232,7 @@ public class Job implements Serializable {
      * @return The job
      * @throws ProcessingException when there is trouble parsing the metadata
      */
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     public Job updateMetadata() throws ProcessingException {
         final List<Item> items = getItems();
 
@@ -369,9 +375,10 @@ public class Job implements Serializable {
      * already been successfully processed as ingested so that newly processed items can be marked as successful.
      *
      * @param aBool True if subsequent run; else, false
+     * @return This job
      */
     @JsonProperty("isSubsequentRun")
-    Job isSubsequentRun(final boolean aBool) {
+    Job setSubsequentRun(final boolean aBool) {
         myJobIsSubsequentRun = aBool;
         return this;
     }

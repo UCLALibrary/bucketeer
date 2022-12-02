@@ -54,28 +54,37 @@ import io.vertx.ext.web.RoutingContext;
 /**
  * A handler of CSV ingest requests.
  */
+@SuppressWarnings("PMD.ExcessiveImports")
 public class LoadCsvHandler extends AbstractBucketeerHandler {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadCsvHandler.class, Constants.MESSAGES);
 
+    /** The job finalizing verticle's name. */
     private static final String JOB_FINALIZER = FinalizeJobVerticle.class.getName();
 
-    /* Default maximum number of bytes in a source image file that we can process on AWS Lambda */
-    private static final long DEFAULT_MAX_FILE_SIZE = 300000000L; // 300 MB
+    /** Default maximum number of bytes in a source image file that we can process on AWS Lambda. */
+    private static final long DEFAULT_MAX_FILE_SIZE = 300_000_000L; // 300 MB
 
-    /* Default delay for requeuing, measured in seconds */
+    /** Default delay for requeuing, measured in seconds. */
     private static final long DEFAULT_REQUEUE_DELAY = 1;
 
+    /** The handler's configuration. */
     private final JsonObject myConfig;
 
+    /** The Vert.x instance. */
     private Vertx myVertx;
 
+    /** The exception page. */
     private final String myExceptionPage;
 
+    /** The success page. */
     private final String mySuccessPage;
 
+    /** The requeuing delay. */
     private final long myRequeueDelay;
 
+    /** The Slack message retry duration. */
     private final long mySlackRetryDuration;
 
     /**
@@ -94,8 +103,8 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
 
         // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
         if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
-            mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
-                    aConfig.getInteger(Config.SLACK_RETRY_DELAY);
+            mySlackRetryDuration =
+                    1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) * aConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
             mySlackRetryDuration = 0;
         }
@@ -107,6 +116,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
      * @param aContext A routing context
      */
     @Override
+    @SuppressWarnings({ "PMD.CognitiveComplexity" })
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
@@ -244,6 +254,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
         });
     }
 
+    @SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.CognitiveComplexity" })
     private void startJob(final Job aJob) {
         final String s3Bucket = myConfig.getString(Config.LAMBDA_S3_BUCKET);
         final Iterator<Item> iterator = aJob.getItems().iterator();
@@ -280,20 +291,17 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                     final Optional<FeatureFlagChecker> featureFlagChecker = getFeatureFlagChecker();
 
                     // Check if we have a feature flag for processing large images
-                    if (featureFlagChecker.isPresent()) {
-                        // If we do, check that it's enabled...
-                        if (featureFlagChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)) {
-                            imageRequest.put(Constants.IMAGE_ID, item.getID());
-                            sendImageRequest(LargeImageVerticle.class.getName(), imageRequest);
+                    // If we do, check that it's enabled...
+                    if (featureFlagChecker.isPresent() &&
+                            featureFlagChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)) {
+                        imageRequest.put(Constants.IMAGE_ID, item.getID());
+                        sendImageRequest(LargeImageVerticle.class.getName(), imageRequest);
 
-                            // If we've send a large image, note that we're processing files
-                            if (!processing) {
-                                processing = true;
-                            }
-                        } else { // Feature isn't enabled
-                            markItemFailed(item, source);
+                        // If we've send a large image, note that we're processing files
+                        if (!processing) {
+                            processing = true;
                         }
-                    } else { // Feature flag isn't available
+                    } else { // Feature isn't enabled
                         markItemFailed(item, source);
                     }
                 }
@@ -347,7 +355,6 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
      *
      * @param aJsonObject A message
      * @param aListener The destination of the message
-     * @param aTimeout A timeout period before the send is considered a failure
      */
     private void sendImageRequest(final String aListener, final JsonObject aJsonObject) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(Integer.MAX_VALUE);
@@ -374,7 +381,7 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                 // {@link ItemFailureVerticle} sends a message to {@link FinalizeJobVerticle}, so use that timeout
                 sendMessage(myVertx, aJsonObject, ItemFailureVerticle.class.getName(),
                         Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
-            } else if (response.result().body().equals(Op.RETRY)) {
+            } else if (Op.RETRY.equals(response.result().body())) {
                 myVertx.setTimer(myRequeueDelay, timer -> {
                     sendImageRequest(aListener, aJsonObject);
                 });
@@ -393,9 +400,8 @@ public class LoadCsvHandler extends AbstractBucketeerHandler {
                     Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
                             TypesafeConfigReader.FROM_STRING),
                     TypesafeConfigDecider.FEATURE_ENABLED));
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
     /**

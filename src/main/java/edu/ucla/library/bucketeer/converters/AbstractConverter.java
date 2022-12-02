@@ -9,6 +9,9 @@ import info.freelibrary.util.Logger;
 
 import edu.ucla.library.bucketeer.MessageCodes;
 
+/**
+ * An abstract image converter.
+ */
 abstract class AbstractConverter {
 
     /**
@@ -23,6 +26,7 @@ abstract class AbstractConverter {
      *
      * @param aProcessBuilder A process builder that has the process to run
      * @param aID The ID for the image that's being converted
+     * @param aLogger A logger for the converter to use
      * @throws IOException If the process has trouble reading or writing
      * @throws InterruptedException If the process has been interrupted
      */
@@ -33,7 +37,8 @@ abstract class AbstractConverter {
         if (process.waitFor() != 0) {
             aLogger.error(new String(IOUtils.readBytes(process.getErrorStream()), StandardCharsets.UTF_8));
             throw new IOException(aLogger.getMessage(MessageCodes.BUCKETEER_001, aID));
-        } else if (aLogger.isDebugEnabled()) {
+        }
+        if (aLogger.isDebugEnabled()) {
             aLogger.debug(new String(IOUtils.readBytes(process.getInputStream()), StandardCharsets.UTF_8));
         }
     }

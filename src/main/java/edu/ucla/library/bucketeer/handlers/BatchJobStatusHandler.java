@@ -40,12 +40,16 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(BatchJobStatusHandler.class, Constants.MESSAGES);
 
+    /** The handler's configuration. */
     private final JsonObject myConfig;
 
+    /** The Slack message retry duration. */
     private final long mySlackRetryDuration;
 
+    /** The Vert.x instance. */
     private Vertx myVertx;
 
     /**
@@ -66,6 +70,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     }
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
@@ -88,7 +93,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                         final Set<String> jobs = keyCheck.result();
 
                         if (jobs.contains(jobName)) {
-                            getLock(sharedData, getLock -> {
+                            handleLock(sharedData, getLock -> {
                                 if (getLock.succeeded()) {
                                     setJobStatus(getLock.result(), map, aContext);
                                 } else {
@@ -121,10 +126,10 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     /**
      * Gets a lock for use with updates.
      *
-     * @param aPromise A promise for the work being done
+     * @param aSharedData A reference to the application's shared data
      * @param aHandler A lock handler
      */
-    private void getLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
+    private void handleLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
         final Promise<Lock> promise = Promise.<Lock>promise();
 
         promise.future().onComplete(aHandler);
@@ -145,7 +150,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      * @param aJobsMap The jobs map
      * @param aContext A routing context
      */
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({ "deprecation", "PMD.CognitiveComplexity" })
     private void setJobStatus(final Lock aLock, final AsyncMap<String, Job> aJobsMap, final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
         final HttpServerRequest request = aContext.request();
@@ -256,12 +261,12 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      *
      * @param aThrowable An exception with a stack trace
      * @param aMessageCode A MessageCode string
-     * @param aDetail Details about the exception
+     * @param aDetailsMessage Details about the exception
      * @param aResponse An HTTP server response
      */
-    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetails,
+    private void returnError(final Throwable aThrowable, final String aMessageCode, final String aDetailsMessage,
             final HttpServerResponse aResponse) {
-        final String errorDetails = LOGGER.getMessage(aMessageCode, aDetails);
+        final String errorDetails = LOGGER.getMessage(aMessageCode, aDetailsMessage);
 
         if (aThrowable != null) {
             LOGGER.error(aThrowable, errorDetails);

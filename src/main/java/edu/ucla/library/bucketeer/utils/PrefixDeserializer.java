@@ -20,11 +20,10 @@ import edu.ucla.library.bucketeer.MessageCodes;
  */
 public class PrefixDeserializer extends StdDeserializer<IFilePathPrefix> {
 
-    /**
-     * The <code>serialVersionUID</code> for PrefixDeserializer.
-     */
+    /** The <code>serialVersionUID</code> for PrefixDeserializer. */
     private static final long serialVersionUID = 6823136469689445963L;
 
+    /** The deserializer's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(PrefixDeserializer.class, Constants.MESSAGES);
 
     /**

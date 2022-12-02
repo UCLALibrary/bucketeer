@@ -53,68 +53,53 @@ public class ClearCacheIT {
         System.setProperty("logback.configurationFile", "src/test/resources/logback-test.xml");
     }
 
-    /**
-     * Logger for the <code>ClearCacheIT</code>.
-     */
+    /** Logger for the <code>ClearCacheIT</code>. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearCacheIT.class, Constants.MESSAGES);
 
+    /** The name of the verticle that clears the Cantaloupe cache. */
     private static final String VERTICLE_NAME = ClearCacheVerticle.class.getName();
 
+    /** The path to a test JPX file. **/
     private static final String VERT_PATH = "src/test/resources/images/key.jpx";
 
+    /** The path to a JPX file that helps test rotation. */
     private static final String HORI_PATH = "src/test/resources/images/keyRotate.jpx";
 
+    /** A JPX file that helps test new keys. */
     private static final String IMAGE_JPX = "newKeyTest2.jpx";
 
+    /** A new key to use when testing. */
     private static final String IMAGE_KEY = "newKeyTest2";
 
+    /** The IIIF cache username. */
     private static final String IIIF_USERNAME = "bucketeer.iiif.cache.user";
 
+    /** The IIIF cache password. */
     private static final String IIIF_PASSWORD = "bucketeer.iiif.cache.password";
 
+    /** The expected IIIF information resource. */
     private static final String IIIF_RESOURCE = "/iiif/2/newKeyTest2/info.json";
 
-    /**
-     * Individual AWS credential
-     */
+    /** Individual AWS credential. */
     private static AWSCredentials myAWSCredentials;
 
+    /** A default S3 bucket name. */
     private static String s3Bucket = "unconfigured";
 
-    /**
-     * A test context from which references to Vert.x can be retrieved.
-     */
+    /** A test context from which references to Vert.x can be retrieved. */
     @Rule
     public RunTestOnContext myRunTestOnContextRule = new RunTestOnContext();
 
-    /**
-     * The URL for the IIIF image server.
-     */
+    /** The URL for the IIIF image server. */
     private String myImageServerURL;
 
-    /**
-     * Deployment options for this test
-     */
+    /** Deployment options for this test. */
     private JsonObject myConfigs;
 
-    /**
-     * Cantaloupe username for testing Cantaloupe cache clearing.
-     */
-    private String myUsername;
-
-    /**
-     * Cantaloupe password for testing Cantaloupe cache clearing.
-     */
-    private String myPassword;
-
-    /**
-     * Verticle ID for undeploying ClearCacheVerticle
-     */
+    /** Verticle ID for undeploying ClearCacheVerticle. */
     private String myVertID;
 
-    /**
-     * We can't, as of yet, execute these tests without a non-default S3 configuration
-     */
+    /** We can't, as of yet, execute these tests without a non-default S3 configuration. */
     private AmazonS3 myAmazonS3;
 
     /**
@@ -122,6 +107,7 @@ public class ClearCacheIT {
      *
      * @param aContext A testing environment
      */
+    @SuppressWarnings("deprecation")
     @Before
     public final void setup(final TestContext aContext) {
         final ConfigRetriever configRetriever = ConfigRetriever.create(myRunTestOnContextRule.vertx());
@@ -280,7 +266,9 @@ public class ClearCacheIT {
     }
 
     /**
-     * Gets width from info.json from Cantaloupe of specific image
+     * Gets width from info.json from Cantaloupe of specific image.
+     *
+     * @return A future with the width
      */
     private Future<Integer> getImageWidth() {
         final WebClient client = WebClient.create(Vertx.vertx());
@@ -309,7 +297,10 @@ public class ClearCacheIT {
     }
 
     /**
-     * Puts image into AmazonS3 bucket
+     * Puts image into AmazonS3 bucket.
+     *
+     * @param aPath An S3 path
+     * @return A future indicating whether the object was successfully PUT into S3
      */
     private Future<Void> putObjectS3(final String aPath) {
         final Promise<Void> promise = Promise.promise();
@@ -326,7 +317,10 @@ public class ClearCacheIT {
     }
 
     /**
-     * Sends message over eventBus to ClearCacheVerticle and verifies expected code is returned with failure
+     * Sends message over eventBus to ClearCacheVerticle and verifies expected code is returned with failure.
+     *
+     * @param aImageID An image ID
+     * @return A future indicating the message has been sent
      */
     @SuppressWarnings("deprecation")
     private Future<Void> sendMessage(final String aImageID) {
@@ -346,7 +340,10 @@ public class ClearCacheIT {
     }
 
     /**
-     * Deploys ClearCache verticle
+     * Deploys ClearCache verticle.
+     *
+     * @param aConfig A new verticle configuration
+     * @return A future with the deployment ID of the new verticle
      */
     private Future<String> deployNewVerticle(final JsonObject aConfig) {
         final Promise<String> promise = Promise.promise();
