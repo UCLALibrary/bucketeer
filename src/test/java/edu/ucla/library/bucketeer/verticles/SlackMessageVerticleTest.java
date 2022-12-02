@@ -155,7 +155,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      *
      * @param aContext A test context
      */
-    @Testgit
+    @Test
     public final void testSlackFileUpload(final TestContext aContext)
             throws FileNotFoundException, ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB, LIVE_TEST_CSV);
