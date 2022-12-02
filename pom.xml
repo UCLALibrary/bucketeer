@@ -1341,7 +1341,7 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>8.0.0</version><!-- 6.6.3 -->
+    <version>8.0.0</version>
   </parent>
 
 </project>
