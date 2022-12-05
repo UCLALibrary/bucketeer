@@ -26,10 +26,13 @@ import io.vertx.ext.web.api.validation.ValidationException;
  */
 public final class FailureHandler implements Handler<RoutingContext> {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(FailureHandler.class, MESSAGES);
 
+    /** A delimiter. */
     private static final String COLON_DELIM = ": ";
 
+    /** The exception page. */
     private final String myExceptionPage;
 
     /**
@@ -41,16 +44,16 @@ public final class FailureHandler implements Handler<RoutingContext> {
         final StringBuilder templateBuilder = new StringBuilder();
 
         // Load a template used for returning the error page
-        final InputStream templateStream = getClass().getResourceAsStream("/webroot/error.html");
-        final BufferedReader templateReader = new BufferedReader(new InputStreamReader(templateStream));
-        String line;
+        try (InputStream templateStream = getClass().getResourceAsStream("/webroot/error.html");
+                BufferedReader templateReader = new BufferedReader(new InputStreamReader(templateStream))) {
+            String line;
 
-        while ((line = templateReader.readLine()) != null) {
-            templateBuilder.append(line);
+            while ((line = templateReader.readLine()) != null) {
+                templateBuilder.append(line);
+            }
+
+            myExceptionPage = templateBuilder.toString();
         }
-
-        templateReader.close();
-        myExceptionPage = templateBuilder.toString();
     }
 
     @Override
@@ -70,9 +73,6 @@ public final class FailureHandler implements Handler<RoutingContext> {
             errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_018, errorType);
 
             response.setStatusCode(HTTP.BAD_REQUEST).setStatusMessage(errorMessage);
-            response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
-            response.end(StringUtils.format(myExceptionPage, errorMessage));
-            response.close();
         } else {
             // If we get a runtime exception, get what its cause was for more details
             if (failure instanceof RuntimeException) {
@@ -82,9 +82,9 @@ public final class FailureHandler implements Handler<RoutingContext> {
             errorMessage = failure.getClass().getSimpleName() + COLON_DELIM + failure.getMessage();
 
             response.setStatusCode(HTTP.INTERNAL_SERVER_ERROR).setStatusMessage(errorMessage);
-            response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
-            response.end(StringUtils.format(myExceptionPage, errorMessage));
-            response.close();
         }
+        response.putHeader(Constants.CONTENT_TYPE, Constants.HTML);
+        response.end(StringUtils.format(myExceptionPage, errorMessage));
+        response.close();
     }
 }

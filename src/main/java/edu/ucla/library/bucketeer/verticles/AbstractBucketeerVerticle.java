@@ -30,6 +30,7 @@ import io.vertx.core.shareddata.LocalMap;
  */
 public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
 
+    /** The optional feature flag checker. */
     protected Optional<FeatureFlagChecker> myFeatureChecker;
 
     @Override
@@ -60,6 +61,11 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
         aPromise.complete();
     }
 
+    /**
+     * Gets the JSON consumer.
+     *
+     * @return The JSON message consumer
+     */
     protected MessageConsumer<JsonObject> getJsonConsumer() {
         getLogger().debug(MessageCodes.BUCKETEER_025, getClass().getName());
         return vertx.eventBus().consumer(getClass().getName());
@@ -86,7 +92,7 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
                 }
 
                 aPromise.fail(response.cause());
-            } else if (response.result().body().equals(Op.RETRY)) {
+            } else if (Op.RETRY.equals(response.result().body())) {
                 getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
                 sendMessage(aPromise, aJsonObject, aVerticleName, aTimeout);
             } else {
@@ -116,9 +122,8 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
                     Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
                             TypesafeConfigReader.FROM_STRING),
                     TypesafeConfigDecider.FEATURE_ENABLED));
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
     /**

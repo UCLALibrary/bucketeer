@@ -29,6 +29,7 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class LoadImageHandler implements Handler<RoutingContext> {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(LoadImageHandler.class, Constants.MESSAGES);
 
     @Override
@@ -84,6 +85,7 @@ public class LoadImageHandler implements Handler<RoutingContext> {
      * Return an error to the HTTP requester.
      *
      * @param aResponse An HTTP response
+     * @param aErrorCode An error code
      * @param aThrowable An exception
      */
     private void returnError(final HttpServerResponse aResponse, final int aErrorCode, final Throwable aThrowable) {

@@ -30,12 +30,16 @@ import io.vertx.ext.web.client.WebClient;
  */
 public class LargeImageVerticle extends AbstractBucketeerVerticle {
 
+    /** The LargeImageVerticle logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(LargeImageVerticle.class, Constants.MESSAGES);
 
+    /** The endpoint for loading images. */
     private static final String LOAD_IMAGE_ENDPOINT = "/images/{}/{}"; // image-id and file-path
 
+    /** An update status callback URL. */
     private Optional<String> myCallbackURL;
 
+    /** The URL for the large image Bucketeer. */
     private String myLargeImageBucketeer;
 
     @Override

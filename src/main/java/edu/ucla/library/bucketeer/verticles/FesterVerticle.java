@@ -34,30 +34,34 @@ import io.vertx.ext.web.multipart.MultipartForm;
  */
 public class FesterVerticle extends AbstractBucketeerVerticle {
 
+    /** This verticle's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(FesterVerticle.class, Constants.MESSAGES);
 
+    /** The Fester host name. */
     private String myFesterHost;
 
+    /** The Fester path. */
     private String myFesterPath;
 
+    /** The Fester port. */
     private int myFesterPort;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void start() throws Exception {
         super.start();
 
         final JsonObject config = config();
         final String urlConfigValue = config.getString(Config.FESTER_URL);
 
-        if (urlConfigValue != null) {
-            final URL festerURL = new URL(urlConfigValue);
-
-            myFesterPort = festerURL.getPort();
-            myFesterHost = festerURL.getHost();
-            myFesterPath = festerURL.getPath();
-        } else {
+        if (urlConfigValue == null) {
             throw new ConfigurationException(LOGGER.getMessage(MessageCodes.BUCKETEER_159));
         }
+        final URL festerURL = new URL(urlConfigValue);
+
+        myFesterPort = festerURL.getPort();
+        myFesterHost = festerURL.getHost();
+        myFesterPath = festerURL.getPath();
 
         getJsonConsumer().handler(message -> {
             final JsonObject messageBody = message.body();

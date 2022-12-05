@@ -7,6 +7,7 @@ import edu.ucla.library.bucketeer.HTTP;
 import edu.ucla.library.bucketeer.MessageCodes;
 import edu.ucla.library.bucketeer.Op;
 import edu.ucla.library.bucketeer.utils.CodeUtils;
+
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -35,6 +36,7 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
      * @param aVerticleName A verticle name that will respond to the message
      * @param aTimeout A timeout measured in milliseconds
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     protected void sendMessage(final Vertx aVertx, final JsonObject aJsonObject, final String aVerticleName,
             final long aTimeout) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
@@ -65,7 +67,7 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
                 } else {
                     log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(MessageCodes.BUCKETEER_136));
                 }
-            } else if (response.result().body().equals(Op.RETRY)) {
+            } else if (Op.RETRY.equals(response.result().body())) {
                 getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
                 sendMessage(aVertx, aJsonObject, aVerticleName, aTimeout);
             }

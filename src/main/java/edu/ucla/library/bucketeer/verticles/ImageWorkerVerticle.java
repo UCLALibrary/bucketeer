@@ -33,14 +33,17 @@ import io.vertx.ext.web.client.WebClient;
  */
 public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
 
+    /** The logger for ImageWorkerVerticle. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ImageWorkerVerticle.class, MESSAGES);
 
-    /* Default delay for requeuing, measured in seconds */
+    /** Default delay for requeuing, measured in seconds. */
     private static final long DEFAULT_REQUEUE_DELAY = 1;
 
+    /** The requeuing delay. */
     private long myRequeueDelay;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void start() throws IOException {
         myRequeueDelay = config().getLong(Config.S3_REQUEUE_DELAY, DEFAULT_REQUEUE_DELAY) * 1000;
 
@@ -75,7 +78,6 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                 promise.future().onComplete(upload -> {
                     if (callbackUrlOpt.isPresent()) {
                         final WebClient webClient = WebClient.create(vertx);
-                        final boolean callbackUsesSSL;
                         final String callbackURL;
 
                         if (upload.succeeded()) {
@@ -84,13 +86,11 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                             callbackURL = callbackUrlOpt.get() + "false";
                         }
 
-                        callbackUsesSSL = callbackURL.startsWith("https") ? true : false;
-
                         LOGGER.debug(MessageCodes.BUCKETEER_515, callbackURL);
 
                         // Report the success of the S3 upload to whatever initiated the job, this may be another
                         // Bucketeer instance or it may be another application that needs an image in Cantaloupe.
-                        webClient.patchAbs(callbackURL).ssl(callbackUsesSSL).send(callback -> {
+                        webClient.patchAbs(callbackURL).ssl(callbackURL.startsWith("https")).send(callback -> {
                             if (callback.failed()) {
                                 // If the callback isn't listening, just log that as an error
                                 LOGGER.error(callback.cause(), callback.cause().getMessage());
@@ -148,7 +148,7 @@ public class ImageWorkerVerticle extends AbstractBucketeerVerticle {
                 }
 
                 aPromise.fail(exception);
-            } else if (response.result().body().equals(Op.RETRY)) {
+            } else if (Op.RETRY.equals(response.result().body())) {
                 vertx.setTimer(myRequeueDelay, timer -> {
                     sendImageRequest(aListener, aJsonObject, aPromise);
                 });

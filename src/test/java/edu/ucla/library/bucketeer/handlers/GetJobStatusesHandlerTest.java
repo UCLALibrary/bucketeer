@@ -126,7 +126,6 @@ public class GetJobStatusesHandlerTest extends AbstractBucketeerHandlerTest {
          * @param aContext A test context
          * @param aAsyncTask A asynchronous task
          * @param aExpectedObj The JSON object test fixture
-         * @param aJob
          */
         private TestHandler(final TestContext aContext, final Async aAsyncTask, final JsonObject aExpectedObj) {
             myJob = aExpectedObj.getJsonArray(Constants.JOBS);

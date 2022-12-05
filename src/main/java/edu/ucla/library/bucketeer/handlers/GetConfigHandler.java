@@ -17,8 +17,10 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class GetConfigHandler extends AbstractBucketeerHandler {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(GetConfigHandler.class, Constants.MESSAGES);
 
+    /** The handler's configuration. */
     private final JsonObject myConfig;
 
     /**

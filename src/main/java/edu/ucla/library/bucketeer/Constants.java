@@ -46,7 +46,7 @@ public final class Constants {
     /**
      * A timeout for a job lock.
      */
-    public static final int JOB_LOCK_TIMEOUT = 10000;
+    public static final int JOB_LOCK_TIMEOUT = 10_000;
 
     /**
      * A timeout for the job delete watcher. Just for context, the curl default timeout is 600 seconds.

@@ -23,28 +23,38 @@ import edu.ucla.library.bucketeer.MessageCodes;
  */
 public class KakaduConverter extends AbstractConverter implements Converter {
 
+    /** The working directory name. */
     public static final String WORKING_DIR_NAME = "kakadu";
 
+    /** The Kakadu home property. */
     public static final String KAKADU_HOME = "KAKADU_HOME";
 
+    /** The Kakadu rate argument. */
     public static final String RATE = "-rate";
 
+    /** The converter's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(KakaduConverter.class, Constants.MESSAGES);
 
+    /** The system's temporary file directory. */
     private static final File TMP_DIR = new File(System.getProperty("java.io.tmpdir"), WORKING_DIR_NAME);
 
+    /** Kakadu's compress command. */
     private static final String KAKADU_COMMAND = "kdu_compress";
 
+    /** The base Kakadu options. */
     private static final List<String> BASE_OPTIONS = Arrays.asList("Clevels=6", "Clayers=6",
             "Cprecincts={256,256},{256,256},{128,128}", "Stiles={512,512}", "Corder=RPCL", "ORGgen_plt=yes",
             "ORGtparts=R", "Cblk={64,64}", "Cuse_sop=yes", "Cuse_eph=yes", "-flush_period", "1024");
 
+    /** Additional options required for creating lossless images. */
     private static final List<String> LOSSLESS_OPTIONS = Arrays.asList("Creversible=yes", RATE, "-");
 
+    /** Additional options required for creating lossy images. */
     private static final List<String> LOSSY_OPTION = Arrays.asList(RATE, "3");
 
-    // private static final List<String> ALPHA_OPTION = Arrays.asList("-jp2_alpha");
-
+    /**
+     * Creates a new Kakadu converter.
+     */
     KakaduConverter() {
         if (!TMP_DIR.exists() && !TMP_DIR.mkdirs()) {
             throw new I18nRuntimeException(MessageCodes.BUNDLE, MessageCodes.BUCKETEER_163, TMP_DIR);
@@ -67,11 +77,11 @@ public class KakaduConverter extends AbstractConverter implements Converter {
             command.addAll(LOSSY_OPTION);
         }
 
-        if (ConverterFactory.hasSystemKakadu()) {
-            run(new ProcessBuilder(command), aID, LOGGER);
-        } else {
+        if (!ConverterFactory.hasSystemKakadu()) {
             throw new KakaduNotFoundException();
         }
+
+        run(new ProcessBuilder(command), aID, LOGGER);
 
         return jpx;
     }

@@ -104,7 +104,7 @@ public class JobTest extends AbstractBucketeerTest {
      */
     @Test
     public final void testSetIsSunsequentRun() {
-        assertTrue(new Job(TEST_JOB_NAME).isSubsequentRun(true).isSubsequentRun());
+        assertTrue(new Job(TEST_JOB_NAME).setSubsequentRun(true).isSubsequentRun());
     }
 
     /**

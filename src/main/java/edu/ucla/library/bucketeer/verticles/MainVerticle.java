@@ -49,24 +49,31 @@ import oshi.hardware.HardwareAbstractionLayer;
 /**
  * Main verticle that starts the application.
  */
+@SuppressWarnings("PMD.ExcessiveImports")
 public class MainVerticle extends AbstractVerticle {
 
+    /** The application's default port. */
     public static final int DEFAULT_PORT = 8888;
 
+    /** The logger for the MainVerticle. */
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class, MESSAGES);
 
+    /** The application's OpenAPI spec. */
     private static final String DEFAULT_SPEC = "bucketeer.yaml";
 
+    /** A thread name addition. */
     private static final String THREAD_NAME = "-thread";
 
+    /** The default number of S3 uploader instances. */
     private static final int S3_UPLOADER_INSTANCES = 1;
 
+    /** The default number of S3 uploader threads. */
     private static final int S3_UPLOADER_THREADS = getAvailableProcessors();
 
     /**
      * Gets the available logical processors on the system minus one.
      *
-     * @return
+     * @return The number of available processors on the system
      */
     private static int getAvailableProcessors() {
         final SystemInfo systemInfo = new SystemInfo();
@@ -107,6 +114,7 @@ public class MainVerticle extends AbstractVerticle {
         });
     }
 
+    @SuppressWarnings({ "PMD.CognitiveComplexity", "PMD.AvoidCatchingGenericException" })
     private void buildRouter(final JsonObject aConfig, final Promise<Void> aPromise) {
         final String apiSpec = aConfig.getString(Config.OPENAPI_SPEC_PATH, DEFAULT_SPEC);
         final HttpServer server = vertx.createHttpServer(getHttpServerOptions());
@@ -194,7 +202,8 @@ public class MainVerticle extends AbstractVerticle {
         final String osArch = System.getProperty("os.arch", Constants.EMPTY);
 
         // Set Linux options if we're running on a Linux machine
-        if (("unix".equalsIgnoreCase(osName) || "linux".equalsIgnoreCase(osName)) && "amd64".equals(osArch)) {
+        if ((HardwareLabels.UNIX.equalsIgnoreCase(osName) || HardwareLabels.LINUX.equalsIgnoreCase(osName)) &&
+                HardwareLabels.AMD64.equals(osArch)) {
             options.setTcpFastOpen(true).setTcpCork(true).setTcpQuickAck(true).setReusePort(true);
         } else {
             LOGGER.warn(MessageCodes.BUCKETEER_035, osName, osArch);
@@ -206,6 +215,7 @@ public class MainVerticle extends AbstractVerticle {
     /**
      * Returns the other non-main verticles.
      *
+     * @param aConfig A configuration
      * @param aHandler A handler that wraps the results of our verticle deployments
      */
     @SuppressWarnings("rawtypes")
@@ -268,6 +278,8 @@ public class MainVerticle extends AbstractVerticle {
      *
      * @param aVerticleName The name of the verticle to deploy
      * @param aOptions Any deployment options that should be considered
+     * @param aPromise A promise that work will be completed
+     * @return A future with work to be done
      */
     private Future<Void> deployVerticle(final String aVerticleName, final DeploymentOptions aOptions,
             final Promise<Void> aPromise) {
@@ -288,5 +300,20 @@ public class MainVerticle extends AbstractVerticle {
         });
 
         return aPromise.future();
+    }
+
+    /**
+     * A constants class with different types of hardware labels defined.
+     */
+    private static final class HardwareLabels {
+
+        /** The Linux OS name. */
+        private static final String LINUX = "linux";
+
+        /** The UNIX OS name. */
+        private static final String UNIX = "unix";
+
+        /** The AMD64 architecture. */
+        private static final String AMD64 = "amd64";
     }
 }

@@ -23,11 +23,14 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class GetJobsHandler extends AbstractBucketeerHandler {
 
+    /** The handler's logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(GetJobsHandler.class, Constants.MESSAGES);
 
+    /** The Vert.x instance. */
     private Vertx myVertx;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void handle(final RoutingContext aContext) {
         final HttpServerResponse response = aContext.response();
 

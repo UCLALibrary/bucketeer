@@ -11,11 +11,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class GenericFilePathPrefix implements IFilePathPrefix {
 
-    /**
-     * The <code>serialVersionUID</code> of GenericFilePathPrefix.
-     */
+    /** The <code>serialVersionUID</code> of GenericFilePathPrefix. */
     private static final long serialVersionUID = 4651239370553190271L;
 
+    /** The root directory. */
     @JsonProperty("genericRootDir")
     private final String myGenericRootDir;
 

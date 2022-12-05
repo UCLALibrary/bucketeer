@@ -31,13 +31,17 @@ import io.vertx.core.shareddata.SharedData;
  */
 public class ItemFailureVerticle extends AbstractBucketeerVerticle {
 
+    /** The ItemFailureVerticle logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(ItemFailureVerticle.class, Constants.MESSAGES);
 
+    /** The name of the verticle that finalizes jobs. */
     private static final String FINALIZER = FinalizeJobVerticle.class.getName();
 
+    /** The Slack message retry duration. */
     private long mySlackRetryDuration;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void start() throws Exception {
         super.start();
 
@@ -63,7 +67,7 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
                             final Set<String> jobs = keyCheck.result();
 
                             if (jobs.contains(jobName)) {
-                                getLock(sharedData, getLock -> {
+                                handleLock(sharedData, getLock -> {
                                     if (getLock.succeeded()) {
                                         setItemStatus(getLock.result(), jobsMap, message);
                                     } else {
@@ -95,10 +99,10 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
     /**
      * Gets a lock for use with updates.
      *
-     * @param aPromise A promise for the work being done
+     * @param aSharedData A reference to the application's shared data
      * @param aHandler A lock handler
      */
-    private void getLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
+    private void handleLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
         final Promise<Lock> promise = Promise.<Lock>promise();
 
         promise.future().onComplete(aHandler);
@@ -117,8 +121,9 @@ public class ItemFailureVerticle extends AbstractBucketeerVerticle {
      *
      * @param aLock A lock
      * @param aJobsMap The jobs map
-     * @param aContext A routing context
+     * @param aMessage A JSON message
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void setItemStatus(final Lock aLock, final AsyncMap<String, Job> aJobsMap,
             final Message<JsonObject> aMessage) {
         final JsonObject json = aMessage.body();

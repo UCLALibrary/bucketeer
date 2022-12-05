@@ -74,6 +74,7 @@ public class GetStatusHandler implements Handler<RoutingContext> {
     /**
      * Gets a feature flag checker.
      *
+     * @param aVertx A Vert.x instance
      * @return An optional feature flag checker
      */
     private Optional<FeatureFlagChecker> getFeatureFlagChecker(final Vertx aVertx) {
@@ -82,8 +83,7 @@ public class GetStatusHandler implements Handler<RoutingContext> {
                     Suppliers.supplierAndThen(FileResourceLoaders.forFile(new File(Features.FEATURE_FLAGS_FILE)),
                             TypesafeConfigReader.FROM_STRING),
                     TypesafeConfigDecider.FEATURE_ENABLED));
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 }

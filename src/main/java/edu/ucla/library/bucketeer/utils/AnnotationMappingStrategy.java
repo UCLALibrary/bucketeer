@@ -1,6 +1,8 @@
 
 package edu.ucla.library.bucketeer.utils;
 
+import static edu.ucla.library.bucketeer.Constants.EMPTY;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,14 +28,13 @@ import edu.ucla.library.bucketeer.MessageCodes;
  */
 public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappingStrategy<T> {
 
+    /** The logger for this class. */
     private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationMappingStrategy.class, Constants.MESSAGES);
 
-    private static final String EMPTY = "";
-
-    // Keep a mapping between annotation names and their actual fields.
+    /** Keep a mapping between annotation names and their actual fields. */
     private final Map<String, Field> myValuesMap = new HashMap<>();
 
-    // We can override the alphanumeric sorting of headers by supplying our desired order.
+    /** We can override the alphanumeric sorting of headers by supplying our desired order. */
     private String[] myHeader;
 
     /**
@@ -69,13 +70,12 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
         // We need to run generateHeader() but after we do we can just use our own headers
         if (myHeader != null && myHeader.length > 0) {
             return myHeader.clone();
-        } else {
-            for (int index = 0; index < result.length; index++) {
-                result[index] = getColumnName(index);
-            }
-
-            return result;
         }
+        for (int index = 0; index < result.length; index++) {
+            result[index] = getColumnName(index);
+        }
+
+        return result;
     }
 
     /**
@@ -93,7 +93,7 @@ public class AnnotationMappingStrategy<T> extends HeaderColumnNameTranslateMappi
      * @param aBean A Java Bean
      */
     @Override
-    @SuppressWarnings("PMD.PreserveStackTrace")
+    @SuppressWarnings({ "PMD.PreserveStackTrace", "PMD.AvoidAccessibilityAlteration" })
     public String[] transmuteBean(final T aBean) throws CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
         final List<String> values = new ArrayList<>();
         final String[] headers = generateHeader(aBean);

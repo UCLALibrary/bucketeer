@@ -35,19 +35,26 @@ import io.vertx.core.shareddata.Counter;
 /**
  * Stores submitted images to an S3 bucket.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class S3BucketVerticle extends AbstractBucketeerVerticle {
 
+    /** The default maximum number of S3 retries. */
     public static final long DEFAULT_S3_MAX_RETRIES = 30;
 
+    /** The logger for the S3Bucket Verticle. */
     private static final Logger LOGGER = LoggerFactory.getLogger(S3BucketVerticle.class, MESSAGES);
 
+    /** The default maximum number of S3 requests. */
     private static final int DEFAULT_S3_MAX_REQUESTS = 20;
 
+    /** An S3 client. */
     private S3Client myS3Client;
 
+    /** The maximum number of retries. */
     private long myMaxRetries;
 
     @Override
+    @SuppressWarnings("PMD.CognitiveComplexity")
     public void start() throws Exception {
         super.start();
 
@@ -120,7 +127,7 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      * @param aMessage The message containing the S3 upload request
      * @param aConfig The verticle's configuration
      */
-    @SuppressWarnings("Indentation") // Checkstyle's indentation check doesn't work with multiple lambdas
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void upload(final Message<JsonObject> aMessage, final JsonObject aConfig) {
         final boolean deletable = aMessage.headers().contains(Constants.DERIVATIVE_IMAGE);
         final JsonObject storageRequest = aMessage.body();
@@ -238,11 +245,12 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
     }
 
     /**
-     * A check to see whether an errored request should be retried.
+     * A check to see whether an error'ed request should be retried.
      *
      * @param aImageID An image ID
      * @param aHandler A retry handler
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void shouldRetry(final String aImageID, final Handler<AsyncResult<Boolean>> aHandler) {
         final Promise<Boolean> promise = Promise.promise();
 
@@ -307,8 +315,10 @@ public class S3BucketVerticle extends AbstractBucketeerVerticle {
      * incremented).
      *
      * @param aMessage A message requesting an S3 upload
+     * @param aCode A reply code
      * @param aDetails The result of the S3 upload
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private void sendReply(final Message<JsonObject> aMessage, final int aCode, final String aDetails) {
         getVertx().sharedData().getLocalCounter(Constants.S3_REQUEST_COUNT, getCounter -> {
             if (getCounter.succeeded()) {

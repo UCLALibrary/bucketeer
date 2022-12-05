@@ -14,21 +14,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class UCLAFilePathPrefix implements IFilePathPrefix {
 
-    /**
-     * The <code>serialVersionUID</code> of UCLAFilePathPrefix.
-     */
+    /** The <code>serialVersionUID</code> of UCLAFilePathPrefix. */
     private static final long serialVersionUID = -7564099601987867700L;
 
+    /** The masters' directory path. */
     private static final String MASTERS_DIR_PATH = "Masters/";
 
+    /** The Digital Library's masters' directory path. */
     private static final String DL_MASTERS_DIR_PATH = "Masters/dlmasters/";
 
+    /** The root directory. */
     @JsonProperty("uclaRootDir")
     private String myUCLARootDir;
 
-    /**
-     * Creates a prefix for UCLA's image sources.
-     */
+    /** Creates a prefix for UCLA's image sources. */
     @SuppressWarnings("unused")
     private UCLAFilePathPrefix() {
     }
