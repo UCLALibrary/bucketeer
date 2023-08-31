@@ -100,7 +100,6 @@
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.3.0</woodstox.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
-    <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
     <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <jslack.version>1.8.1</jslack.version>
@@ -487,7 +486,6 @@
       <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-maven-plugins</artifactId>
-        <version>${freelib.maven.version}</version>
         <executions>
           <execution>
             <phase>process-resources</phase>
