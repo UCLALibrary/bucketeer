@@ -2,7 +2,6 @@
 package edu.ucla.library.bucketeer;
 
 import static edu.ucla.library.bucketeer.Constants.MESSAGES;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -50,6 +49,7 @@ public class JobFactoryTest {
     private static final String ITEMS = "items";
 
     @Rule
+    @SuppressWarnings("deprecation")
     public ExpectedException myThrown = ExpectedException.none();
 
     /**
@@ -81,7 +81,8 @@ public class JobFactoryTest {
     public final void testDupeHeadersThrowsException() throws ProcessingException, IOException {
         myThrown.expect(ProcessingException.class);
         myThrown.expectMessage("has one or more duplicate column headers");
-        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
+
+        JobFactory.getInstance().createJob(TEST_JOB_NAME, BAD_HEADERS);
     }
 
     /**
@@ -91,7 +92,8 @@ public class JobFactoryTest {
     public final void testSpacesThrowsException() throws ProcessingException, IOException {
         myThrown.expect(ProcessingException.class);
         myThrown.expectMessage("There are spaces (\" \")");
-        final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, FILE_WITH_SPACES);
+
+        JobFactory.getInstance().createJob(TEST_JOB_NAME, FILE_WITH_SPACES);
     }
 
     /**
@@ -104,9 +106,8 @@ public class JobFactoryTest {
         final long expectedFailed = 2;
         final long expectedMissing = 1;
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, MISSING_FAILED_FILE);
-        final String slackMessage =
-                LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackUserHandle, job.size(),
-                                  job.failedItems(), job.missingItems(), iiifURL);
+        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackUserHandle, job.size(),
+                job.failedItems(), job.missingItems(), iiifURL);
 
         assertEquals(expectedFailed, job.failedItems());
         assertEquals(expectedMissing, job.missingItems());
