@@ -79,13 +79,13 @@
 
     <!-- OS pinned package versions (Cf. https://ubuntuupdates.org/package_metas for latest versions) -->
     <ubuntu.tag>20.04</ubuntu.tag>
-    <openjdk.version>17.0.5+8-2ubuntu1~20.04</openjdk.version>
+    <openjdk.version>17.0.13+11-2ubuntu1~20.04</openjdk.version>
     <gcc.version>4:9.3.0-1ubuntu2</gcc.version>
     <make.version>4.2.1-1.2</make.version>
-    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.7</libtiff.version>
+    <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.14</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
-    <libopenjp2.version>2.3.1-1ubuntu4.20.04.1</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.14</curl.version>
+    <libopenjp2.version>2.3.1-1ubuntu4.20.04.3</libopenjp2.version>
+    <curl.version>7.68.0-1ubuntu2.24</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
@@ -102,7 +102,6 @@
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
-    <maven.failsafe.plugin.version>2.22.0</maven.failsafe.plugin.version>
     <jslack.version>1.8.1</jslack.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>

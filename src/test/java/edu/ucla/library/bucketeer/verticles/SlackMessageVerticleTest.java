@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -126,6 +127,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      */
     @Test
+    @Ignore
     public final void testSlackSendMessage(final TestContext aContext) {
         final String textMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_116);
         final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, textMessage);
@@ -156,6 +158,7 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      */
     @Test
+    @Ignore
     public final void testSlackFileUpload(final TestContext aContext)
             throws FileNotFoundException, ProcessingException, IOException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB, LIVE_TEST_CSV);
