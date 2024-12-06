@@ -97,7 +97,6 @@ public class ItemTest extends AbstractBucketeerTest {
 
     /**
      * Tests setting an empty file path.
-     *
      */
     @Test
     public final void testSetEmptyFilePath() {
@@ -108,7 +107,6 @@ public class ItemTest extends AbstractBucketeerTest {
 
     /**
      * Tests setting an empty file path via default constructor.
-     *
      */
     @Test
     public final void testSetEmptyFilePathDefaultConstructor() {
@@ -169,8 +167,8 @@ public class ItemTest extends AbstractBucketeerTest {
     @Test
     public final void testToJSONWithGenericPrefix() throws IOException {
         final Item item = new Item(TEST_ID, FILE_PATH).setWorkflowState(WorkflowState.EMPTY);
-        final JsonObject expected = new JsonObject(StringUtils.read(new File(
-                "src/test/resources/json/generic-item.json")));
+        final JsonObject expected =
+                new JsonObject(StringUtils.read(new File("src/test/resources/json/generic-item.json")));
 
         expected.put(FILE_PATH_KEY, new File(FILE_PATH).getPath());
 

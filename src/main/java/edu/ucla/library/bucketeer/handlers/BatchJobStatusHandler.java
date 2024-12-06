@@ -62,8 +62,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
 
         // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
         if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
-            mySlackRetryDuration = 1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) *
-                     aConfig.getInteger(Config.SLACK_RETRY_DELAY);
+            mySlackRetryDuration =
+                    1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) * aConfig.getInteger(Config.SLACK_RETRY_DELAY);
         } else {
             mySlackRetryDuration = 0;
         }
