@@ -87,8 +87,8 @@ public class SlackMessageVerticle extends AbstractBucketeerVerticle {
             sendSlackApiRequest(aSlackClient, aMessageData).onSuccess(promise::complete).onFailure(failure -> {
                 if (aRetryCount <= aMaxRetries) {
                     vertx.setTimer(1000 * aRetryDelay, timerId -> {
-                        final Future<SlackApiResponse> retryAttempt = sendSlackApiRequestWithRetry(
-                                aSlackClient, aMessageData, aMaxRetries, aRetryDelay, aRetryCount + 1);
+                        final Future<SlackApiResponse> retryAttempt = sendSlackApiRequestWithRetry(aSlackClient,
+                                aMessageData, aMaxRetries, aRetryDelay, aRetryCount + 1);
 
                         retryAttempt.onSuccess(promise::complete).onFailure(promise::fail);
                     });

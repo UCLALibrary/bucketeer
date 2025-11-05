@@ -1,3 +1,4 @@
+
 package edu.ucla.library.bucketeer.utils;
 
 import io.vertx.ext.unit.Async;
@@ -8,8 +9,8 @@ import io.vertx.ext.unit.Async;
 public final class TestUtils {
 
     /**
-    * Creates new TestUtils instance.
-    */
+     * Creates new TestUtils instance.
+     */
     private TestUtils() {
     }
 

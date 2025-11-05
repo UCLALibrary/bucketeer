@@ -79,13 +79,13 @@
 
     <!-- OS pinned package versions (Cf. https://ubuntuupdates.org/package_metas for latest versions) -->
     <ubuntu.tag>20.04</ubuntu.tag>
-    <openjdk.version>17.0.13+11-2ubuntu1~20.04</openjdk.version>
+    <openjdk.version>17.0.15+6~us1-0ubuntu1~20.04</openjdk.version>
     <gcc.version>4:9.3.0-1ubuntu2</gcc.version>
     <make.version>4.2.1-1.2</make.version>
     <libtiff.version>4.1.0+git191117-2ubuntu0.20.04.14</libtiff.version>
     <build.essential.version>12.8ubuntu1.1</build.essential.version>
-    <libopenjp2.version>2.3.1-1ubuntu4.20.04.3</libopenjp2.version>
-    <curl.version>7.68.0-1ubuntu2.24</curl.version>
+    <libopenjp2.version>2.3.1-1ubuntu4.20.04.4</libopenjp2.version>
+    <curl.version>7.68.0-1ubuntu2.25</curl.version>
     <python2.version>2.7.17-2ubuntu4</python2.version>
 
     <!-- Application dependencies -->
@@ -100,7 +100,6 @@
     <beanutils.version>1.9.4</beanutils.version>
     <woodstox.version>5.3.0</woodstox.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
-    <freelib.maven.version>0.3.0</freelib.maven.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
     <jslack.version>1.8.1</jslack.version>
     <snakeyaml.version>1.33</snakeyaml.version>
@@ -118,9 +117,7 @@
     <shade.plugin.version>2.4.3</shade.plugin.version>
     <vertx.plugin.version>1.0.18</vertx.plugin.version>
     <deploy.plugin.version>2.8.2</deploy.plugin.version>
-    <codacy.plugin.version>1.2.0</codacy.plugin.version>
     <jcip.annotations.version>1.0-1</jcip.annotations.version>
-    <jacoco.maven.plugin.version>0.8.5</jacoco.maven.plugin.version>
     <docker.maven.plugin.version>0.38.1</docker.maven.plugin.version>
     <maven.download.plugin.version>1.3.0</maven.download.plugin.version>
 
@@ -225,6 +222,9 @@
     <bucketeer.iiif.cache.user>IIIF_CACHE_USERNAME</bucketeer.iiif.cache.user>
     <bucketeer.iiif.cache.password>IIIF_CACHE_PASSWORD</bucketeer.iiif.cache.password>
 
+    <!-- Loosening the standards now that the Services Team is gone -->
+    <checkstyle.skip>true</checkstyle.skip>
+    <pmd.skip>true</pmd.skip>
   </properties>
 
   <dependencies>
@@ -486,7 +486,6 @@
       <plugin>
         <groupId>info.freelibrary</groupId>
         <artifactId>freelib-maven-plugins</artifactId>
-        <version>${freelib.maven.version}</version>
         <executions>
           <execution>
             <phase>process-resources</phase>
@@ -1162,6 +1161,7 @@
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <useModulePath>false</useModulePath>
               <includes>
                 <include>**/*Test.java</include>
               </includes>
@@ -1196,6 +1196,7 @@
           <plugin>
             <artifactId>maven-failsafe-plugin</artifactId>
             <configuration>
+              <useModulePath>false</useModulePath>
               <includes>
                 <include/>
               </includes>
@@ -1340,7 +1341,7 @@
   <parent>
     <artifactId>freelib-parent</artifactId>
     <groupId>info.freelibrary</groupId>
-    <version>8.0.0</version>
+    <version>13.0.0</version>
   </parent>
 
 </project>

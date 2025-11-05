@@ -6,8 +6,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
- * A simple test class that tests operation results. Things would break if these were changed without also changing
- * the things that use them to check the success or failure of a process.
+ * A simple test class that tests operation results. Things would break if these were changed without also changing the
+ * things that use them to check the success or failure of a process.
  */
 public class OpTest {
 
