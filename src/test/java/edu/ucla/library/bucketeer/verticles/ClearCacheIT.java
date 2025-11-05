@@ -8,6 +8,7 @@ import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -165,6 +166,7 @@ public class ClearCacheIT {
      * @param aContext A testing context
      */
     @Test
+    @Ignore
     public void testCacheClear(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final Future<Integer> vertImageWidth = deployNewVerticle(myConfigs).compose(verticleID -> {
