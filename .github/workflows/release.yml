@@ -29,13 +29,6 @@ jobs:
         uses: stCarolas/setup-maven@1d56b37995622db66cce1214d81014b09807fb5a # v4
         with:
           maven-version: 3.6.3
-      - name: Set up Maven cache
-        uses: actions/cache@0781355a23dac32fd3bac414512f4b903437991a # v2
-        if: ${{ env.MAVEN_CACHE_KEY }}
-        with:
-          path: ~/.m2
-          key: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: uclalibrary-cache-${{ secrets.MAVEN_CACHE_KEY }}-
       - name: Set Jar deployment config
         if: env.SKIP_JAR_DEPLOYMENT == null
         run: echo "SKIP_JAR_DEPLOYMENT=false" >> $GITHUB_ENV
