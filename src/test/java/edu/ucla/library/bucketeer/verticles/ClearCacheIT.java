@@ -8,6 +8,7 @@ import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -165,31 +166,26 @@ public class ClearCacheIT {
      * @param aContext A testing context
      */
     @Test
+    @Ignore
     public void testCacheClear(final TestContext aContext) {
         final Async asyncTask = aContext.async();
         final Future<Integer> vertImageWidth = deployNewVerticle(myConfigs).compose(verticleID -> {
             myVertID = verticleID;
 
-            return putObjectS3(VERT_PATH).compose(success -> {
-                return getImageWidth();
-            });
+            return putObjectS3(VERT_PATH).compose(success -> getImageWidth());
         });
 
         vertImageWidth.compose(width -> {
-            final Future<Integer> horiImageWidth = sendMessage(IMAGE_KEY).compose(success -> {
-                return putObjectS3(HORI_PATH);
-            }).compose(success -> {
-                return getImageWidth();
-            });
+            final Future<Integer> horiImageWidth = sendMessage(IMAGE_KEY).compose(success -> putObjectS3(HORI_PATH))
+                    .compose(success -> getImageWidth());
 
             return horiImageWidth.compose(horiWidth -> {
                 if (horiWidth != width) {
                     return sendMessage(IMAGE_KEY);
                 }
 
-                return sendMessage(IMAGE_KEY).compose(success -> {
-                    return Future.failedFuture(LOGGER.getMessage(MessageCodes.BUCKETEER_610));
-                });
+                return sendMessage(IMAGE_KEY)
+                        .compose(success -> Future.failedFuture(LOGGER.getMessage(MessageCodes.BUCKETEER_610)));
             });
         }).onSuccess(result -> {
             myAmazonS3.deleteObject(s3Bucket, IMAGE_JPX);

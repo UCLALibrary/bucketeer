@@ -46,7 +46,6 @@ public class FilesystemWriteCsvFfOnT {
     @Rule
     public RunTestOnContext myTestContext = new RunTestOnContext();
 
-
     /**
      * Tests the status of the large image feature flag.
      *
@@ -76,9 +75,7 @@ public class FilesystemWriteCsvFfOnT {
     }
 
     /**
-     * Tests writing a CSV to the local filesystem mount.
-     *
-     * This is an e2e test (although the AWS Lambda is mocked).
+     * Tests writing a CSV to the local filesystem mount. This is an e2e test (although the AWS Lambda is mocked).
      *
      * @param aContext A test context
      */
@@ -87,8 +84,7 @@ public class FilesystemWriteCsvFfOnT {
         final WebClient webClient = WebClient.create(myTestContext.vertx());
         final int port = Integer.parseInt(System.getProperty(Config.HTTP_PORT));
         final Async asyncTask = aContext.async();
-        final MultipartForm form = MultipartForm.create()
-                .attribute(Constants.SLACK_HANDLE, "bucketeer")
+        final MultipartForm form = MultipartForm.create().attribute(Constants.SLACK_HANDLE, "bucketeer")
                 .textFileUpload(Constants.CSV_DATA, TEST_CSV.getName(), TEST_CSV.getAbsolutePath(), Constants.CSV);
 
         webClient.post(port, Constants.UNSPECIFIED_HOST, "/batch/input/csv").sendMultipartForm(form, sendForm -> {
@@ -109,9 +105,8 @@ public class FilesystemWriteCsvFfOnT {
                         aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs());
 
                         // Confirm we can copy the test container's files to the temporary test directory
-                        aContext.assertTrue(
-                                DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir.toString(),
-                                        tmpDestDir.toString()));
+                        aContext.assertTrue(DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir.toString(),
+                                tmpDestDir.toString()));
 
                         // Confirm the file we expect to exist actually does
                         aContext.assertTrue(expectedFile.exists());

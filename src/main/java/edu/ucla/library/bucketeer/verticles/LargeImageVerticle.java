@@ -60,8 +60,8 @@ public class LargeImageVerticle extends AbstractBucketeerVerticle {
         myCallbackURL = Optional.ofNullable(config.getString(Config.BATCH_CALLBACK_URL));
 
         // We should have a configuration value for our large image server if the feature is turned on
-        if (myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING)
-                && myLargeImageBucketeer == null) {
+        if (myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.LARGE_IMAGE_ROUTING) &&
+                myLargeImageBucketeer == null) {
             throw new ConfigurationException(LOGGER.getMessage(MessageCodes.BUCKETEER_512));
         }
 

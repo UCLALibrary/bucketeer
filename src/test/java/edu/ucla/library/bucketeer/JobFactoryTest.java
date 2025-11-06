@@ -104,9 +104,8 @@ public class JobFactoryTest {
         final long expectedFailed = 2;
         final long expectedMissing = 1;
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, MISSING_FAILED_FILE);
-        final String slackMessage =
-                LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackUserHandle, job.size(),
-                                  job.failedItems(), job.missingItems(), iiifURL);
+        final String slackMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_111, slackUserHandle, job.size(),
+                job.failedItems(), job.missingItems(), iiifURL);
 
         assertEquals(expectedFailed, job.failedItems());
         assertEquals(expectedMissing, job.missingItems());
