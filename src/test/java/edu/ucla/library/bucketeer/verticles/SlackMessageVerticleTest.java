@@ -127,7 +127,6 @@ public class SlackMessageVerticleTest extends AbstractBucketeerVerticle {
      * @param aContext A test context
      */
     @Test
-    @Ignore
     public final void testSlackSendMessage(final TestContext aContext) {
         final String textMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_116);
         final String errorMessage = LOGGER.getMessage(MessageCodes.BUCKETEER_110, textMessage);
