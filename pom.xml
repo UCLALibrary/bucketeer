@@ -101,7 +101,7 @@
     <woodstox.version>5.3.0</woodstox.version>
     <freelib.utils.version>3.0.1</freelib.utils.version>
     <netty.epoll.version>4.1.73.Final</netty.epoll.version>
-    <jslack.version>1.8.1</jslack.version>
+    <slack.client.version>1.46.0</slack.client.version>
     <snakeyaml.version>1.33</snakeyaml.version>
     <oshi.version>4.0.0</oshi.version>
     <jackson.version>2.13.1</jackson.version>
@@ -358,7 +358,7 @@
     <dependency>
       <groupId>com.slack.api</groupId>
       <artifactId>slack-api-client</artifactId>
-      <version>1.46.0</version>
+      <version>${slack.client.version}</version>
     </dependency>
 
     <!-- Below dependencies only used for testing -->
