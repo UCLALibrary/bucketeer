@@ -26,7 +26,6 @@ import io.vertx.core.json.JsonObject;
 /**
  * Accepts and forwards messages to a configured Slack channel.
  */
-@SuppressWarnings({ "PMD.AvoidDuplicateLiterals" }) // For other SuppressWarnings' text
 public class SlackMessageVerticle extends AbstractBucketeerVerticle {
 
     /** The SlackMessageVerticle's logger. */
