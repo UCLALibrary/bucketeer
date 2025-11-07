@@ -356,9 +356,9 @@
       <version>${vertx.super.s3.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.github.seratch</groupId>
-      <artifactId>jslack</artifactId>
-      <version>${jslack.version}</version>
+      <groupId>com.slack.api</groupId>
+      <artifactId>slack-api-client</artifactId>
+      <version>1.46.0</version>
     </dependency>
 
     <!-- Below dependencies only used for testing -->
