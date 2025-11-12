@@ -56,7 +56,6 @@ jobs:
           ssh-private-key: ${{ secrets.KAKADU_PRIVATE_SSH_KEY }}
 
       - name: Release with Maven
-        uses: samuelmeuli/action-maven-publish@201a45a3f311b2ee888f252ba9f4194257545709 # v1.4.0
         with:
           MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
