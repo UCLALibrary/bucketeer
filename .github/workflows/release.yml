@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         java: [ 17 ]
+        jdk: [ "temurin" ]
         build_property: [ "kakadu.version", "ignored.version" ]
     steps:
       - name: Check out source code
