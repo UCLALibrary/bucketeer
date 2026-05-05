@@ -11,8 +11,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.ucla.library.bucketeer.Job.WorkflowState;
 import info.freelibrary.util.StringUtils;
+
+import edu.ucla.library.bucketeer.Job.WorkflowState;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -147,7 +148,7 @@ public class JobTest extends AbstractBucketeerTest {
         newMetadata = job.getMetadata();
 
         // IIIF Access URL should have been added
-        assertEquals(originalHeader.length + 1, newHeader.length);
+        assertEquals(originalHeader.length + 3, newHeader.length);
         assertTrue(newHeader[originalHeader.length].equals(Metadata.IIIF_ACCESS_URL));
 
         // Bucketeer State of all items should be predictable
@@ -159,6 +160,7 @@ public class JobTest extends AbstractBucketeerTest {
             } else {
                 expectedWorkflowState = WorkflowState.EMPTY;
             }
+
             assertTrue(row[bucketeerStateIndex].equals(expectedWorkflowState.toString()));
         }
     }

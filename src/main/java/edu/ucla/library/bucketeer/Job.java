@@ -4,6 +4,7 @@ package edu.ucla.library.bucketeer;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -234,57 +235,45 @@ public class Job implements Serializable {
      */
     @SuppressWarnings("PMD.CyclomaticComplexity")
     public Job updateMetadata() throws ProcessingException {
+        final List<String> missingHeaders = new ArrayList<>();
         final List<Item> items = getItems();
 
-        final String[] newHeader;
-        final String[] additionalHeaders;
-
-        final int newHeaderLength;
-        final int additionalHeadersCount;
-
-        // Find the index position of our two columns: Bucketeer State and Access URL
         int bucketeerStateIndex = findHeader(Metadata.BUCKETEER_STATE);
         int accessUrlIndex = findHeader(Metadata.IIIF_ACCESS_URL);
+        int widthIndex = findHeader(Metadata.MEDIA_WIDTH);
+        int heightIndex = findHeader(Metadata.MEDIA_HEIGHT);
 
-        // Check which headers already exist in the metadata
-        final boolean bucketeerStateMissing = bucketeerStateIndex == -1;
-        final boolean accessUrlMissing = accessUrlIndex == -1;
+        int nextIndex = myMetadataHeader.length;
 
-        // If both headers are missing, we need to expand our headers array by two
-        if (bucketeerStateMissing && accessUrlMissing) {
-            additionalHeadersCount = 2;
-            additionalHeaders = new String[additionalHeadersCount];
-            additionalHeaders[0] = Metadata.BUCKETEER_STATE;
-            additionalHeaders[1] = Metadata.IIIF_ACCESS_URL;
-
-            bucketeerStateIndex = myMetadataHeader.length;
-            accessUrlIndex = myMetadataHeader.length + 1;
-        } else if (bucketeerStateMissing) {
-            // If only one header is missing, we need to expand our headers array by one
-            additionalHeadersCount = 1;
-            additionalHeaders = new String[additionalHeadersCount];
-            additionalHeaders[0] = Metadata.BUCKETEER_STATE;
-
-            bucketeerStateIndex = myMetadataHeader.length;
-        } else if (accessUrlMissing) {
-            // Expand by one
-            additionalHeadersCount = 1;
-            additionalHeaders = new String[additionalHeadersCount];
-            additionalHeaders[0] = Metadata.IIIF_ACCESS_URL;
-
-            accessUrlIndex = myMetadataHeader.length;
-        } else {
-            // No change
-            additionalHeadersCount = 0;
-            additionalHeaders = new String[additionalHeadersCount];
+        if (bucketeerStateIndex == -1) {
+            bucketeerStateIndex = nextIndex++;
+            missingHeaders.add(Metadata.BUCKETEER_STATE);
         }
 
-        LOGGER.debug(MessageCodes.BUCKETEER_155, additionalHeadersCount);
-        newHeaderLength = myMetadataHeader.length + additionalHeadersCount;
+        if (accessUrlIndex == -1) {
+            accessUrlIndex = nextIndex++;
+            missingHeaders.add(Metadata.IIIF_ACCESS_URL);
+        }
 
-        // Update the headers if there are changes
-        if (bucketeerStateMissing || accessUrlMissing) {
-            newHeader = new String[newHeaderLength];
+        if (widthIndex == -1) {
+            widthIndex = nextIndex++;
+            missingHeaders.add(Metadata.MEDIA_WIDTH);
+        }
+
+        if (heightIndex == -1) {
+            heightIndex = nextIndex++;
+            missingHeaders.add(Metadata.MEDIA_HEIGHT);
+        }
+
+        final int additionalHeadersCount = missingHeaders.size();
+        final boolean headersChanged = additionalHeadersCount > 0;
+        final int newHeaderLength = myMetadataHeader.length + additionalHeadersCount;
+
+        LOGGER.debug(MessageCodes.BUCKETEER_155, additionalHeadersCount);
+
+        if (headersChanged) {
+            final String[] additionalHeaders = missingHeaders.toArray(new String[0]);
+            final String[] newHeader = new String[newHeaderLength];
 
             System.arraycopy(myMetadataHeader, 0, newHeader, 0, myMetadataHeader.length);
             System.arraycopy(additionalHeaders, 0, newHeader, myMetadataHeader.length, additionalHeadersCount);
@@ -292,28 +281,31 @@ public class Job implements Serializable {
             setMetadataHeader(newHeader);
         }
 
-        // Then let's loop through the metadata and add or update columns as needed
         for (int index = 0; index < myMetadata.size(); index++) {
             final Item item = items.get(index);
 
             String[] row = myMetadata.get(index);
 
-            // If the number of columns has changed, increase our metadata row array size
-            if (bucketeerStateMissing || accessUrlMissing) {
+            if (headersChanged) {
                 final String[] newRow = new String[newHeaderLength];
 
                 System.arraycopy(row, 0, newRow, 0, row.length);
                 row = newRow;
             }
 
-            // We mark structural rows with empty statuses before outputting the CSV data
-            if (WorkflowState.STRUCTURAL.equals(item.getWorkflowState())) {
-                row[bucketeerStateIndex] = WorkflowState.EMPTY.toString();
-            } else {
-                row[bucketeerStateIndex] = item.getWorkflowState().toString();
-            }
+            row[bucketeerStateIndex] = WorkflowState.STRUCTURAL.equals(item.getWorkflowState())
+                    ? WorkflowState.EMPTY.toString() : item.getWorkflowState().toString();
 
             row[accessUrlIndex] = item.getAccessURL();
+
+            if (item.getWidth().isPresent()) {
+                row[widthIndex] = item.getWidth().get();
+            }
+
+            if (item.getHeight().isPresent()) {
+                row[heightIndex] = item.getHeight().get();
+            }
+
             myMetadata.set(index, row);
         }
 

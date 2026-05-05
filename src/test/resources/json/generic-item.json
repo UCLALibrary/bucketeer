@@ -5,5 +5,7 @@
     "workflowState": "",
     "filePathPrefix": {
         "genericRootDir": "."
-    }
+    },
+    "media.width": null,
+    "media.height": null
 }

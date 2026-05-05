@@ -5,5 +5,7 @@
     "workflowState": "",
     "filePathPrefix": {
         "uclaRootDir": "/tmp"
-    }
+    },
+    "media.width": null,
+    "media.height": null
 }
