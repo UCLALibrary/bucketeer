@@ -8,9 +8,11 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 import info.freelibrary.util.StringUtils;
 
@@ -22,7 +24,8 @@ import io.vertx.core.json.JsonObject;
 /**
  * A batch job item.
  */
-@JsonPropertyOrder({ "id", "filePath", "accessURL", "workflowState", "filePathPrefix" })
+@JsonPropertyOrder({ "id", "filePath", "accessURL", "workflowState", "filePathPrefix", Metadata.MEDIA_WIDTH,
+    Metadata.MEDIA_HEIGHT })
 public class Item implements Serializable {
 
     /** The <code>serialVersionUID</code> of the Item. */
@@ -39,6 +42,12 @@ public class Item implements Serializable {
 
     /** The item's image access URL. */
     private String myAccessURL;
+
+    /** The item's image width. */
+    private String myWidth;
+
+    /** The item's image height. */
+    private String myHeight;
 
     /** A flag indicating whether the item has an image file associated with it. */
     private boolean hasImageFile = true;
@@ -225,6 +234,48 @@ public class Item implements Serializable {
         myFilePath = Objects.requireNonNull(aFilePath);
         myPrefixedFilePath = null;
 
+        return this;
+    }
+
+    /**
+     * Gets the item's image width.
+     *
+     * @return The item's image width
+     */
+    @JsonGetter(Metadata.MEDIA_WIDTH)
+    public Optional<String> getWidth() {
+        return Optional.ofNullable(myWidth);
+    }
+
+    /**
+     * Gets the item's image height.
+     *
+     * @return The item's image height
+     */
+    @JsonGetter(Metadata.MEDIA_HEIGHT)
+    public Optional<String> getHeight() {
+        return Optional.ofNullable(myHeight);
+    }
+
+    /**
+     * Sets the item's image width.
+     *
+     * @param aWidth The item's image width
+     */
+    @JsonSetter(Metadata.MEDIA_WIDTH)
+    public Item setWidth(final int aWidth) {
+        myWidth = Integer.toString(aWidth);
+        return this;
+    }
+
+    /**
+     * Sets the item's image height.
+     *
+     * @param aHeight The item's image height
+     */
+    @JsonSetter(Metadata.MEDIA_HEIGHT)
+    public Item setHeight(final int aHeight) {
+        myHeight = Integer.toString(aHeight);
         return this;
     }
 

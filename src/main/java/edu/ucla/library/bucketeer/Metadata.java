@@ -49,8 +49,21 @@ public final class Metadata {
      */
     public static final String WORK = "Work";
 
-    // Constants classes should not have public constructors.
+    /**
+     * The item's image width.
+     */
+    public static final String MEDIA_WIDTH = "media.width";
+
+    /**
+     * The item's image height.
+     */
+    public static final String MEDIA_HEIGHT = "media.height";
+
+    /**
+     * Constants classes should not have public constructors.
+     */
     private Metadata() {
+        // This is intentionally left empty
     }
 
 }
