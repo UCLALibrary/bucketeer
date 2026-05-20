@@ -123,6 +123,7 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
                             TypesafeConfigReader.FROM_STRING),
                     TypesafeConfigDecider.FEATURE_ENABLED));
         }
+
         return Optional.empty();
     }
 

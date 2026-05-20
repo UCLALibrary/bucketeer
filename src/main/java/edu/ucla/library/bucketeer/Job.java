@@ -1,6 +1,9 @@
 
 package edu.ucla.library.bucketeer;
 
+import static edu.ucla.library.bucketeer.Constants.HEIGHT;
+import static edu.ucla.library.bucketeer.Constants.WIDTH;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -17,7 +20,15 @@ import com.opencsv.CSVWriter;
 
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.warnings.JDK;
+import info.freelibrary.util.warnings.PMD;
 
+import edu.ucla.library.bucketeer.verticles.WidthHeightVerticle;
+
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -233,10 +244,12 @@ public class Job implements Serializable {
      * @return The job
      * @throws ProcessingException when there is trouble parsing the metadata
      */
-    @SuppressWarnings("PMD.CyclomaticComplexity")
-    public Job updateMetadata() throws ProcessingException {
+    @SuppressWarnings({ PMD.CYCLOMATIC_COMPLEXITY, JDK.RAW_TYPES, JDK.DEPRECATION })
+    public Future<Job> updateMetadata(final Vertx aVertxRef) {
         final List<String> missingHeaders = new ArrayList<>();
+        final Promise<Job> promise = Promise.promise();
         final List<Item> items = getItems();
+        final List<Future> futures = new ArrayList<>();
 
         int bucketeerStateIndex = findHeader(Metadata.BUCKETEER_STATE);
         int accessUrlIndex = findHeader(Metadata.IIIF_ACCESS_URL);
@@ -282,34 +295,89 @@ public class Job implements Serializable {
         }
 
         for (int index = 0; index < myMetadata.size(); index++) {
+            final Future<Void> rowFuture = Future.future();
             final Item item = items.get(index);
+            final int rowIndex = index;
 
-            String[] row = myMetadata.get(index);
+            // The row, modified or as-in, for the item's metadata
+            String[] row;
+
+            futures.add(rowFuture);
+            row = myMetadata.get(index); // as-in
 
             if (headersChanged) {
                 final String[] newRow = new String[newHeaderLength];
 
                 System.arraycopy(row, 0, newRow, 0, row.length);
-                row = newRow;
+                row = newRow; // modified
             }
 
-            row[bucketeerStateIndex] = WorkflowState.STRUCTURAL.equals(item.getWorkflowState())
+            // Lambdas require final variables, so we make final copies
+            final String[] finalRow = row;
+            final int finalBucketeerStateIndex = bucketeerStateIndex;
+            final int finalAccessUrlIndex = accessUrlIndex;
+            final int finalWidthIndex = widthIndex;
+            final int finalHeightIndex = heightIndex;
+
+            finalRow[finalBucketeerStateIndex] = WorkflowState.STRUCTURAL.equals(item.getWorkflowState())
                     ? WorkflowState.EMPTY.toString() : item.getWorkflowState().toString();
 
-            row[accessUrlIndex] = item.getAccessURL();
+            finalRow[finalAccessUrlIndex] = item.getAccessURL();
 
             if (item.getWidth().isPresent()) {
-                row[widthIndex] = item.getWidth().get();
+                finalRow[finalWidthIndex] = item.getWidth().get();
             }
 
             if (item.getHeight().isPresent()) {
-                row[heightIndex] = item.getHeight().get();
+                finalRow[finalHeightIndex] = item.getHeight().get();
             }
 
-            myMetadata.set(index, row);
+            if (item.getWidth().isPresent() && item.getHeight().isPresent()) {
+                myMetadata.set(rowIndex, finalRow);
+                rowFuture.complete();
+            } else {
+                final JsonObject request = new JsonObject();
+
+                if (item.hasFile()) {
+                    request.put(Constants.IMAGE_ID, item.getID());
+                    item.getPrefixedFilePath().ifPresent(path -> request.put(Constants.FILE_PATH, path));
+
+                    aVertxRef.eventBus().<JsonObject>send(WidthHeightVerticle.class.getName(), request, reply -> {
+                        if (reply.succeeded()) {
+                            final JsonObject body = reply.result().body();
+                            final String width = body.getString(WIDTH);
+                            final String height = body.getString(HEIGHT);
+
+                            if (width != null) {
+                                finalRow[finalWidthIndex] = width;
+                            }
+
+                            if (height != null) {
+                                finalRow[finalHeightIndex] = height;
+                            }
+                        } else {
+                            LOGGER.error(MessageCodes.BUCKETEER_612, request.getValue(Constants.FILE_PATH));
+                        }
+
+                        myMetadata.set(rowIndex, finalRow);
+                        rowFuture.complete();
+                    });
+                } else {
+                    myMetadata.set(rowIndex, finalRow);
+                    rowFuture.complete();
+                }
+            }
         }
 
-        return this;
+        CompositeFuture.all(futures).setHandler(result -> {
+            if (result.succeeded()) {
+                promise.complete(this);
+            } else {
+                promise.fail(result.cause());
+            }
+        });
+
+        return promise.future();
     }
 
     /**
