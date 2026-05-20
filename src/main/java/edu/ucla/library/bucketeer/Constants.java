@@ -74,6 +74,16 @@ public final class Constants {
     public static final String JOB_NAME = "job-name";
 
     /**
+     * The constant for passing around width information.
+     */
+    public static final String WIDTH = "width";
+
+    /**
+     * The constant for passing around height information.
+     */
+    public static final String HEIGHT = "height";
+
+    /**
      * The header for indicating an image is a derivative image.
      */
     public static final String DERIVATIVE_IMAGE = "derivative-image";

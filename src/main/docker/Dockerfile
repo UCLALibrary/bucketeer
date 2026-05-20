@@ -41,6 +41,7 @@ COPY --from=KAKADU_TOOL_CHAIN /usr/local/lib/*.so /usr/local/lib/
 COPY --from=KAKADU_TOOL_CHAIN /usr/local/bin/kdu_* /usr/local/bin/
 
 # Copy over our Bucketeer application
+WORKDIR /usr/local/bucketeer/csv
 WORKDIR /usr/local/bucketeer
 COPY "maven/bucketeer-${project.version}.jar" .
 

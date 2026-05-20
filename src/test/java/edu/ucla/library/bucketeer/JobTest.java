@@ -1,6 +1,8 @@
 
 package edu.ucla.library.bucketeer;
 
+import static edu.ucla.library.bucketeer.Constants.HEIGHT;
+import static edu.ucla.library.bucketeer.Constants.WIDTH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,18 +11,27 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import info.freelibrary.util.StringUtils;
 
 import edu.ucla.library.bucketeer.Job.WorkflowState;
+import edu.ucla.library.bucketeer.verticles.WidthHeightVerticle;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 /**
  * A suite of batch job tests.
  */
+@RunWith(VertxUnitRunner.class)
 public class JobTest extends AbstractBucketeerTest {
 
     private static final String TEST_JOB_NAME = "test-job";
@@ -40,6 +51,9 @@ public class JobTest extends AbstractBucketeerTest {
     private static final String FILE_PATH = "filePath";
 
     private static final String ITEMS = "items";
+
+    @Rule
+    public RunTestOnContext myTestContext = new RunTestOnContext();
 
     /**
      * Tests JSON serialization.
@@ -134,34 +148,56 @@ public class JobTest extends AbstractBucketeerTest {
      * Tests updating the metadata.
      */
     @Test
-    public final void testUpdateMetadata() throws IOException, ProcessingException {
+    public final void testUpdateMetadata(TestContext aContext) throws IOException, ProcessingException {
         final Job job = JobFactory.getInstance().createJob(TEST_JOB_NAME, CSV_FILE);
         final String[] originalHeader = job.getMetadataHeader();
         final int bucketeerStateIndex = job.findHeader(Metadata.BUCKETEER_STATE);
+        final Vertx vertx = myTestContext.vertx();
+        final Async async = aContext.async();
+        final String width = "100";
+        final String height = "200";
 
-        final String[] newHeader;
-        final List<String[]> newMetadata;
+        vertx.eventBus().<JsonObject>consumer(WidthHeightVerticle.class.getName(), message -> {
+            final JsonObject body = message.body();
 
-        job.updateMetadata();
+            // Confirm our message from Job.updateMetadata(Vertx) contains the keys we need
+            assertTrue(body.containsKey(Constants.IMAGE_ID));
+            assertTrue(body.containsKey(Constants.FILE_PATH));
 
-        newHeader = job.getMetadataHeader();
-        newMetadata = job.getMetadata();
+            message.reply(new JsonObject().put(WIDTH, width).put(HEIGHT, height));
+        });
 
-        // IIIF Access URL should have been added
-        assertEquals(originalHeader.length + 3, newHeader.length);
-        assertTrue(newHeader[originalHeader.length].equals(Metadata.IIIF_ACCESS_URL));
+        job.updateMetadata(vertx).onComplete(result -> {
+            if (result.succeeded()) {
+                final String[] newHeader = job.getMetadataHeader();
+                final List<String[]> newMetadata = job.getMetadata();
 
-        // Bucketeer State of all items should be predictable
-        for (final String[] row : newMetadata) {
-            final WorkflowState expectedWorkflowState;
+                // IIIF Access URL should have been added
+                assertEquals(originalHeader.length + 3, newHeader.length);
+                assertTrue(newHeader[originalHeader.length].equals(Metadata.IIIF_ACCESS_URL));
 
-            if (row[job.findHeader(Metadata.FILE_NAME)].equals(TEST_FAIL_FILE.getPath())) {
-                expectedWorkflowState = WorkflowState.FAILED;
+                // Bucketeer State of all items should be predictable
+                for (final String[] row : newMetadata) {
+                    final WorkflowState expectedWorkflowState;
+
+                    if (row[job.findHeader(Metadata.FILE_NAME)].equals(TEST_FAIL_FILE.getPath())) {
+                        expectedWorkflowState = WorkflowState.FAILED;
+                    } else {
+                        expectedWorkflowState = WorkflowState.EMPTY;
+                    }
+
+                    // Check workflow state was set correctly
+                    assertTrue(row[bucketeerStateIndex].equals(expectedWorkflowState.toString()));
+
+                    // Check width and height were set correctly
+                    assertEquals(height, row[row.length - 1]);
+                    assertEquals(width, row[row.length - 2]);
+                }
+
+                async.complete();
             } else {
-                expectedWorkflowState = WorkflowState.EMPTY;
+                aContext.fail();
             }
-
-            assertTrue(row[bucketeerStateIndex].equals(expectedWorkflowState.toString()));
-        }
+        });
     }
 }
