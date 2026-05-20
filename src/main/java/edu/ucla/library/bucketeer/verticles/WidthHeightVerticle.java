@@ -17,6 +17,7 @@ import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
+import edu.ucla.library.bucketeer.MessageCodes;
 
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -37,15 +38,13 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
             final JsonObject body = message.body();
             final Path path = Paths.get(body.getString(Constants.FILE_PATH));
 
-            System.out.println(path.toAbsolutePath());
-
             try (final ImageInputStream in = ImageIO.createImageInputStream(path.toFile())) {
                 final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
                 final ImageReader reader;
                 final JsonObject reply;
 
                 if (!readers.hasNext()) {
-                    throw new IOException("No ImageReader available for TIFF: " + path);
+                    throw new IOException(LOGGER.getMessage(MessageCodes.BUCKETEER_613, path));
                 }
 
                 // If we found a reader for the type of image file we have, proceed

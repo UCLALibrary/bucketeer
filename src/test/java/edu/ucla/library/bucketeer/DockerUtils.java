@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Duration;
 
 import edu.ucla.library.bucketeer.converters.KakaduConverter;
 
@@ -38,7 +39,7 @@ public final class DockerUtils {
      * @throws InterruptedException If the copying process gets interrupted
      */
     public static boolean copy(final String aContainerName, final String aSrcDirPath, final String aDestDirPath) {
-        final String namespacedContainerSrcDirPath = aContainerName + ":" + aSrcDirPath;
+        final String namespacedContainerSrcDirPath = aContainerName + ":" + aSrcDirPath + "/";
         final ProcessBuilder builder = new ProcessBuilder("docker", "cp", namespacedContainerSrcDirPath, aDestDirPath);
 
         builder.redirectErrorStream(true);
