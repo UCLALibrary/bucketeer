@@ -40,6 +40,7 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
     protected void sendMessage(final Vertx aVertx, final JsonObject aJsonObject, final String aVerticleName,
             final long aTimeout) {
         final DeliveryOptions options = new DeliveryOptions().setSendTimeout(aTimeout);
+        final Logger logger = getLogger();
 
         aVertx.eventBus().request(aVerticleName, aJsonObject, options, response -> {
             if (response.failed()) {
@@ -51,11 +52,9 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
                         final ReplyException replyException = (ReplyException) exception;
                         final String messageCode = CodeUtils.getCode(replyException.failureCode());
                         final String messageDetails = replyException.getMessage();
-                        final String failureReason;
 
                         try {
-                            failureReason = log.getMessage(messageCode, messageDetails);
-                            log.error(MessageCodes.BUCKETEER_005, aVerticleName, failureReason);
+                            log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(messageDetails));
                         } catch (final IndexOutOfBoundsException details) {
                             // Different number of slots and values
                             log.error(MessageCodes.BUCKETEER_005, aVerticleName, messageCode);
@@ -68,7 +67,7 @@ public abstract class AbstractBucketeerHandler implements Handler<RoutingContext
                     log.error(MessageCodes.BUCKETEER_005, aVerticleName, log.getMessage(MessageCodes.BUCKETEER_136));
                 }
             } else if (Op.RETRY.equals(response.result().body())) {
-                getLogger().debug(MessageCodes.BUCKETEER_048, aVerticleName);
+                logger.info(MessageCodes.BUCKETEER_048, aVerticleName);
                 sendMessage(aVertx, aJsonObject, aVerticleName, aTimeout);
             }
 

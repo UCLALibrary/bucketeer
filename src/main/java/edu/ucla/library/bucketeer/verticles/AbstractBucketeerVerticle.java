@@ -85,8 +85,10 @@ public abstract class AbstractBucketeerVerticle extends AbstractVerticle {
 
         vertx.eventBus().request(aVerticleName, aJsonObject, options, response -> {
             if (response.failed()) {
-                if (response.cause() != null) {
-                    getLogger().error(response.cause(), MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
+                final Throwable throwable = response.cause();
+
+                if (throwable != null) {
+                    getLogger().error(throwable, MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 } else {
                     getLogger().error(MessageCodes.BUCKETEER_005, aVerticleName, aJsonObject);
                 }

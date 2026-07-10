@@ -1,9 +1,6 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
-import static edu.ucla.library.bucketeer.Constants.HEIGHT;
-import static edu.ucla.library.bucketeer.Constants.WIDTH;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,7 +48,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
                 reader = readers.next();
 
                 try {
-                    reader.setInput(in, true, true);
+                    reader.setInput(in, false, false);
                     reply = new JsonObject().put(Constants.WIDTH, Integer.toString(reader.getWidth(0)))
                             .put(Constants.HEIGHT, Integer.toString(reader.getHeight(0)));
 
@@ -59,8 +56,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
                 } finally {
                     reader.dispose();
                 }
-            } catch (final IOException | IllegalArgumentException details) {
-                // If the file is bad, no reader will be found and an IllegalArgumentException will be thrown
+            } catch (final Throwable details) {
                 message.fail(500, details.getMessage());
             }
         });

@@ -214,7 +214,7 @@
   <entry key="BUCKETEER-609">Username or password is not valid; Username: '{}'</entry>
   <entry key="BUCKETEER-610">Cantaloupe cache was not properly cleared; image remained the same after attempt of clearing</entry>
   <entry key="BUCKETEER-611">Unexpected Cantaloupe response: {} [{}]</entry>
-  <entry key="BUCKETEER-612">Failed to find an image from which to extract width/height: {}</entry>
+  <entry key="BUCKETEER-612">Failed to find an image from which to extract width/height: {} [{}]</entry>
   <entry key="BUCKETEER-613">No ImageReader available for TIFF: {}</entry>
   <entry key="BUCKETEER-614">Timed out waiting for CSV file: {}</entry>
 </properties>
