@@ -30,7 +30,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(WidthHeightVerticle.class, Constants.MESSAGES);
 
     @Override
-    public void start(final Promise<Void> aStart) throws Exception {
+    public void start(final Promise<Void> aPromise) throws Exception {
         super.start();
 
         getJsonConsumer().handler(message -> {
