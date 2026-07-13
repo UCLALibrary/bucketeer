@@ -16,6 +16,8 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
@@ -28,7 +30,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(WidthHeightVerticle.class, Constants.MESSAGES);
 
     @Override
-    public void start(final Promise<Void> aPromise) throws Exception {
+    public void start(final Promise<Void> aStart) throws Exception {
         super.start();
 
         getJsonConsumer().handler(message -> {
@@ -38,7 +40,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
             try (final ImageInputStream in = ImageIO.createImageInputStream(path.toFile())) {
                 final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
                 final ImageReader reader;
-                final JsonObject reply;
+                final JsonObject reply;   
 
                 if (!readers.hasNext()) {
                     throw new IOException(LOGGER.getMessage(MessageCodes.BUCKETEER_613, path));

@@ -217,4 +217,5 @@
   <entry key="BUCKETEER-612">Failed to find an image from which to extract width/height: {} [{}]</entry>
   <entry key="BUCKETEER-613">No ImageReader available for TIFF: {}</entry>
   <entry key="BUCKETEER-614">Timed out waiting for CSV file: {}</entry>
+  <entry key="BUCKETEER-615">Could not open image input stream for: {}</entry>
 </properties>
