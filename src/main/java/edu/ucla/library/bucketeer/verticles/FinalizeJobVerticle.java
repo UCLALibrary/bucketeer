@@ -96,29 +96,12 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
         LOGGER.info(MessageCodes.BUCKETEER_131, jobName);
 
-        removeJobFuture(jobName).compose(job -> finalizeJob(json, jobName, job)).setHandler(result -> {
-            if (result.succeeded()) {
-                aMessage.reply(Op.SUCCESS);
-            } else {
-                handleFinalizeFailure(aMessage, jobName, result.cause());
+        removeJobFuture(jobName).compose(job -> finalizeJob(json, jobName, job)).setHandler(finalization -> {
+            if (finalization.failed()) {
+                final Throwable throwable = finalization.cause();
+                LOGGER.error(throwable, throwable.getMessage());
             }
         });
-    }
-
-    /**
-     * Handle a failure in the finalization process.
-     *
-     * @param aMessage A message about the finalization process
-     * @param aJobName A job name
-     * @param aError A error representing the finalization failure
-     */
-    private void handleFinalizeFailure(final Message<JsonObject> aMessage, final String aJobName,
-            final Throwable aError) {
-        if (aError instanceof IOException || aError instanceof ProcessingException) {
-            aMessage.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), aError.getMessage());
-        } else {
-            aMessage.reply(Op.FS_WRITE_CSV_FAILURE);
-        }
     }
 
     /**
