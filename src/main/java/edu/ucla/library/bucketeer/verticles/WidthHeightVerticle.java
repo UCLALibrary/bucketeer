@@ -16,8 +16,6 @@ import info.freelibrary.util.LoggerFactory;
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.MessageCodes;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 
@@ -30,57 +28,40 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(WidthHeightVerticle.class, Constants.MESSAGES);
 
     @Override
-    public void start(final Promise<Void> aStart) throws Exception {
+    public void start(final Promise<Void> aPromise) throws Exception {
         super.start();
 
         getJsonConsumer().handler(message -> {
             final JsonObject body = message.body();
             final Path path = Paths.get(body.getString(Constants.FILE_PATH));
 
-            vertx.executeBlocking(new Handler<Promise<JsonObject>>() {
+            try (final ImageInputStream inStream = ImageIO.createImageInputStream(path.toFile())) {
+                final Iterator<ImageReader> readers = ImageIO.getImageReaders(inStream);
+                final ImageReader reader;
+                final JsonObject reply;
 
-                @Override
-                public void handle(final Promise<JsonObject> aPromise) {
-                    try (ImageInputStream inStream = ImageIO.createImageInputStream(path.toFile())) {
-                        if (inStream == null) {
-                            throw new IOException(LOGGER.getMessage(MessageCodes.BUCKETEER_615, path));
-                        }
-
-                        final Iterator<ImageReader> readers = ImageIO.getImageReaders(inStream);
-                        if (!readers.hasNext()) {
-                            throw new IOException(LOGGER.getMessage(MessageCodes.BUCKETEER_613, path));
-                        }
-
-                        final ImageReader reader = readers.next();
-                        try {
-                            reader.setInput(inStream, true, true);
-                            aPromise.complete(new JsonObject() // Prepare and send response message
-                                    .put(Constants.WIDTH, Integer.toString(reader.getWidth(0)))
-                                    .put(Constants.HEIGHT, Integer.toString(reader.getHeight(0))));
-                        } finally {
-                            reader.dispose();
-                        }
-                    } catch (final IOException | IllegalArgumentException details) {
-                        aPromise.fail(details);
-                    }
+                if (!readers.hasNext()) {
+                    throw new IOException(LOGGER.getMessage(MessageCodes.BUCKETEER_613, path));
                 }
-            }, new Handler<AsyncResult<JsonObject>>() {
 
-                @Override
-                public void handle(final AsyncResult<JsonObject> aResult) {
-                    if (aResult.succeeded()) {
-                        message.reply(aResult.result());
-                    } else {
-                        final Throwable cause = aResult.cause();
+                // If we found a reader for the type of image file we have, proceed
+                reader = readers.next();
 
-                        LOGGER.error(cause, cause.getMessage());
-                        message.fail(500, cause.getMessage() != null ? cause.getMessage() : cause.toString());
-                    }
+                try {
+                    reader.setInput(inStream);
+                    reply = new JsonObject().put(Constants.WIDTH, Integer.toString(reader.getWidth(0)))
+                            .put(Constants.HEIGHT, Integer.toString(reader.getHeight(0)));
+
+                    message.reply(reply);
+                } finally {
+                    reader.dispose();
                 }
-            });
+            } catch (final Throwable details) {
+                message.fail(500, details.getMessage());
+            }
         });
 
-        aStart.complete();
+        aPromise.complete();
     }
 
     @Override

@@ -26,7 +26,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -46,9 +45,6 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
     /** The handler's configuration. */
     private final JsonObject myConfig;
 
-    /** The Slack message retry duration. */
-    private final long mySlackRetryDuration;
-
     /** The Vert.x instance. */
     private Vertx myVertx;
 
@@ -59,14 +55,6 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
      */
     public BatchJobStatusHandler(final JsonObject aConfig) {
         myConfig = aConfig;
-
-        // Scale the {@link FinalizeJobVerticle} send timeout with the {@link SlackMessageVerticle} retry configuration
-        if (aConfig.containsKey(Config.SLACK_MAX_RETRIES) && aConfig.containsKey(Config.SLACK_RETRY_DELAY)) {
-            mySlackRetryDuration =
-                    1000 * aConfig.getInteger(Config.SLACK_MAX_RETRIES) * aConfig.getInteger(Config.SLACK_RETRY_DELAY);
-        } else {
-            mySlackRetryDuration = 0;
-        }
     }
 
     @Override
@@ -225,7 +213,7 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                 if (finished) {
                     final JsonObject message = new JsonObject().put(Constants.JOB_NAME, job.getName());
 
-                    // Clear Cantaloupe cache of already processed images
+                    // Clear Cantaloupe cache of already processed images; don't wait for reply
                     myVertx.eventBus().<JsonObject>send(ClearCacheVerticle.class.getName(),
                             new JsonObject().put(Constants.IMAGE_ID, imageId), reply -> {
                                 if (reply.failed()) {
@@ -233,8 +221,8 @@ public class BatchJobStatusHandler extends AbstractBucketeerHandler {
                                 }
                             });
 
-                    sendMessage(myVertx, message, FinalizeJobVerticle.class.getName(),
-                            Math.max(mySlackRetryDuration, DeliveryOptions.DEFAULT_TIMEOUT));
+                    // Send a message to clean-up verticle
+                    myVertx.eventBus().send(FinalizeJobVerticle.class.getName(), message);
                 }
 
                 returnSuccess(response, LOGGER.getMessage(MessageCodes.BUCKETEER_081, job.getName()));

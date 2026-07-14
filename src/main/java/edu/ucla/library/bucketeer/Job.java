@@ -23,7 +23,7 @@ import info.freelibrary.util.LoggerFactory;
 import info.freelibrary.util.warnings.JDK;
 import info.freelibrary.util.warnings.PMD;
 
-import edu.ucla.library.bucketeer.verticles.WidthHeightVerticle;
+import edu.ucla.library.bucketeer.utils.WidthHeightRequestQueue;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -65,7 +65,7 @@ public class Job implements Serializable {
      * Creates a new batch job.
      */
     public Job() {
-        // Used for deserialization
+        // Used for Jackson deserialization
     }
 
     /**
@@ -246,6 +246,7 @@ public class Job implements Serializable {
      */
     @SuppressWarnings({ PMD.CYCLOMATIC_COMPLEXITY, JDK.RAW_TYPES, JDK.DEPRECATION })
     public Future<Job> updateMetadata(final Vertx aVertxRef) {
+        final WidthHeightRequestQueue queue = new WidthHeightRequestQueue(aVertxRef, 10);
         final List<String> missingHeaders = new ArrayList<>();
         final Promise<Job> promise = Promise.promise();
         final List<Item> items = getItems();
@@ -295,14 +296,14 @@ public class Job implements Serializable {
         }
 
         for (int index = 0; index < myMetadata.size(); index++) {
-            final Future<Void> rowFuture = Future.future();
+            final Promise<Void> rowPromise = Promise.promise();
             final Item item = items.get(index);
             final int rowIndex = index;
 
             // The row, modified or as-in, for the item's metadata
             String[] row;
 
-            futures.add(rowFuture);
+            futures.add(rowPromise.future());
             row = myMetadata.get(index); // as-in
 
             if (headersChanged) {
@@ -334,7 +335,7 @@ public class Job implements Serializable {
 
             if (item.getWidth().isPresent() && item.getHeight().isPresent()) {
                 myMetadata.set(rowIndex, finalRow);
-                rowFuture.complete();
+                rowPromise.complete();
             } else {
                 final JsonObject request = new JsonObject();
 
@@ -342,29 +343,27 @@ public class Job implements Serializable {
                     request.put(Constants.IMAGE_ID, item.getID());
                     item.getPrefixedFilePath().ifPresent(path -> request.put(Constants.FILE_PATH, path));
 
-                    aVertxRef.eventBus().<JsonObject>send(WidthHeightVerticle.class.getName(), request, reply -> {
-                        if (reply.succeeded()) {
-                            final JsonObject body = reply.result().body();
-                            final String width = body.getString(WIDTH);
-                            final String height = body.getString(HEIGHT);
+                    queue.enqueue(request, body -> {
+                        final String width = body.getString(WIDTH);
+                        final String height = body.getString(HEIGHT);
 
-                            if (width != null) {
-                                finalRow[finalWidthIndex] = width;
-                            }
+                        if (width != null) {
+                            finalRow[finalWidthIndex] = width;
+                        }
 
-                            if (height != null) {
-                                finalRow[finalHeightIndex] = height;
-                            }
-                        } else {
-                            LOGGER.error(MessageCodes.BUCKETEER_612, request.getValue(Constants.FILE_PATH));
+                        if (height != null) {
+                            finalRow[finalHeightIndex] = height;
                         }
 
                         myMetadata.set(rowIndex, finalRow);
-                        rowFuture.complete();
-                    });
+                    }, error -> {
+                        LOGGER.error(MessageCodes.BUCKETEER_612, request.getValue(Constants.FILE_PATH),
+                                error.getMessage());
+                        myMetadata.set(rowIndex, finalRow);
+                    }, rowPromise);
                 } else {
                     myMetadata.set(rowIndex, finalRow);
-                    rowFuture.complete();
+                    rowPromise.complete();
                 }
             }
         }

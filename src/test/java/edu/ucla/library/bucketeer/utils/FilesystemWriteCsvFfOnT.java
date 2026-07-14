@@ -112,9 +112,6 @@ public class FilesystemWriteCsvFfOnT {
                         // Confirm we can create our temporary test directory (or that it already exists)
                         aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs());
 
-                        System.out.println("=> " + srcDir.toString());
-                        System.out.println("=> " + tmpDestDir.toString());
-
                         // Confirm we can copy the test container's files to the temporary test directory
                         aContext.assertTrue(DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir.toString(),
                                 tmpDestDir.toString()));

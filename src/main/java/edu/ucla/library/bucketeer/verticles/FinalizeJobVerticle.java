@@ -94,31 +94,14 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         final JsonObject json = aMessage.body();
         final String jobName = json.getString(Constants.JOB_NAME);
 
-        LOGGER.debug(MessageCodes.BUCKETEER_131, jobName);
+        LOGGER.info(MessageCodes.BUCKETEER_131, jobName);
 
-        removeJobFuture(jobName).compose(job -> finalizeJob(json, jobName, job)).setHandler(result -> {
-            if (result.succeeded()) {
-                aMessage.reply(Op.SUCCESS);
-            } else {
-                handleFinalizeFailure(aMessage, jobName, result.cause());
+        removeJobFuture(jobName).compose(job -> finalizeJob(json, jobName, job)).setHandler(finalization -> {
+            if (finalization.failed()) {
+                final Throwable throwable = finalization.cause();
+                LOGGER.error(throwable, throwable.getMessage());
             }
         });
-    }
-
-    /**
-     * Handle a failure in the finalization process.
-     *
-     * @param aMessage A message about the finalization process
-     * @param aJobName A job name
-     * @param aError A error representing the finalization failure
-     */
-    private void handleFinalizeFailure(final Message<JsonObject> aMessage, final String aJobName,
-            final Throwable aError) {
-        if (aError instanceof IOException || aError instanceof ProcessingException) {
-            aMessage.fail(CodeUtils.getInt(MessageCodes.BUCKETEER_089), aError.getMessage());
-        } else {
-            aMessage.reply(Op.FS_WRITE_CSV_FAILURE);
-        }
     }
 
     /**
@@ -131,11 +114,11 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     private Future<Job> removeJobFuture(final String aJobName) {
         final Future<Job> future = Future.future();
 
-        removeJob(aJobName, ar -> {
-            if (ar.succeeded()) {
-                future.complete(ar.result());
+        removeJob(aJobName, removeJob -> {
+            if (removeJob.succeeded()) {
+                future.complete(removeJob.result());
             } else {
-                future.fail(ar.cause());
+                future.fail(removeJob.cause());
             }
         });
 
@@ -237,7 +220,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     }
 
     @SuppressWarnings(JDK.DEPRECATION)
-    private Future<Boolean> writeCsvIfEnabled(final String fileName, final String csvData) {
+    private Future<Boolean> writeCsvIfEnabled(final String aFileName, final String aCsvData) {
         final Future<Boolean> future = Future.future();
 
         if (!(myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV))) {
@@ -246,7 +229,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         }
 
         final String dirPath = myFilesystemCsvMount;
-        final String filePath = Paths.get(dirPath, fileName).toString();
+        final String filePath = Paths.get(dirPath, aFileName).toString();
         final OpenOptions options = new OpenOptions().setWrite(true).setCreate(true).setTruncateExisting(true);
 
         ensureDirectoryExists(dirPath).setHandler(dirResult -> {
@@ -267,7 +250,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
                 final AsyncFile file = openResult.result();
 
-                file.write(Buffer.buffer(csvData), writeResult -> {
+                file.write(Buffer.buffer(aCsvData), writeResult -> {
                     if (writeResult.succeeded()) {
                         file.close(closeResult -> future.complete(true));
                     } else {
@@ -338,38 +321,35 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
         promise.future().onComplete(aHandler);
 
         vertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
-            if (getMap.succeeded()) {
-                final AsyncMap<String, Job> map = getMap.result();
+            if (getMap.failed()) {
+                failPromise(getMap.cause(), MessageCodes.BUCKETEER_063, Constants.LAMBDA_JOBS, promise);
+                return;
+            }
 
-                map.keys(keyCheck -> {
-                    if (keyCheck.succeeded()) {
-                        final Set<String> jobs = keyCheck.result();
+            final AsyncMap<String, Job> map = getMap.result();
 
-                        if (jobs.contains(aJobName)) {
-                            map.get(aJobName, getJob -> {
-                                if (getJob.succeeded()) {
-                                    map.remove(aJobName, removeJob -> {
-                                        if (removeJob.succeeded()) {
-                                            promise.complete(removeJob.result());
-                                        } else {
-                                            failPromise(getMap.cause(), MessageCodes.BUCKETEER_082, aJobName, promise);
-                                        }
-                                    });
-                                } else {
-                                    failPromise(getJob.cause(), MessageCodes.BUCKETEER_076, aJobName, promise);
-                                }
-                            });
-                        } else {
-                            failPromise(new JobNotFoundException(MessageCodes.BUCKETEER_075, aJobName),
-                                    MessageCodes.BUCKETEER_075, aJobName, promise);
-                        }
+            map.get(aJobName, getJob -> {
+                if (getJob.failed()) {
+                    failPromise(getJob.cause(), MessageCodes.BUCKETEER_076, aJobName, promise);
+                    return;
+                }
+
+                final Job job = getJob.result();
+
+                if (job == null) {
+                    failPromise(new JobNotFoundException(MessageCodes.BUCKETEER_075, aJobName),
+                            MessageCodes.BUCKETEER_075, aJobName, promise);
+                    return;
+                }
+
+                map.remove(aJobName, removeJob -> {
+                    if (removeJob.succeeded()) {
+                        promise.complete(removeJob.result());
                     } else {
-                        failPromise(keyCheck.cause(), MessageCodes.BUCKETEER_062, aJobName, promise);
+                        failPromise(removeJob.cause(), MessageCodes.BUCKETEER_082, aJobName, promise);
                     }
                 });
-            } else {
-                failPromise(getMap.cause(), MessageCodes.BUCKETEER_063, Constants.LAMBDA_JOBS, promise);
-            }
+            });
         });
     }
 
