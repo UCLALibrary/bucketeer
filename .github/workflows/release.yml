@@ -59,7 +59,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.BUILD_PASSPHRASE }}
           MAVEN_GPG_KEY: ${{ secrets.BUILD_KEY }}
         run: |
-          mvn -V -B deploy -Dmaven.javadoc.skip=true -DskipPublishing=true \
+          mvn -V -B deploy -Dmaven.javadoc.skip=true -DskipPublishing=true -DlogLevel="INFO" \
           -Prelease -Drevision=${{ github.event.release.tag_name }} \
           -ntp -Dorg.slf4j.simpleLogger.log.net.sourceforge.pmd=error \
           -Ddocker.registry.username=${{ secrets.DOCKER_USERNAME }} \
