@@ -48,7 +48,7 @@ public class WidthHeightVerticle extends AbstractBucketeerVerticle {
                 reader = readers.next();
 
                 try {
-                    reader.setInput(inStream);
+                    reader.setInput(inStream, false, true);
                     reply = new JsonObject().put(Constants.WIDTH, Integer.toString(reader.getWidth(0)))
                             .put(Constants.HEIGHT, Integer.toString(reader.getHeight(0)));
 
