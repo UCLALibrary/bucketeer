@@ -218,4 +218,11 @@
   <entry key="BUCKETEER-613">No ImageReader available for TIFF: {}</entry>
   <entry key="BUCKETEER-614">Timed out waiting for CSV file: {}</entry>
   <entry key="BUCKETEER-615">Could not open image input stream for: {}</entry>
+  <entry key="BUCKETEER-616">TLS handshake failed while connecting to Cantaloupe at {}. Verify the endpoint certificate chain and the JVM trust store.</entry>
+  <entry key="BUCKETEER-617">Unable to resolve Cantaloupe host for {}</entry>
+  <entry key="BUCKETEER-618">Unable to connect to Cantaloupe at {}</entry>
+  <entry key="BUCKETEER-619">Request to Cantaloupe failed for {}</entry>
+  <entry key="BUCKETEER-620">Cantaloupe rejected credentials for {}: HTTP {} {}</entry>
+  <entry key="BUCKETEER-621">Cantaloupe auth configuration request to {} returned: HTTP {} {}</entry>
+  <entry key="BUCKETEER-622">Timed out connecting to Cantaloupe at {}</entry>
 </properties>

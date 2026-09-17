@@ -1,6 +1,12 @@
 
 package edu.ucla.library.bucketeer.verticles;
 
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+
+import javax.net.ssl.SSLHandshakeException;
+
 import info.freelibrary.util.HTTP;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
@@ -49,12 +55,78 @@ public class ClearCacheVerticle extends AbstractVerticle {
         if (myUsername == null || myPassword == null) {
             aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_603));
         } else {
-            client.getAbs(iiifURL + "/configuration").basicAuthentication(myUsername, myPassword).send(post -> {
-                if (post.failed() || post.result().statusCode() != HTTP.OK) {
-                    aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
-                } else {
-                    aPromise.complete();
+            // We hit an endpoint that's access restricted to test/confirm our configured username and password
+            client.getAbs(iiifURL + "/configuration").basicAuthentication(myUsername, myPassword).send(get -> {
+                final String statusMessage;
+                final String error;
+                final int status;
+
+                if (get.failed()) {
+                    final Throwable cause = get.cause();
+
+                    if (hasCause(cause, SSLHandshakeException.class)) {
+                        error = LOGGER.getMessage(MessageCodes.BUCKETEER_616, iiifURL);
+
+                        LOGGER.error(error, cause);
+                        aPromise.fail(error);
+
+                        return;
+                    }
+
+                    if (hasCause(cause, UnknownHostException.class)) {
+                        error = LOGGER.getMessage(MessageCodes.BUCKETEER_617, iiifURL);
+
+                        LOGGER.error(error, cause);
+                        aPromise.fail(error);
+
+                        return;
+                    }
+
+                    if (hasCause(cause, ConnectException.class)) {
+                        error = LOGGER.getMessage(MessageCodes.BUCKETEER_618, iiifURL);
+
+                        LOGGER.error(error, cause);
+                        aPromise.fail(error);
+
+                        return;
+                    }
+
+                    if (hasCause(cause, SocketTimeoutException.class)) {
+                        error = LOGGER.getMessage(MessageCodes.BUCKETEER_619, iiifURL);
+
+                        LOGGER.error(error, cause);
+                        aPromise.fail(error);
+
+                        return;
+                    }
+
+                    error = LOGGER.getMessage(MessageCodes.BUCKETEER_620, iiifURL);
+
+                    LOGGER.error(error, cause);
+                    aPromise.fail(error);
+
+                    return;
                 }
+
+                status = get.result().statusCode();
+
+                if (status == HTTP.OK) {
+                    aPromise.complete();
+                    return;
+                }
+
+                statusMessage = get.result().statusMessage();
+
+                if (status == HTTP.UNAUTHORIZED || status == HTTP.FORBIDDEN) {
+                    LOGGER.warn(MessageCodes.BUCKETEER_621, iiifURL, status, statusMessage);
+                    aPromise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_609, myUsername));
+
+                    return;
+                }
+
+                error = LOGGER.getMessage(MessageCodes.BUCKETEER_622, iiifURL, statusMessage);
+                LOGGER.error(error);
+                aPromise.fail(error);
             });
         }
 
@@ -96,5 +168,18 @@ public class ClearCacheVerticle extends AbstractVerticle {
     protected MessageConsumer<JsonObject> getJsonConsumer() {
         getLogger().debug(MessageCodes.BUCKETEER_025, ClearCacheVerticle.class.getName());
         return vertx.eventBus().<JsonObject>consumer(ClearCacheVerticle.class.getName());
+    }
+
+    /**
+     * Determines if the exception is of an expected type.
+     */
+    private static boolean hasCause(final Throwable aThrowable, final Class<? extends Throwable> aExpectedType) {
+        for (Throwable throwable = aThrowable; throwable != null; throwable = throwable.getCause()) {
+            if (aExpectedType.isInstance(throwable)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
