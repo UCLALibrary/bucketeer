@@ -1225,7 +1225,7 @@
                   <includes>
                     <include>**/*FT.java</include>
                   </includes>
-                  <skipTests>${skipFTs}</skipTests>
+                  <skipITs>${skipFTs}</skipITs>
                 </configuration>
               </execution>
               <execution>
@@ -1238,7 +1238,7 @@
                   <includes>
                     <include>**/*IT.java</include>
                   </includes>
-                  <skipTests>${skipITs}</skipTests>
+                  <skipITs>${skipITs}</skipITs>
                 </configuration>
               </execution>
               <execution>
@@ -1252,7 +1252,7 @@
                   <includes>
                     <include>**/*FfOffT.java</include>
                   </includes>
-                  <skipTests>${skipFfTs}</skipTests>
+                  <skipITs>true</skipITs>
                   <systemPropertyVariables>
                     <http.port>${ff.off.http.port}</http.port>
                   </systemPropertyVariables>
@@ -1269,7 +1269,7 @@
                   <includes>
                     <include>**/*FfOnT.java</include>
                   </includes>
-                  <skipTests>${skipFfTs}</skipTests>
+                  <skipITs>${skipFfTs}</skipITs>
                   <systemPropertyVariables>
                     <http.port>${ff.on.http.port}</http.port>
                     <bucketeer.fs.csv.mount>/usr/local/bucketeer/csv</bucketeer.fs.csv.mount>

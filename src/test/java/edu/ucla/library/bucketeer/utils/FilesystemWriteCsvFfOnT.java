@@ -2,11 +2,15 @@
 package edu.ucla.library.bucketeer.utils;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,6 +26,7 @@ import edu.ucla.library.bucketeer.TestConstants;
 import info.freelibrary.util.FileUtils;
 import info.freelibrary.util.Logger;
 import info.freelibrary.util.LoggerFactory;
+import info.freelibrary.util.StringUtils;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -46,6 +51,9 @@ public class FilesystemWriteCsvFfOnT {
     private static final Logger LOGGER = LoggerFactory.getLogger(FilesystemWriteCsvFfOnT.class, MessageCodes.BUNDLE);
 
     private static final File TEST_CSV = new File("src/test/resources/csv/live-test-docker.csv");
+
+    /** Test user/uploader. */
+    private static final String BUCKETEER_USER = "bucketeer";
 
     /**
      * A JUnit rule to run the test on the active context.
@@ -92,7 +100,7 @@ public class FilesystemWriteCsvFfOnT {
         final WebClient webClient = WebClient.create(vertx);
         final int port = Integer.parseInt(System.getProperty(Config.HTTP_PORT));
         final Async asyncTask = aContext.async();
-        final MultipartForm form = MultipartForm.create().attribute(Constants.SLACK_HANDLE, "bucketeer")
+        final MultipartForm form = MultipartForm.create().attribute(Constants.SLACK_HANDLE, BUCKETEER_USER)
                 .textFileUpload(Constants.CSV_DATA, TEST_CSV.getName(), TEST_CSV.getAbsolutePath(), Constants.CSV);
 
         webClient.post(port, Constants.UNSPECIFIED_HOST, "/batch/input/csv").sendMultipartForm(form, sendForm -> {
@@ -100,30 +108,32 @@ public class FilesystemWriteCsvFfOnT {
                 // Complete the job
                 final Promise<Void> jobCompletion = Promise.promise();
 
-                jobCompletion.future().onComplete(fakeLambda -> {
-                    if (fakeLambda.succeeded()) {
-                        final Path srcDir = Path.of(System.getProperty(Config.FILESYSTEM_CSV_MOUNT));
+                jobCompletion.future().onComplete(jobResult -> {
+                    if (jobResult.failed()) {
+                        aContext.fail(jobResult.cause());
+                        return;
+                    }
+
+                    aContext.verify(ignored -> {
+                        final Path srcDir = Path.of(System.getProperty(Config.FILESYSTEM_CSV_MOUNT), BUCKETEER_USER);
                         final String srcDirName = srcDir.getFileName().toString();
                         final File tmpDestDir = new File(TestConstants.TMP_DEST_DIR);
 
                         final Path expectedFilePath = Path.of(tmpDestDir.getPath(), srcDirName, TEST_CSV.getName());
-                        final File expectedFile = new File(expectedFilePath.toString());
+                        final File expectedFile = expectedFilePath.toFile();
 
-                        // Confirm we can create our temporary test directory (or that it already exists)
-                        aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs());
-
-                        // Confirm we can copy the test container's files to the temporary test directory
+                        aContext.assertTrue(tmpDestDir.exists() || tmpDestDir.mkdirs(),
+                                "Could not create temp directory: " + tmpDestDir);
                         aContext.assertTrue(DockerUtils.copy(TestConstants.BUCKETEER_FF_ON, srcDir.toString(),
-                                tmpDestDir.toString()));
-
-                        // Confirm the file we expect to exist actually does
-                        aContext.assertTrue(expectedFile.exists());
+                                tmpDestDir.toString()), "Could not copy container files");
+                        aContext.assertTrue(expectedFile.exists(),
+                                "Expected CSV did not exist: " + expectedFile.getAbsolutePath());
 
                         FileUtils.delete(expectedFile);
-                        TestUtils.complete(asyncTask);
-                    } else {
-                        aContext.fail(fakeLambda.cause());
-                    }
+
+                        // Only finish after every assertion and cleanup step succeeds.
+                        asyncTask.complete();
+                    });
                 });
 
                 fakeLambda(webClient, port, Constants.UNSPECIFIED_HOST, jobCompletion, vertx);
@@ -172,7 +182,8 @@ public class FilesystemWriteCsvFfOnT {
 
             return CompositeFuture.all(patchFutures).mapEmpty();
         }).compose(wrapUp -> waitForCsvFile(aVertx, TestConstants.BUCKETEER_FF_ON,
-                "/usr/local/bucketeer/csv/live-test-docker.csv")).onSuccess(wrapUp -> {
+                StringUtils.format("/usr/local/bucketeer/csv/{}/live-test-docker.csv", BUCKETEER_USER)))
+                .onSuccess(wrapUp -> {
                     aPromise.complete();
                 }).onFailure(aPromise::fail);
     }

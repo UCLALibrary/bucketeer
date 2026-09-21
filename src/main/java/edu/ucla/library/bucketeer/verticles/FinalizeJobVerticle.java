@@ -3,6 +3,7 @@ package edu.ucla.library.bucketeer.verticles;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Set;
@@ -141,7 +142,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
 
         // @formatter:off
         job.updateMetadata(vertx).compose(this::toCsvFuture) //
-            .compose((String csvData) -> writeCsvIfEnabled(fileName, csvData).compose(writeResult -> {
+            .compose((String csvData) -> writeCsvIfEnabled(fileName, csvData, slackHandle).compose(writeResult -> {
                 return notifySlackAndFinish(aJsonObj, job, slackHandle, fileName, csvData, writeResult);
             }))
             .onComplete(result -> {
@@ -220,7 +221,8 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
     }
 
     @SuppressWarnings(JDK.DEPRECATION)
-    private Future<Boolean> writeCsvIfEnabled(final String aFileName, final String aCsvData) {
+    private Future<Boolean> writeCsvIfEnabled(final String aFileName, final String aCsvData,
+            final Optional<String> aSlackHandle) {
         final Future<Boolean> future = Future.future();
 
         if (!(myFeatureChecker.isPresent() && myFeatureChecker.get().isFeatureEnabled(Features.FS_WRITE_CSV))) {
@@ -228,7 +230,8 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             return future;
         }
 
-        final String dirPath = myFilesystemCsvMount;
+        final String dirPath = aSlackHandle.isEmpty() ? myFilesystemCsvMount
+                : Path.of(myFilesystemCsvMount, aSlackHandle.get()).toString();
         final String filePath = Paths.get(dirPath, aFileName).toString();
         final OpenOptions options = new OpenOptions().setWrite(true).setCreate(true).setTruncateExisting(true);
 
