@@ -17,9 +17,12 @@ import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
 import edu.ucla.library.bucketeer.Job.WorkflowState;
 import edu.ucla.library.bucketeer.MessageCodes;
+import edu.ucla.library.bucketeer.Metadata;
 import edu.ucla.library.bucketeer.utils.TestUtils;
+import edu.ucla.library.bucketeer.verticles.SlackMessageVerticle;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -36,6 +39,8 @@ public class DeleteJobHandlerTest extends AbstractBucketeerHandlerTest {
 
     private static final String TEST_URL = "/batch/jobs/" + JOB_NAME;
 
+    private static final String EMPTY = "";
+
     /**
      * Tests deleting a job from the batch workflow.
      *
@@ -50,9 +55,21 @@ public class DeleteJobHandlerTest extends AbstractBucketeerHandlerTest {
         // Get our shared data store so we can insert a job we want to test against
         myVertx.sharedData().<String, Job>getLocalAsyncMap(Constants.LAMBDA_JOBS, getMap -> {
             if (getMap.succeeded()) {
-                final List<Item> items = Arrays.asList(new Item().setWorkflowState(WorkflowState.SUCCEEDED));
+                final Job job = new Job(JOB_NAME);
+                final List<Item> items = Arrays.asList(
+                        new Item().setWorkflowState(WorkflowState.SUCCEEDED).setAccessURL(EMPTY).setHeight(10)
+                                .setWidth(10),
+                        new Item().setWorkflowState(WorkflowState.EMPTY).setAccessURL(EMPTY).setHeight(10).setWidth(10),
+                        new Item().setWorkflowState(WorkflowState.FAILED).setAccessURL(EMPTY).setHeight(10)
+                                .setWidth(10));
 
-                getMap.result().put(JOB_NAME, new Job(JOB_NAME).setItems(items), put -> {
+                job.setSlackHandle("ksclarke");
+                job.setMetadataHeader("id", "filePath", "accessURL", Metadata.MEDIA_WIDTH, Metadata.MEDIA_HEIGHT);
+                job.setMetadata(Arrays.asList(new String[] { "ark:/12345/asdfasdf", "test.tif", "", "10", "10" },
+                        new String[] { "ark:/12345/asdffdsa", "test.tif", "", "10", "10" },
+                        new String[] { "ark:/12345/fdsafdsa", "test.tif", "", "10", "10" }));
+
+                getMap.result().put(JOB_NAME, job.setItems(items), put -> {
                     if (put.succeeded()) {
                         // Once we've put the job into our shared data store, try to delete it
                         webClient.delete(port, Constants.UNSPECIFIED_HOST, TEST_URL).send(deletion -> {

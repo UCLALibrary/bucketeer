@@ -1,6 +1,7 @@
 
 package edu.ucla.library.bucketeer.handlers;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import info.freelibrary.util.Logger;
@@ -8,7 +9,10 @@ import info.freelibrary.util.LoggerFactory;
 
 import edu.ucla.library.bucketeer.Constants;
 import edu.ucla.library.bucketeer.HTTP;
+import edu.ucla.library.bucketeer.Item;
 import edu.ucla.library.bucketeer.Job;
+import edu.ucla.library.bucketeer.Job.WorkflowState;
+import edu.ucla.library.bucketeer.verticles.FinalizeJobVerticle;
 import edu.ucla.library.bucketeer.MessageCodes;
 
 import io.vertx.core.AsyncResult;
@@ -16,7 +20,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.AsyncMap;
+import io.vertx.core.shareddata.Lock;
+import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -104,9 +111,32 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
 
                 // Wait and see if the number of remaining items has changed
                 myVertx.setTimer(Constants.JOB_DELETE_TIMEOUT, timer -> {
-                    if (remaining == job.remaining()) {
-                        aJobsMap.remove(aJobName, deleteJob -> {
-                            if (deleteJob.succeeded()) {
+                    if (remaining == job.remaining()) { // Simple check that it is stalled
+                        handleLock(myVertx.sharedData(), getLock -> {
+                            if (getLock.succeeded()) {
+                                final Lock lock = getLock.result();
+                                final Iterator<Item> iterator = job.getItems().iterator();
+                                final JsonObject message = new JsonObject();
+
+                                // Zero out the rest of the items that haven't yet been processed
+                                while (iterator.hasNext()) {
+                                    final Item item = iterator.next();
+                                    final WorkflowState state = item.getWorkflowState();
+
+                                    if (WorkflowState.EMPTY == state) {
+                                        item.setWorkflowState(WorkflowState.FAILED);
+                                    }
+                                }
+
+                                // Release lock on shared data map
+                                lock.release();
+
+                                // Send message with job name to the job finalizer
+                                message.put(Constants.JOB_NAME, job.getName());
+
+                                // Send the finalize command to export our interrupted job
+                                myVertx.eventBus().send(FinalizeJobVerticle.class.getName(), message);
+
                                 promise.complete(job);
                             } else {
                                 promise.fail(LOGGER.getMessage(MessageCodes.BUCKETEER_097));
@@ -122,6 +152,26 @@ public class DeleteJobHandler extends AbstractBucketeerHandler {
 
                 LOGGER.error(exception, message);
                 promise.fail(message);
+            }
+        });
+    }
+
+    /**
+     * Gets a lock for use with updates.
+     *
+     * @param aSharedData A reference to the application's shared data
+     * @param aHandler A lock handler
+     */
+    private void handleLock(final SharedData aSharedData, final Handler<AsyncResult<Lock>> aHandler) {
+        final Promise<Lock> promise = Promise.<Lock>promise();
+
+        promise.future().onComplete(aHandler);
+
+        aSharedData.getLocalLockWithTimeout(Constants.JOB_LOCK, Constants.JOB_LOCK_TIMEOUT, getLock -> {
+            if (getLock.succeeded()) {
+                promise.complete(getLock.result());
+            } else {
+                promise.fail(getLock.cause());
             }
         });
     }
