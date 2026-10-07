@@ -32,6 +32,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.file.AsyncFile;
 import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.JsonObject;
@@ -189,6 +190,7 @@ public class FinalizeJobVerticle extends AbstractBucketeerVerticle {
             }
 
             slackMessage = StringUtils.format("{} {}", jobResultMsg, csvWriteStatusMsg);
+
             sendSlackMessage(mySlackChannelID, slackMessage, job, csvData);
         }
 
