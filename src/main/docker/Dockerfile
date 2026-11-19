@@ -101,4 +101,5 @@ ENV CONFIG_FILE="-Dvertx-config-path=/etc/bucketeer/bucketeer.properties"
 ENV JAR_PATH="/usr/local/bucketeer/bucketeer-${project.version}.jar"
 ENV BOOT_CLASSPATH="-Xbootclasspath/a:/etc/bucketeer"
 ENV HEAP_SIZE="2g"
-CMD ["sh", "-c", "java $BOOT_CLASSPATH $CACHE_DIR $CONFIG_FILE -Xmx$HEAP_SIZE -jar $JAR_PATH"]
+ENV JAVA_OPTS="-XX:+UnlockDiagnosticVMOptions -XX:-UseBASE64Intrinsics"
+CMD ["sh", "-c", "java $BOOT_CLASSPATH $JAVA_OPTS $CACHE_DIR $CONFIG_FILE -Xmx$HEAP_SIZE -jar $JAR_PATH"]
